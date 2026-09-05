@@ -1,0 +1,14 @@
+# Keep line endings stable in the repository regardless of who commits.
+#
+# Without this, files written on Linux (LF) and committed from Windows (CRLF)
+# show up as whole-file diffs the next time either side touches them. Storing
+# LF and letting Git convert on checkout keeps the history readable.
+
+* text=auto eol=lf
+
+# Binary and generated files Git should never try to normalise.
+*.png binary
+*.jpg binary
+*.woff2 binary
+*.pdf binary
+package-lock.json -diff linguist-generated
