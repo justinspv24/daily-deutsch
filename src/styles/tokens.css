@@ -1,0 +1,102 @@
+/*
+  Tagesdrill design tokens.
+
+  Two committed schemes, both switched explicitly by [data-theme] on <html>.
+  The bare :root block carries the complete light palette so nothing is ever
+  defined only inside a conditional block.
+
+  Palette: an ink-navy accent with a brass hairline, forest green and claret
+  for right and wrong. Neutrals are biased slightly cool so the navy sits in
+  the same family rather than floating on a dead grey.
+*/
+
+:root {
+  /* surfaces */
+  --bg: #ecedea;
+  --surface: #f8f8f6;
+  --surface-raised: #ffffff;
+  --surface-sunk: #e6e7e3;
+
+  /* ink */
+  --ink: #15181c;
+  --ink-muted: #5f656d;
+  --ink-faint: #949aa2;
+
+  /* lines */
+  --line: #dcdedb;
+  --line-strong: #c6c9c5;
+
+  /* brand */
+  --accent: #1e3a5f;
+  --accent-ink: #fbfbfa;
+  --accent-wash: #e5eaf1;
+  --brass: #a8813f;
+
+  /* semantics */
+  --ok: #2c6b4c;
+  --ok-wash: #e4efe8;
+  --no: #a03040;
+  --no-wash: #f6e7e9;
+  --near: #9c7526;
+  --near-wash: #f5eddd;
+
+  /* type */
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-ui: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  /* scale */
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.1875rem;
+  --step-2: 1.5rem;
+  --step-3: 2rem;
+  --step-4: 2.75rem;
+  --step-5: 3.75rem;
+
+  /* space */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+
+  /* form */
+  --radius: 6px;
+  --radius-sm: 3px;
+  --shadow-card: 0 1px 2px rgb(21 24 28 / 4%), 0 12px 32px -24px rgb(21 24 28 / 45%);
+  --shadow-lift: 0 2px 4px rgb(21 24 28 / 6%), 0 20px 48px -28px rgb(21 24 28 / 55%);
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 180ms;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0c0e11;
+  --surface: #14171b;
+  --surface-raised: #1a1e23;
+  --surface-sunk: #101317;
+
+  --ink: #e8eaed;
+  --ink-muted: #9aa1aa;
+  --ink-faint: #666d76;
+
+  --line: #23272d;
+  --line-strong: #333940;
+
+  --accent: #8fb3e3;
+  --accent-ink: #0c0e11;
+  --accent-wash: #182234;
+  --brass: #c8a463;
+
+  --ok: #6fbf8e;
+  --ok-wash: #14241c;
+  --no: #e07b76;
+  --no-wash: #2a1719;
+  --near: #d3ac60;
+  --near-wash: #241d12;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 40%), 0 14px 36px -26px rgb(0 0 0 / 90%);
+  --shadow-lift: 0 2px 6px rgb(0 0 0 / 50%), 0 24px 56px -30px rgb(0 0 0 / 95%);
+}

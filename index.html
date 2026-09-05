@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Daily Deutsch</title>
+    <meta
+      name="description"
+      content="Learn German from A1 to B2 with a daily drill: vocabulary, grammar tables in real sentences, and spaced repetition that remembers what you got wrong."
+    />
+    <meta name="theme-color" content="#1e3a5f" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <meta property="og:title" content="Daily Deutsch" />
+    <meta property="og:description" content="A daily German drill that remembers your mistakes." />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
+
+    <script>
+      // Apply the stored theme and language before first paint, so the page
+      // never flashes the wrong one.
+      try {
+        var stored = localStorage.getItem("tagesdrill.theme");
+        var dark =
+          stored === "dark" ||
+          (stored !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        var lang = localStorage.getItem("tagesdrill.lang");
+        if (lang === "de" || lang === "en") document.documentElement.lang = lang;
+      } catch (e) {
+        /* private mode — defaults apply */
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

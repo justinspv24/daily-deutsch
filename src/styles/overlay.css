@@ -1,0 +1,329 @@
+/* The "cc" chat and "tt" translator panels. */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: end center;
+  padding: var(--sp-5);
+  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  backdrop-filter: blur(6px);
+  animation: scrim-in 140ms var(--ease) both;
+}
+
+@media (min-height: 620px) {
+  .scrim {
+    place-items: center;
+  }
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.panel {
+  width: min(560px, 100%);
+  max-height: min(680px, 88vh);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+  animation: panel-in 180ms var(--ease) both;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.panel__badge {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-wash);
+  border-radius: var(--radius-sm);
+  padding: 3px 7px;
+}
+
+.panel__title {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.panel__close {
+  border: 0;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: color var(--dur) var(--ease);
+}
+
+.panel__close:hover {
+  color: var(--ink);
+}
+
+.panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.panel__footer {
+  border-top: 1px solid var(--line);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.panel__footer:empty {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ chat */
+
+.chat__stream {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.bubble {
+  max-width: 88%;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius);
+  font-size: var(--step--1);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.bubble[data-role="user"] {
+  align-self: flex-end;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-bottom-right-radius: 2px;
+}
+
+.bubble[data-role="assistant"] {
+  align-self: flex-start;
+  background: var(--surface-sunk);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 2px;
+}
+
+.bubble[data-pending="true"] {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.bubble[data-error="true"] {
+  border-color: var(--no);
+  background: var(--no-wash);
+  color: var(--no);
+}
+
+.composer {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-end;
+}
+
+.composer__input,
+.translate__source {
+  flex: 1;
+  width: 100%;
+  resize: none;
+  font-family: var(--font-ui);
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.composer__input::placeholder,
+.translate__source::placeholder {
+  color: var(--ink-faint);
+}
+
+.composer__input:focus,
+.translate__source:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.composer__send {
+  flex: none;
+  padding: 10px 18px;
+}
+
+.composer__send[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.composer__meta {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ------------------------------------------------------------ translator */
+
+.translate__source {
+  min-height: 5.5rem;
+}
+
+.translate__result {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  padding: var(--sp-4);
+}
+
+.translate__resulthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.translate__direction {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  color: var(--brass);
+}
+
+.translate__output {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  min-height: 2.6rem;
+}
+
+.translate__output[data-state="idle"],
+.translate__output[data-state="busy"] {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.translate__output[data-state="error"] {
+  color: var(--no);
+  font-family: var(--font-ui);
+  font-size: var(--step--1);
+  font-style: normal;
+}
+
+.translate__note {
+  margin-top: var(--sp-3);
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.translate__note:empty {
+  display: none;
+}
+
+/* -------------------------------------------------------------- notices */
+
+.notice {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brass);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.notice__title {
+  font-weight: 700;
+  font-size: var(--step-0);
+}
+
+.notice__body {
+  margin-top: var(--sp-2);
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------- top-bar trigger keys */
+
+.keycap {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-muted);
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.keycap:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+@media (max-width: 520px) {
+  .scrim {
+    padding: 0;
+  }
+
+  .panel {
+    width: 100%;
+    max-height: 100vh;
+    height: 100vh;
+    border: 0;
+    border-radius: 0;
+  }
+}
