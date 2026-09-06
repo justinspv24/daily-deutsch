@@ -422,6 +422,271 @@
   margin-top: 0;
 }
 
+/* Chrome that is switched off before sign-in or level choice. */
+.stepper[hidden],
+.account[hidden] {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- loading */
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.loading .lede {
+  margin-top: 0;
+}
+
+.spinner {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 3px solid var(--line-strong);
+  border-top-color: var(--accent);
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ------------------------------------------------------------------ login */
+
+.login__mark {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--sp-5);
+  border-radius: 20px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--accent-ink);
+  background: linear-gradient(135deg, var(--hero-a), var(--hero-b));
+  box-shadow: 0 14px 30px -10px var(--accent-glow), inset 0 1px 0 rgb(255 255 255 / 45%);
+}
+
+.login__points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+}
+
+.login__points li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+}
+
+.login__tick {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: var(--ok);
+}
+
+.login__tick svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 3;
+}
+
+.login__label {
+  display: block;
+  margin-top: var(--sp-6);
+  margin-bottom: var(--sp-2);
+}
+
+.login__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  max-width: 540px;
+}
+
+.login__input {
+  flex: 1 1 240px;
+  font-family: var(--font-ui);
+  font-size: var(--step-0);
+  padding: 14px 16px;
+}
+
+.login__form .btn {
+  flex: none;
+}
+
+.login__status {
+  margin-top: var(--sp-3);
+  min-height: 1.5em;
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+}
+
+.login__status[data-tone="ok"] {
+  color: var(--ok);
+}
+
+.login__status[data-tone="no"] {
+  color: var(--no);
+}
+
+/* ----------------------------------------------------------- level picker */
+
+.levels {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+}
+
+.levelcard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  text-align: left;
+  padding: var(--sp-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+  animation: rise var(--dur-slow) var(--ease) both;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.levelcard:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.levelcard:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.levelcard:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.levelcard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--accent);
+}
+
+.levelcard[data-current="true"] {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.levelcard__code {
+  display: inline-grid;
+  place-items: center;
+  min-width: 52px;
+  height: 52px;
+  padding: 0 12px;
+  border-radius: 16px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.375rem;
+  letter-spacing: -0.02em;
+  color: var(--accent-ink);
+  background: linear-gradient(135deg, var(--hero-a), var(--hero-b));
+  box-shadow: 0 10px 22px -10px var(--accent-glow), inset 0 1px 0 rgb(255 255 255 / 40%);
+}
+
+.levelcard[data-level="B1"] .levelcard__code,
+.levelcard[data-level="B2"] .levelcard__code {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--hero-c), var(--hero-b));
+}
+
+.levelcard__name {
+  margin-top: var(--sp-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-1);
+  letter-spacing: -0.015em;
+}
+
+.levelcard__blurb {
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+  line-height: 1.5;
+}
+
+.levelcard__focus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--sp-2);
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface-sunk);
+  color: var(--ink-muted);
+}
+
+.levelcard__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--sp-3);
+  font-weight: 700;
+  font-size: var(--step--1);
+  color: var(--accent-text);
+}
+
+.levelcard__cta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.levelcard[data-current="true"] .levelcard__cta {
+  color: var(--ok);
+}
+
+.actions--center {
+  justify-content: center;
+  margin-top: 0;
+}
+
+.actions--flush {
+  margin-top: 0;
+}
+
+.account__level {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.account__level .levelcard__code {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  font-size: 1.05rem;
+}
+
 /* ----------------------------------------------------------------- stats */
 
 .stats {
@@ -1417,6 +1682,14 @@ td.is-meta {
 
   .agenda {
     grid-template-columns: 1fr;
+  }
+
+  .levels {
+    grid-template-columns: 1fr;
+  }
+
+  .login__form .btn {
+    flex: 1 1 auto;
   }
 
   .field {

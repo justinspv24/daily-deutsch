@@ -1,6 +1,4 @@
-import { GRAMMAR } from "../data/grammar";
-import { TOPICS } from "../data/topics";
-import { VOCAB } from "../data/vocab";
+import { curriculumFor } from "../data/curriculum";
 import { formatDate, pick, t } from "../i18n";
 import { REVIEW_INTERVALS, daysBetween, todayISO } from "../scheduler";
 import { h } from "./dom";
@@ -11,6 +9,7 @@ const HISTORY_LENGTH = 14;
 
 export function renderProgress(ctx: AppContext): HTMLElement {
   const s = t();
+  const bank = curriculumFor(ctx.progress.level);
   const sessions = ctx.progress.sessions.slice(-HISTORY_LENGTH);
 
   const bars = h("div", { class: "bars", role: "img", "aria-label": s.lastRounds });
@@ -30,7 +29,7 @@ export function renderProgress(ctx: AppContext): HTMLElement {
 
   /* ------------------------------------------------------ vocabulary table */
   const vocabBody = h("tbody");
-  for (const item of VOCAB) {
+  for (const item of bank.vocab) {
     const state = ctx.progress.vocab[item.id];
     const streak = state?.streak ?? 0;
     const dots = h(
@@ -62,7 +61,7 @@ export function renderProgress(ctx: AppContext): HTMLElement {
 
   /* ---------------------------------------------------------- topic table */
   const topicBody = h("tbody");
-  for (const topic of TOPICS) {
+  for (const topic of bank.topics) {
     const state = ctx.progress.topics[topic.id];
     if (!state) continue;
     const finished = state.stage >= REVIEW_INTERVALS.length;
@@ -89,7 +88,7 @@ export function renderProgress(ctx: AppContext): HTMLElement {
     );
   }
 
-  const secure = GRAMMAR.filter((item) => (ctx.progress.grammar[item.id]?.streak ?? 0) >= 2).length;
+  const secure = bank.grammar.filter((item) => (ctx.progress.grammar[item.id]?.streak ?? 0) >= 2).length;
 
   const back = h("button", { class: "btn", type: "button" }, s.backToDrill);
   back.addEventListener("click", () => ctx.go("home"));
@@ -149,7 +148,7 @@ export function renderProgress(ctx: AppContext): HTMLElement {
     h(
       "p",
       { class: "note" },
-      `${s.tablesSecure(secure, GRAMMAR.length)} `,
+      `${s.tablesSecure(secure, bank.grammar.length)} `,
       h("span", {}, s.intervals)
     ),
     h("div", { class: "actions" }, back)

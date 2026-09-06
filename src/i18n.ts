@@ -84,6 +84,22 @@ export interface Strings {
   readonly statAccuracy: string;
   readonly todayPlan: string;
 
+  /* front door */
+  readonly loading: string;
+  readonly loginTitle: string;
+  readonly loginBlurb: string;
+  readonly loginPoints: readonly [string, string, string];
+  readonly sent: string;
+
+  /* level */
+  readonly levelEyebrow: string;
+  readonly levelTitle: string;
+  readonly levelLede: string;
+  readonly levelPick: (code: string) => string;
+  readonly levelCurrent: string;
+  readonly changeLevel: string;
+  readonly yourLevel: string;
+
   /* overlays */
   readonly close: string;
   readonly send: string;
@@ -201,6 +217,26 @@ const de: Strings = {
   statAccuracy: "Trefferquote",
   todayPlan: "Dein Plan für heute",
 
+  loading: "Einen Moment …",
+  loginTitle: "Dein Deutsch. Jeden Tag.",
+  loginBlurb:
+    "Ein Drill pro Tag, der sich merkt, was du falsch machst. Melde dich mit deiner E-Mail an — ganz ohne Passwort.",
+  loginPoints: [
+    "Vokabeln, Tabellen und Wiederholung in 25 Minuten",
+    "Fehler kommen morgen wieder, bis sie sitzen",
+    "Dein Niveau, deine Themen — auf jedem Gerät"
+  ],
+  sent: "Gesendet",
+
+  levelEyebrow: "Dein Niveau",
+  levelTitle: "Wo stehst du?",
+  levelLede:
+    "Wähl dein Niveau. Jedes hat eigene Vokabeln, Tabellen und Themen — du kannst es jederzeit im Konto ändern.",
+  levelPick: (code) => `Mit ${code} starten`,
+  levelCurrent: "dein aktuelles Niveau",
+  changeLevel: "Niveau ändern",
+  yourLevel: "Dein Niveau",
+
   close: "Schließen",
   send: "Senden",
   thinking: "Einen Moment …",
@@ -317,6 +353,26 @@ const en: Strings = {
   statMastered: "mastered",
   statAccuracy: "accuracy",
   todayPlan: "Your plan for today",
+
+  loading: "One moment …",
+  loginTitle: "Your German. Every day.",
+  loginBlurb:
+    "One drill a day that remembers what you get wrong. Sign in with your email — no password at all.",
+  loginPoints: [
+    "Vocabulary, tables and review in 25 minutes",
+    "Mistakes come back tomorrow until they stick",
+    "Your level, your topics — on every device"
+  ],
+  sent: "Sent",
+
+  levelEyebrow: "Your level",
+  levelTitle: "Where do you stand?",
+  levelLede:
+    "Pick your level. Each one has its own vocabulary, tables and topics — you can change it any time in your account.",
+  levelPick: (code) => `Start with ${code}`,
+  levelCurrent: "your current level",
+  changeLevel: "Change level",
+  yourLevel: "Your level",
 
   close: "Close",
   send: "Send",

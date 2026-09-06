@@ -162,6 +162,8 @@ function buildBlankField(body: HTMLElement, task: BlankTask): HTMLInputElement[]
     prompt.append(document.createTextNode(part));
     if (index < parts.length - 1) prompt.append(input);
   });
+  // "Schreib richtig: schule" has no gap in the sentence — the answer goes after it.
+  if (parts.length === 1) prompt.append(document.createTextNode(" "), input);
   body.append(prompt);
   body.append(h("p", { class: "hint", html: pick(task.question.hint) }));
   return [input];

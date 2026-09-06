@@ -1,14 +1,20 @@
 import { sendMagicLink, signOut } from "../auth";
-import { t } from "../i18n";
-import type { Learner } from "../types";
+import { LEVEL_INFO } from "../data/curriculum";
+import { pick, t } from "../i18n";
+import type { Learner, Level } from "../types";
 import { h, ICON_USER, svgIcon } from "./dom";
 import { openPanel, type Overlay } from "./overlay";
+
+export interface AccountHandlers {
+  onSignedOut(): void;
+  onChangeLevel(): void;
+}
 
 /**
  * Sign-in is a link in an e-mail: no password field exists anywhere in this
  * app, so there is nothing here to leak, forget or reset.
  */
-export function openAccount(learner: Learner | null, onSignedOut: () => void): Overlay {
+export function openAccount(learner: Learner | null, level: Level | null, handlers: AccountHandlers): Overlay {
   const s = t();
   const overlay = openPanel({ title: learner ? s.account : s.signInTitle, badge: "@" });
   const avatar = h("span", { class: "account__avatar", "aria-hidden": "true" }, svgIcon(ICON_USER, "account"));
@@ -18,9 +24,16 @@ export function openAccount(learner: Learner | null, onSignedOut: () => void): O
     out.addEventListener("click", () => {
       void signOut().then(() => {
         overlay.close();
-        onSignedOut();
+        handlers.onSignedOut();
       });
     });
+
+    const change = h("button", { class: "btn", type: "button" }, s.changeLevel);
+    change.addEventListener("click", () => {
+      overlay.close();
+      handlers.onChangeLevel();
+    });
+
     overlay.body.append(
       h(
         "div",
@@ -28,13 +41,24 @@ export function openAccount(learner: Learner | null, onSignedOut: () => void): O
         avatar,
         h(
           "div",
-          { class: "notice__text" },
+          {},
           h("p", { class: "notice__title" }, learner.displayName ?? learner.email ?? s.account),
           h("p", { class: "notice__body" }, s.syncedAs(learner.email ?? learner.id.slice(0, 8)))
         )
+      ),
+      h(
+        "div",
+        { class: "notice account__level" },
+        h("span", { class: "levelcard__code" }, level ?? "—"),
+        h(
+          "div",
+          {},
+          h("p", { class: "notice__title" }, s.yourLevel),
+          h("p", { class: "notice__body" }, level ? pick(LEVEL_INFO[level].name) : s.levelEyebrow)
+        )
       )
     );
-    overlay.footer.append(out);
+    overlay.footer.append(h("div", { class: "actions actions--flush" }, change, out));
     return overlay;
   }
 

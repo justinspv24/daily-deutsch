@@ -70,7 +70,8 @@ function expectedAnswers(doc) {
     .map((n) => (n.nodeType === 3 ? n.textContent : "___"))
     .join("");
   const pool = [...DATA.GRAMMAR, ...DATA.TOPICS.flatMap((t) => t.questions)];
-  const match = pool.find((q) => q.sentence === shape);
+  // A sentence without a gap gets its input appended after a space.
+  const match = pool.find((q) => q.sentence === shape || `${q.sentence} ___` === shape);
   if (!match) throw new Error(`unknown sentence: ${JSON.stringify(shape)}`);
   return [match.answers[0]];
 }

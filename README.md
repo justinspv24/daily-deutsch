@@ -4,9 +4,16 @@ A daily German drill for learners working from A1 towards B2: a vocabulary
 check, grammar tables practised as real sentences, and a spaced-repetition
 review that brings back exactly what you got wrong.
 
-Anyone can use it signed out — progress lives in the browser. Sign in and the
-same progress follows you to any device, with whatever you already did merged
-into the account rather than thrown away.
+It is an accounts app: the front door is a magic-link sign-in, and the first
+thing a new learner does is pick a level — A1, A2, B1 or B2. Each level has
+its own vocabulary, table sentences, review topics and "up next" suggestions,
+and the daily suggestion is rotated per learner, so two people at the same
+level are not shown the same thing. Progress is stored per account and follows
+you to any device; the level can be changed at any time from the account panel.
+
+Without Supabase configured (the test suites, a bare checkout) there is no
+sign-in and the drill opens directly on the A2 bank with progress kept in the
+browser.
 
 ```bash
 npm install

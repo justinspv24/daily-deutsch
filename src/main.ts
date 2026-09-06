@@ -7,9 +7,9 @@ import { aiAvailable } from "./ai";
 import { currentLearner, onAuthChange, supabase } from "./auth";
 import { CLOUD_ENABLED } from "./config";
 import { getLang, setLang, t } from "./i18n";
-import { LocalRepository, readLocalProgress } from "./repositories/local";
+import { LocalRepository, clearLocalProgress, readLocalProgress } from "./repositories/local";
 import { SupabaseRepository } from "./repositories/supabase";
-import { mergeProgress, type Repository } from "./repository";
+import { emptyProgress, mergeProgress, seedLevel, type Repository } from "./repository";
 import { advanceTopic, todayISO } from "./scheduler";
 import {
   GRAMMAR_PER_SESSION,
@@ -27,15 +27,23 @@ import type { AppContext, Route } from "./ui/context";
 import { clear } from "./ui/dom";
 import { renderDrill } from "./ui/drill";
 import { renderHome } from "./ui/home";
+import { renderLevel } from "./ui/level";
+import { renderLoading, renderLogin } from "./ui/login";
 import { renderProgress } from "./ui/progress";
 import { buildShell, paintStepper, type Shell } from "./ui/shell";
 import { renderSummary } from "./ui/summary";
 import { openTranslator } from "./ui/translate";
 
+/** How long the boot screen waits for Supabase before falling back to sign-in. */
+const AUTH_TIMEOUT_MS = 8000;
+
+/** Routes without the session stepper — nothing is being drilled yet. */
+const BARE_ROUTES: ReadonlySet<Route> = new Set(["loading", "login", "level"]);
+
 class App {
   private progress: Progress;
   private session: SessionState | null = null;
-  private route: Route = "home";
+  private route: Route;
   private learner: Learner | null = null;
   private repository: Repository = new LocalRepository();
   private shell: Shell;
@@ -47,8 +55,9 @@ class App {
     setLang(getLang());
     initTheme();
 
-    // Start from whatever this browser already knows, so the first paint is
-    // immediate and a signed-out visitor can drill without an account at all.
+    // With an account system behind the app the front door is the sign-in
+    // screen; without one (tests, a bare checkout) the drill is open as before.
+    this.route = CLOUD_ENABLED ? "loading" : "home";
     this.progress = readLocalProgress();
 
     this.shell = buildShell(root, {
@@ -62,7 +71,11 @@ class App {
       },
       onChat: () => openChat(),
       onTranslate: () => openTranslator(),
-      onAccount: () => openAccount(this.learner, () => void this.adoptLearner(null))
+      onAccount: () =>
+        openAccount(this.learner, this.progress.level, {
+          onSignedOut: () => void this.adoptLearner(null, { wipeLocal: true }),
+          onChangeLevel: () => this.context().go("level")
+        })
     });
     this.shell.setLearner(null);
     this.paint();
@@ -78,34 +91,59 @@ class App {
 
   private async restoreSession(): Promise<void> {
     if (!CLOUD_ENABLED) return;
-    const learner = await currentLearner();
-    await this.adoptLearner(learner);
+
+    let timedOut = false;
+    const learner = await Promise.race([
+      currentLearner().catch(() => null),
+      new Promise<null>((resolve) =>
+        setTimeout(() => {
+          timedOut = true;
+          resolve(null);
+        }, AUTH_TIMEOUT_MS)
+      )
+    ]);
+    // A stale mirror from an expired session must not merge into whoever signs
+    // in next; a network timeout, on the other hand, proves nothing.
+    await this.adoptLearner(learner, { wipeLocal: !learner && !timedOut });
+
     onAuthChange((next) => {
       if (next?.id === this.learner?.id) return;
-      void this.adoptLearner(next);
+      void this.adoptLearner(next, { wipeLocal: !next });
     });
   }
 
   /**
-   * Switch storage layers. Signing in merges whatever was played anonymously
-   * into the account rather than discarding it; signing out drops back to the
-   * local copy that is already on this device.
+   * Switch storage layers. Signing in merges whatever this device already
+   * holds into the account; signing out drops back to an empty local copy so
+   * the next person at this browser starts from nothing.
    */
-  private async adoptLearner(learner: Learner | null): Promise<void> {
+  private async adoptLearner(learner: Learner | null, options: { wipeLocal: boolean }): Promise<void> {
     this.learner = learner;
     this.shell.setLearner(learner);
+    this.session = null;
 
     const client = supabase();
     if (!learner || !client) {
       this.repository = new LocalRepository();
-      this.progress = readLocalProgress();
+      if (options.wipeLocal) {
+        clearLocalProgress();
+        this.progress = emptyProgress();
+      } else {
+        this.progress = readLocalProgress();
+      }
+      this.route = this.landing();
       this.paint();
       return;
     }
 
     const cloud = new SupabaseRepository(client, learner.id);
     try {
-      const remote = await cloud.load();
+      const remote = await Promise.race([
+        cloud.load(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("progress load timed out")), AUTH_TIMEOUT_MS)
+        )
+      ]);
       const merged = mergeProgress(this.progress, remote);
       this.repository = cloud;
       this.progress = merged;
@@ -117,7 +155,16 @@ class App {
       // blocking the drill on the network.
       this.repository = new LocalRepository();
     }
+    this.route = this.landing();
     this.paint();
+  }
+
+  /** Where a freshly (un)authenticated learner belongs. */
+  private landing(): Route {
+    if (!CLOUD_ENABLED) return "home";
+    if (!this.learner) return "login";
+    if (!this.progress.level) return "level";
+    return "home";
   }
 
   /* -------------------------------------------------------------- state */
@@ -148,6 +195,14 @@ class App {
         this.session = buildSession(this.progress);
         this.summaryScored = false;
         this.route = this.session.tasks.length > 0 ? "drill" : "home";
+        this.paint();
+      },
+      setLevel: (level) => {
+        this.progress.level = level;
+        seedLevel(this.progress, level);
+        this.persist();
+        this.session = null;
+        this.route = "home";
         this.paint();
       },
       commit: () => this.persist()
@@ -203,11 +258,23 @@ class App {
   private paint(): void {
     if (this.route === "summary") this.scoreSession();
 
-    paintStepper(this.shell.stepper, this.stepperCounts(), this.activeStep());
+    this.shell.setRoute(this.route);
+    if (!BARE_ROUTES.has(this.route)) {
+      paintStepper(this.shell.stepper, this.stepperCounts(), this.activeStep());
+    }
     const ctx = this.context();
     const view = clear(this.shell.view);
 
     switch (this.route) {
+      case "loading":
+        view.append(renderLoading());
+        break;
+      case "login":
+        view.append(renderLogin());
+        break;
+      case "level":
+        view.append(renderLevel(ctx));
+        break;
       case "drill":
         view.append(renderDrill(ctx));
         break;

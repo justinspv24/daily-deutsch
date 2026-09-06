@@ -1,5 +1,4 @@
-import { GRAMMAR } from "./data/grammar";
-import { VOCAB } from "./data/vocab";
+import { curriculumFor } from "./data/curriculum";
 import { consecutiveDays } from "./scheduler";
 import type { Progress } from "./types";
 
@@ -7,7 +6,7 @@ import type { Progress } from "./types";
 export interface Stats {
   /** Consecutive days with at least one finished round. */
   readonly streak: number;
-  /** Words and table sentences that have sat twice in a row. */
+  /** Words and table sentences of the current level that have sat twice in a row. */
   readonly mastered: number;
   readonly masteredTotal: number;
   /** Share of correct answers over the recent rounds; null before the first. */
@@ -17,8 +16,9 @@ export interface Stats {
 const RECENT_ROUNDS = 14;
 
 export function computeStats(progress: Progress): Stats {
-  const words = VOCAB.filter((item) => (progress.vocab[item.id]?.streak ?? 0) >= 2).length;
-  const sentences = GRAMMAR.filter((item) => (progress.grammar[item.id]?.streak ?? 0) >= 2).length;
+  const bank = curriculumFor(progress.level);
+  const words = bank.vocab.filter((item) => (progress.vocab[item.id]?.streak ?? 0) >= 2).length;
+  const sentences = bank.grammar.filter((item) => (progress.grammar[item.id]?.streak ?? 0) >= 2).length;
 
   const recent = progress.sessions.slice(-RECENT_ROUNDS);
   const right = recent.reduce((sum, round) => sum + round.right, 0);
@@ -27,7 +27,7 @@ export function computeStats(progress: Progress): Stats {
   return {
     streak: consecutiveDays(progress.sessions),
     mastered: words + sentences,
-    masteredTotal: VOCAB.length + GRAMMAR.length,
+    masteredTotal: bank.vocab.length + bank.grammar.length,
     accuracy: total > 0 ? Math.round((right / total) * 100) : null
   };
 }

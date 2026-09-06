@@ -23,7 +23,8 @@ export function renderHome(ctx: AppContext): HTMLElement {
   const words = activeVocab(ctx.progress);
   const due = dueTopics(ctx.progress);
   const overdue = due.filter((topic) => (ctx.progress.topics[topic.id]?.due ?? "") < todayISO()).length;
-  const upcoming = suggestedTopic();
+  const upcoming = suggestedTopic(ctx.progress, ctx.learner?.id ?? "");
+  const level = ctx.progress.level;
 
   const rows: Row[] = [
     {
@@ -90,7 +91,7 @@ export function renderHome(ctx: AppContext): HTMLElement {
   const hero = h(
     "section",
     { class: "card hero" },
-    h("p", { class: "eyebrow" }, formatToday()),
+    h("p", { class: "eyebrow" }, level ? `${level} · ${formatToday()}` : formatToday()),
     h("h2", { class: "display" }, s.greeting(ctx.learner?.displayName ?? null)),
     lede,
     h("div", { class: "actions" }, start, progressButton)

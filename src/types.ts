@@ -3,6 +3,9 @@
 export type Lang = "de" | "en";
 export type Theme = "light" | "dark";
 
+/** CEFR band a learner drills at. Each has its own content bank. */
+export type Level = "A1" | "A2" | "B1" | "B2";
+
 /** A string that exists in both interface languages. */
 export type Bilingual = Readonly<Record<Lang, string>>;
 
@@ -78,6 +81,8 @@ export interface SessionRecord {
 
 export interface Progress {
   updatedAt: string;
+  /** Chosen on first sign-in; null until then (the A2 bank is drilled meanwhile). */
+  level: Level | null;
   vocab: Record<string, VocabProgress>;
   grammar: Record<string, GrammarProgress>;
   topics: Record<string, TopicProgress>;

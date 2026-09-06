@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { allCurricula, isLevel } from "../data/curriculum";
 import { normalise, type Repository } from "../repository";
 import { todayISO } from "../scheduler";
 import type { Progress, SessionRecord } from "../types";
@@ -17,7 +18,8 @@ export class SupabaseRepository implements Repository {
   ) {}
 
   async load(): Promise<Progress> {
-    const [vocab, grammar, topics, sessions] = await Promise.all([
+    const [profile, vocab, grammar, topics, sessions] = await Promise.all([
+      this.client.from("profiles").select("level").eq("id", this.userId).maybeSingle(),
       this.client.from("vocab_state").select("word_id, streak, seen, last_date"),
       this.client.from("grammar_state").select("item_id, streak, seen"),
       this.client.from("topic_state").select("topic_id, stage, due, last_date"),
@@ -28,27 +30,35 @@ export class SupabaseRepository implements Repository {
         .limit(400)
     ]);
 
-    const progress = normalise(null);
+    const storedLevel = (profile.data as { level?: unknown } | null)?.level;
+    const progress = normalise({ level: isLevel(storedLevel) ? storedLevel : null });
+
+    // Rows for every level are loaded, not just the current one, so a learner
+    // who switches level and back finds their old streaks where they left them.
+    const known = knownIds();
 
     for (const row of vocab.data ?? []) {
-      const state = progress.vocab[row.word_id as string];
-      if (!state) continue;
-      state.streak = Number(row.streak ?? 0);
-      state.seen = Number(row.seen ?? 0);
-      state.lastDate = (row.last_date as string | null) ?? null;
+      const id = row.word_id as string;
+      if (!known.vocab.has(id)) continue;
+      progress.vocab[id] = {
+        streak: Number(row.streak ?? 0),
+        seen: Number(row.seen ?? 0),
+        lastDate: (row.last_date as string | null) ?? null
+      };
     }
     for (const row of grammar.data ?? []) {
-      const state = progress.grammar[row.item_id as string];
-      if (!state) continue;
-      state.streak = Number(row.streak ?? 0);
-      state.seen = Number(row.seen ?? 0);
+      const id = row.item_id as string;
+      if (!known.grammar.has(id)) continue;
+      progress.grammar[id] = { streak: Number(row.streak ?? 0), seen: Number(row.seen ?? 0) };
     }
     for (const row of topics.data ?? []) {
-      const state = progress.topics[row.topic_id as string];
-      if (!state) continue;
-      state.stage = Number(row.stage ?? 0);
-      state.due = (row.due as string) ?? todayISO();
-      state.lastDate = (row.last_date as string | null) ?? null;
+      const id = row.topic_id as string;
+      if (!known.topics.has(id)) continue;
+      progress.topics[id] = {
+        stage: Number(row.stage ?? 0),
+        due: (row.due as string) ?? todayISO(),
+        lastDate: (row.last_date as string | null) ?? null
+      };
     }
     progress.sessions = (sessions.data ?? []).map((row) => ({
       date: row.played_on as string,
@@ -92,12 +102,16 @@ export class SupabaseRepository implements Repository {
       updated_at: stamp
     }));
 
-    const results = await Promise.all([
+    const writes = [
       this.client.from("vocab_state").upsert(vocabRows, { onConflict: "user_id,word_id" }),
       this.client.from("grammar_state").upsert(grammarRows, { onConflict: "user_id,item_id" }),
       this.client.from("topic_state").upsert(topicRows, { onConflict: "user_id,topic_id" })
-    ]);
+    ];
+    if (progress.level) {
+      writes.push(this.client.from("profiles").update({ level: progress.level }).eq("id", this.userId));
+    }
 
+    const results = await Promise.all(writes);
     const failure = results.find((r) => r.error);
     if (failure?.error) throw new Error(failure.error.message);
   }
@@ -111,4 +125,14 @@ export class SupabaseRepository implements Repository {
     });
     if (error) throw new Error(error.message);
   }
+}
+
+function knownIds(): { vocab: Set<string>; grammar: Set<string>; topics: Set<string> } {
+  const known = { vocab: new Set<string>(), grammar: new Set<string>(), topics: new Set<string>() };
+  for (const bank of allCurricula()) {
+    for (const item of bank.vocab) known.vocab.add(item.id);
+    for (const item of bank.grammar) known.grammar.add(item.id);
+    for (const topic of bank.topics) known.topics.add(topic.id);
+  }
+  return known;
 }

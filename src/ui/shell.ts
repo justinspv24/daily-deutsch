@@ -3,12 +3,15 @@ import { CLOUD_ENABLED, SITE_NAME } from "../config";
 import { getLang, setLang, t } from "../i18n";
 import { getTheme, toggleTheme } from "../theme";
 import type { Lang, Learner } from "../types";
+import type { Route } from "./context";
 import { clear, h, ICON_CHECK, ICON_MOON, ICON_SUN, svgIcon } from "./dom";
 
 export interface Shell {
   readonly stepper: HTMLElement;
   readonly view: HTMLElement;
   setLearner(learner: Learner | null): void;
+  /** Hide the chrome that makes no sense before sign-in or level choice. */
+  setRoute(route: Route): void;
   refreshChrome(): void;
 }
 
@@ -99,6 +102,10 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
         : t().signIn;
       accountButton.dataset["state"] = learner ? "in" : "out";
       accountButton.title = learner ? t().account : t().signInTitle;
+    },
+    setRoute(route) {
+      stepper.hidden = route === "loading" || route === "login" || route === "level";
+      accountButton.hidden = route === "loading" || route === "login";
     },
     refreshChrome() {
       tag.textContent = t().tagline;

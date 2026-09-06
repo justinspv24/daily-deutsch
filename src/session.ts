@@ -1,7 +1,4 @@
-import { GRAMMAR } from "./data/grammar";
-import { TOPICS } from "./data/topics";
-import { UPCOMING } from "./data/topics";
-import { VOCAB } from "./data/vocab";
+import { curriculumFor } from "./data/curriculum";
 import { todayISO } from "./scheduler";
 import type {
   BlankTask,
@@ -26,14 +23,16 @@ function shuffle<T>(items: readonly T[]): T[] {
   return copy;
 }
 
-/** Words still short of two consecutive correct answers. */
+/** Words of the learner's level still short of two consecutive correct answers. */
 export function activeVocab(progress: Progress): VocabItem[] {
-  return VOCAB.filter((item) => (progress.vocab[item.id]?.streak ?? 0) < 2);
+  return curriculumFor(progress.level).vocab.filter(
+    (item) => (progress.vocab[item.id]?.streak ?? 0) < 2
+  );
 }
 
 export function dueTopics(progress: Progress): TopicItem[] {
   const today = todayISO();
-  return TOPICS.filter((topic) => {
+  return curriculumFor(progress.level).topics.filter((topic) => {
     const state = progress.topics[topic.id];
     if (!state) return false;
     return state.stage < 5 && state.due <= today;
@@ -46,7 +45,7 @@ export function dueTopics(progress: Progress): TopicItem[] {
  * mornings in a row never feel identical.
  */
 export function pickGrammar(progress: Progress): GrammarItem[] {
-  return [...GRAMMAR]
+  return [...curriculumFor(progress.level).grammar]
     .map((item) => {
       const state = progress.grammar[item.id];
       const secure = (state?.streak ?? 0) >= 2 ? 0 : 10;
@@ -58,10 +57,21 @@ export function pickGrammar(progress: Progress): GrammarItem[] {
     .map((entry) => entry.item);
 }
 
-/** Rotates daily so step 4 suggests something different each morning. */
-export function suggestedTopic(): UpcomingTopic {
+/**
+ * Rotates daily so step 4 suggests something different each morning — and is
+ * offset per learner, so two people at the same level get different topics on
+ * the same day.
+ */
+export function suggestedTopic(progress: Progress, seed = ""): UpcomingTopic {
+  const list = curriculumFor(progress.level).upcoming;
   const dayNumber = Math.floor(Date.parse(`${todayISO()}T00:00:00Z`) / 86_400_000);
-  return UPCOMING[Math.abs(dayNumber) % UPCOMING.length]!;
+  return list[Math.abs(dayNumber + hashSeed(seed)) % list.length]!;
+}
+
+function hashSeed(seed: string): number {
+  let hash = 0;
+  for (const char of seed) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return hash % 1000;
 }
 
 export function buildSession(progress: Progress): SessionState {
