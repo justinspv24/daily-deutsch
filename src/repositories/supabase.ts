@@ -102,18 +102,22 @@ export class SupabaseRepository implements Repository {
       updated_at: stamp
     }));
 
-    const writes = [
+    const results = await Promise.all([
       this.client.from("vocab_state").upsert(vocabRows, { onConflict: "user_id,word_id" }),
       this.client.from("grammar_state").upsert(grammarRows, { onConflict: "user_id,item_id" }),
       this.client.from("topic_state").upsert(topicRows, { onConflict: "user_id,topic_id" })
-    ];
-    if (progress.level) {
-      writes.push(this.client.from("profiles").update({ level: progress.level }).eq("id", this.userId));
-    }
-
-    const results = await Promise.all(writes);
+    ]);
     const failure = results.find((r) => r.error);
     if (failure?.error) throw new Error(failure.error.message);
+
+    // The level lives on the profile row, which the sign-up trigger created.
+    if (progress.level) {
+      const { error } = await this.client
+        .from("profiles")
+        .update({ level: progress.level })
+        .eq("id", this.userId);
+      if (error) throw new Error(error.message);
+    }
   }
 
   async recordSession(record: SessionRecord): Promise<void> {
