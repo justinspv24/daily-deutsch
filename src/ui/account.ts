@@ -1,7 +1,7 @@
 import { sendMagicLink, signOut } from "../auth";
 import { t } from "../i18n";
 import type { Learner } from "../types";
-import { h } from "./dom";
+import { h, ICON_USER, svgIcon } from "./dom";
 import { openPanel, type Overlay } from "./overlay";
 
 /**
@@ -11,9 +11,10 @@ import { openPanel, type Overlay } from "./overlay";
 export function openAccount(learner: Learner | null, onSignedOut: () => void): Overlay {
   const s = t();
   const overlay = openPanel({ title: learner ? s.account : s.signInTitle, badge: "@" });
+  const avatar = h("span", { class: "account__avatar", "aria-hidden": "true" }, svgIcon(ICON_USER, "account"));
 
   if (learner) {
-    const out = h("button", { class: "btn", type: "button" }, s.signOut);
+    const out = h("button", { class: "btn btn--ghost", type: "button" }, s.signOut);
     out.addEventListener("click", () => {
       void signOut().then(() => {
         overlay.close();
@@ -23,9 +24,14 @@ export function openAccount(learner: Learner | null, onSignedOut: () => void): O
     overlay.body.append(
       h(
         "div",
-        { class: "notice" },
-        h("p", { class: "notice__title" }, learner.displayName ?? learner.email ?? s.account),
-        h("p", { class: "notice__body" }, s.syncedAs(learner.email ?? learner.id.slice(0, 8)))
+        { class: "account__hero" },
+        avatar,
+        h(
+          "div",
+          { class: "notice__text" },
+          h("p", { class: "notice__title" }, learner.displayName ?? learner.email ?? s.account),
+          h("p", { class: "notice__body" }, s.syncedAs(learner.email ?? learner.id.slice(0, 8)))
+        )
       )
     );
     overlay.footer.append(out);
@@ -44,7 +50,7 @@ export function openAccount(learner: Learner | null, onSignedOut: () => void): O
   const status = h("p", { class: "notice__body", role: "status" });
 
   overlay.body.append(
-    h("p", { class: "lede" }, s.signInBlurb),
+    h("div", { class: "account__hero" }, avatar, h("p", { class: "lede" }, s.signInBlurb)),
     h("label", { class: "field" }, h("span", { class: "field__label" }, s.emailLabel), field),
     status
   );

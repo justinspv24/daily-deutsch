@@ -3,7 +3,7 @@ import { CLOUD_ENABLED, SITE_NAME } from "../config";
 import { getLang, setLang, t } from "../i18n";
 import { getTheme, toggleTheme } from "../theme";
 import type { Lang, Learner } from "../types";
-import { clear, h, ICON_MOON, ICON_SUN, svgIcon } from "./dom";
+import { clear, h, ICON_CHECK, ICON_MOON, ICON_SUN, svgIcon } from "./dom";
 
 export interface Shell {
   readonly stepper: HTMLElement;
@@ -23,9 +23,10 @@ export interface ShellHandlers {
 export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
   clear(root);
 
+  const mark = h("div", { class: "wordmark__mark", "aria-hidden": "true" }, "D");
   const name = h("div", { class: "wordmark__name" }, SITE_NAME);
   const tag = h("div", { class: "wordmark__tag" }, t().tagline);
-  const wordmark = h("div", { class: "wordmark" }, name, tag);
+  const wordmark = h("div", { class: "wordmark" }, mark, h("div", { class: "wordmark__text" }, name, tag));
 
   /* language ------------------------------------------------------------ */
   const langGroup = h("div", { class: "segmented", role: "group", "aria-label": t().langLabel });
@@ -72,7 +73,8 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
   translateKey.addEventListener("click", () => handlers.onTranslate());
 
   /* account ------------------------------------------------------------- */
-  const accountButton = h("button", { class: "account", type: "button" }, t().signIn);
+  const accountLabel = h("span", { class: "account__label" }, t().signIn);
+  const accountButton = h("button", { class: "account", type: "button" }, accountLabel);
   accountButton.addEventListener("click", () => handlers.onAccount());
 
   const controls = h("div", { class: "controls" });
@@ -92,7 +94,7 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
     stepper,
     view,
     setLearner(learner) {
-      accountButton.textContent = learner
+      accountLabel.textContent = learner
         ? (learner.displayName ?? learner.email?.split("@")[0] ?? t().account)
         : t().signIn;
       accountButton.dataset["state"] = learner ? "in" : "out";
@@ -109,7 +111,7 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
         langButtons[lang].setAttribute("aria-pressed", String(getLang() === lang));
       });
       foot.textContent = t().footer;
-      if (accountButton.dataset["state"] !== "in") accountButton.textContent = t().signIn;
+      if (accountButton.dataset["state"] !== "in") accountLabel.textContent = t().signIn;
     }
   };
 }
@@ -130,11 +132,14 @@ export function paintStepper(
           : index === activeStep
             ? "active"
             : "idle";
+    const badge = h("div", { class: "stepper__n" });
+    if (state === "done") badge.append(svgIcon(ICON_CHECK, "done"));
+    else badge.append(`0${index + 1}`);
     stepper.append(
       h(
         "div",
         { class: "stepper__item", "data-state": state },
-        h("div", { class: "stepper__n" }, `0${index + 1}`),
+        badge,
         h("div", { class: "stepper__label" }, label),
         h("div", { class: "stepper__meta" }, counts[index] ?? "")
       )

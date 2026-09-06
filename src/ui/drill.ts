@@ -3,7 +3,7 @@ import { getLang, pick, t } from "../i18n";
 import { todayISO } from "../scheduler";
 import type { BlankTask, Task, Verdict, VocabTask } from "../types";
 import type { AppContext } from "./context";
-import { esc, h } from "./dom";
+import { esc, h, ICON_CHECK, ICON_TILDE, ICON_X, svgIcon } from "./dom";
 
 /**
  * One question per screen. Enter checks; Enter again moves on — so a whole
@@ -286,11 +286,16 @@ function gradeBlank(
 }
 
 function buildVerdict(verdict: Verdict, title: string, lines: readonly string[]): HTMLElement {
-  const box = h("div", { class: "verdict", "data-verdict": verdict, role: "status" });
-  box.append(h("p", { class: "verdict__title" }, title));
+  const icon = verdict === "ok" ? ICON_CHECK : verdict === "near" ? ICON_TILDE : ICON_X;
+  const text = h("div", { class: "verdict__text" }, h("p", { class: "verdict__title" }, title));
   for (const line of lines) {
     if (!line) continue;
-    box.append(h("p", { class: "verdict__line", html: line }));
+    text.append(h("p", { class: "verdict__line", html: line }));
   }
-  return box;
+  return h(
+    "div",
+    { class: "verdict", "data-verdict": verdict, role: "status" },
+    h("span", { class: "verdict__icon", "aria-hidden": "true" }, svgIcon(icon, verdict)),
+    text
+  );
 }

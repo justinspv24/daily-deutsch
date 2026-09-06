@@ -5,6 +5,7 @@ import { formatDate, pick, t } from "../i18n";
 import { REVIEW_INTERVALS, daysBetween, todayISO } from "../scheduler";
 import { h } from "./dom";
 import type { AppContext } from "./context";
+import { statsRow } from "./widgets";
 
 const HISTORY_LENGTH = 14;
 
@@ -93,7 +94,7 @@ export function renderProgress(ctx: AppContext): HTMLElement {
   const back = h("button", { class: "btn", type: "button" }, s.backToDrill);
   back.addEventListener("click", () => ctx.go("home"));
 
-  return h(
+  const card = h(
     "section",
     { class: "card" },
     h("p", { class: "eyebrow" }, s.viewProgress),
@@ -153,4 +154,6 @@ export function renderProgress(ctx: AppContext): HTMLElement {
     ),
     h("div", { class: "actions" }, back)
   );
+
+  return h("div", { class: "home" }, statsRow(ctx.progress), card);
 }

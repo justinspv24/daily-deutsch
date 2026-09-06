@@ -7,8 +7,9 @@ import {
   dueTopics,
   suggestedTopic
 } from "../session";
-import { h } from "./dom";
+import { h, ICON_ARROW, svgIcon } from "./dom";
 import type { AppContext } from "./context";
+import { statsRow } from "./widgets";
 
 interface Row {
   title: string;
@@ -65,7 +66,7 @@ export function renderHome(ctx: AppContext): HTMLElement {
         h("span", { class: "agenda__n" }, `0${index + 1}`),
         h(
           "span",
-          {},
+          { class: "agenda__body" },
           h("span", { class: "agenda__title" }, row.title),
           h("span", { class: "agenda__detail" }, row.detail)
         ),
@@ -80,21 +81,24 @@ export function renderHome(ctx: AppContext): HTMLElement {
     lede.append(h("span", { class: "gloss" }, ENGLISH_LEDE));
   }
 
-  const start = h("button", { class: "btn", type: "button" }, s.start);
+  const start = h("button", { class: "btn btn--lg", type: "button" }, s.start, svgIcon(ICON_ARROW, "start"));
   start.addEventListener("click", () => ctx.startSession());
 
   const progressButton = h("button", { class: "btn btn--ghost", type: "button" }, s.viewProgress);
   progressButton.addEventListener("click", () => ctx.go("progress"));
 
-  return h(
+  const hero = h(
     "section",
-    { class: "card" },
+    { class: "card hero" },
     h("p", { class: "eyebrow" }, formatToday()),
     h("h2", { class: "display" }, s.greeting(ctx.learner?.displayName ?? null)),
     lede,
-    agenda,
     h("div", { class: "actions" }, start, progressButton)
   );
+
+  const plan = h("section", { class: "plan" }, h("h3", { class: "sectiontitle" }, s.todayPlan), agenda);
+
+  return h("div", { class: "home" }, hero, statsRow(ctx.progress), plan);
 }
 
 /** Kept verbatim so the German view can gloss it without a second lookup. */

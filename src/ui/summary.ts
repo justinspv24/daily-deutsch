@@ -23,9 +23,8 @@ export function renderSummary(ctx: AppContext): HTMLElement {
       { class: "score" },
       h(
         "div",
-        { class: "score__figure" },
-        String(right),
-        h("span", {}, `/${total}`)
+        { class: "score__ring", style: `--pct:${share}` },
+        h("div", { class: "score__figure" }, String(right), h("span", {}, `/${total}`))
       ),
       h(
         "div",

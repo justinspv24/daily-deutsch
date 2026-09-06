@@ -1,58 +1,75 @@
 /*
-  Tagesdrill design tokens.
+  Daily Deutsch design tokens — "gold on midnight".
 
   Two committed schemes, both switched explicitly by [data-theme] on <html>.
   The bare :root block carries the complete light palette so nothing is ever
   defined only inside a conditional block.
 
-  Palette: an ink-navy accent with a brass hairline, forest green and claret
-  for right and wrong. Neutrals are biased slightly cool so the navy sits in
-  the same family rather than floating on a dead grey.
+  Palette: a warm gold accent (the gold of the flag) on deep ink, with an
+  indigo secondary for information, emerald for right and rose for wrong.
+  The light scheme puts the same system on warm paper.
 */
 
 :root {
+  color-scheme: light;
+
   /* surfaces */
-  --bg: #ecedea;
-  --surface: #f8f8f6;
+  --bg: #f4f3ee;
+  --bg-deep: #ebe9e2;
+  --surface: #faf9f6;
   --surface-raised: #ffffff;
-  --surface-sunk: #e6e7e3;
+  --surface-sunk: #edebe4;
+  --glass: rgb(250 249 246 / 74%);
 
   /* ink */
-  --ink: #15181c;
-  --ink-muted: #5f656d;
-  --ink-faint: #949aa2;
+  --ink: #131419;
+  --ink-muted: #585d6b;
+  --ink-faint: #8d92a0;
 
   /* lines */
-  --line: #dcdedb;
-  --line-strong: #c6c9c5;
+  --line: #e3e1d9;
+  --line-strong: #cdcabf;
 
-  /* brand */
-  --accent: #1e3a5f;
-  --accent-ink: #fbfbfa;
-  --accent-wash: #e5eaf1;
-  --brass: #a8813f;
+  /* brand — gold */
+  --accent: #e8ad2c;
+  --accent-strong: #d3960f;
+  --accent-text: #8a6208;
+  --accent-ink: #1b1505;
+  --accent-wash: #fbf1d4;
+  --accent-glow: rgb(232 173 44 / 32%);
+
+  /* secondary — indigo, for information */
+  --info: #4c5ed6;
+  --info-wash: #e8ebfb;
 
   /* semantics */
-  --ok: #2c6b4c;
-  --ok-wash: #e4efe8;
-  --no: #a03040;
-  --no-wash: #f6e7e9;
-  --near: #9c7526;
-  --near-wash: #f5eddd;
+  --ok: #178f55;
+  --ok-wash: #e0f4e8;
+  --no: #d42f57;
+  --no-wash: #fbe5eb;
+  --near: #b3720a;
+  --near-wash: #faeed6;
+
+  /* hero gradient stops */
+  --hero-a: #ffd36e;
+  --hero-b: #ff9b7c;
+  --hero-c: #8ea2ff;
 
   /* type */
-  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-display: "Bricolage Grotesque", "Manrope", "Segoe UI", system-ui, sans-serif;
   --font-ui: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 
   /* scale */
-  --step--1: 0.8125rem;
+  --step--2: 0.75rem;
+  --step--1: 0.875rem;
   --step-0: 1rem;
   --step-1: 1.1875rem;
   --step-2: 1.5rem;
   --step-3: 2rem;
   --step-4: 2.75rem;
-  --step-5: 3.75rem;
+  --step-5: 3.5rem;
+  --step-6: 4.5rem;
 
   /* space */
   --sp-1: 0.25rem;
@@ -62,41 +79,61 @@
   --sp-5: 1.5rem;
   --sp-6: 2rem;
   --sp-7: 3rem;
+  --sp-8: 4rem;
 
   /* form */
-  --radius: 6px;
-  --radius-sm: 3px;
-  --shadow-card: 0 1px 2px rgb(21 24 28 / 4%), 0 12px 32px -24px rgb(21 24 28 / 45%);
-  --shadow-lift: 0 2px 4px rgb(21 24 28 / 6%), 0 20px 48px -28px rgb(21 24 28 / 55%);
-  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --dur: 180ms;
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-card: 0 1px 2px rgb(24 20 8 / 4%), 0 12px 32px -14px rgb(24 20 8 / 20%);
+  --shadow-lift: 0 4px 10px rgb(24 20 8 / 6%), 0 28px 64px -22px rgb(24 20 8 / 36%);
+  --shadow-btn: 0 8px 20px -8px var(--accent-glow);
+  --ring: 0 0 0 4px var(--accent-glow);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur: 200ms;
+  --dur-slow: 520ms;
 }
 
 :root[data-theme="dark"] {
-  --bg: #0c0e11;
-  --surface: #14171b;
-  --surface-raised: #1a1e23;
-  --surface-sunk: #101317;
+  color-scheme: dark;
 
-  --ink: #e8eaed;
-  --ink-muted: #9aa1aa;
-  --ink-faint: #666d76;
+  --bg: #0a0b10;
+  --bg-deep: #05060a;
+  --surface: #10121a;
+  --surface-raised: #161926;
+  --surface-sunk: #0c0e15;
+  --glass: rgb(12 14 20 / 68%);
 
-  --line: #23272d;
-  --line-strong: #333940;
+  --ink: #f1f2f7;
+  --ink-muted: #a2a8ba;
+  --ink-faint: #656c80;
 
-  --accent: #8fb3e3;
-  --accent-ink: #0c0e11;
-  --accent-wash: #182234;
-  --brass: #c8a463;
+  --line: rgb(255 255 255 / 7%);
+  --line-strong: rgb(255 255 255 / 14%);
 
-  --ok: #6fbf8e;
-  --ok-wash: #14241c;
-  --no: #e07b76;
-  --no-wash: #2a1719;
-  --near: #d3ac60;
-  --near-wash: #241d12;
+  --accent: #f6c453;
+  --accent-strong: #ffd36e;
+  --accent-text: #f6c453;
+  --accent-ink: #1a1405;
+  --accent-wash: rgb(246 196 83 / 12%);
+  --accent-glow: rgb(246 196 83 / 28%);
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 40%), 0 14px 36px -26px rgb(0 0 0 / 90%);
-  --shadow-lift: 0 2px 6px rgb(0 0 0 / 50%), 0 24px 56px -30px rgb(0 0 0 / 95%);
+  --info: #96a7ff;
+  --info-wash: rgb(150 167 255 / 12%);
+
+  --ok: #4ade80;
+  --ok-wash: rgb(74 222 128 / 12%);
+  --no: #fb7185;
+  --no-wash: rgb(251 113 133 / 12%);
+  --near: #fbbf24;
+  --near-wash: rgb(251 191 36 / 12%);
+
+  --hero-a: #f6c453;
+  --hero-b: #ff7a6b;
+  --hero-c: #6b7bff;
+
+  --shadow-card: inset 0 1px 0 rgb(255 255 255 / 4%), 0 14px 40px -18px rgb(0 0 0 / 70%);
+  --shadow-lift: inset 0 1px 0 rgb(255 255 255 / 6%), 0 32px 80px -26px rgb(0 0 0 / 85%);
 }

@@ -79,6 +79,10 @@ export interface Strings {
   readonly langLabel: string;
   readonly footer: string;
   readonly noSessionsYet: string;
+  readonly statStreak: string;
+  readonly statMastered: string;
+  readonly statAccuracy: string;
+  readonly todayPlan: string;
 
   /* overlays */
   readonly close: string;
@@ -192,6 +196,10 @@ const de: Strings = {
   langLabel: "Sprache",
   footer: "Daily Deutsch",
   noSessionsYet: "Noch keine Runde abgeschlossen.",
+  statStreak: "Tage in Folge",
+  statMastered: "gemeistert",
+  statAccuracy: "Trefferquote",
+  todayPlan: "Dein Plan für heute",
 
   close: "Schließen",
   send: "Senden",
@@ -305,6 +313,10 @@ const en: Strings = {
   langLabel: "Language",
   footer: "Daily Deutsch",
   noSessionsYet: "No round completed yet.",
+  statStreak: "day streak",
+  statMastered: "mastered",
+  statAccuracy: "accuracy",
+  todayPlan: "Your plan for today",
 
   close: "Close",
   send: "Send",
