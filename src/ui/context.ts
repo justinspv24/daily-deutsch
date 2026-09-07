@@ -1,6 +1,6 @@
 import type { Learner, Level, Progress, SessionState } from "../types";
 
-export type Route = "loading" | "login" | "level" | "home" | "drill" | "summary" | "progress";
+export type Route = "loading" | "login" | "recovery" | "level" | "home" | "drill" | "summary" | "progress";
 
 /** Everything a view needs from the app shell, and nothing more. */
 export interface AppContext {
@@ -13,6 +13,8 @@ export interface AppContext {
   startSession(): void;
   /** Pick (or change) the level; the content bank switches with it. */
   setLevel(level: Level): void;
+  /** Leave the new-password screen once the password has been saved. */
+  finishRecovery(): void;
   /** Persist after a graded answer. */
   commit(): void;
 }

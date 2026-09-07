@@ -4,8 +4,11 @@ A daily German drill for learners working from A1 towards B2: a vocabulary
 check, grammar tables practised as real sentences, and a spaced-repetition
 review that brings back exactly what you got wrong.
 
-It is an accounts app: the front door is a magic-link sign-in, and the first
-thing a new learner does is pick a level — A1, A2, B1 or B2. Each level has
+It is an accounts app: you create an account with an e-mail address and a
+password, confirm the address through the link Supabase sends, and from then
+on sign in with the password (there is a reset link for when it is forgotten,
+and the account panel lets you change it). The first thing a new learner does
+after that is pick a level — A1, A2, B1 or B2. Each level has
 its own vocabulary, table sentences, review topics and "up next" suggestions,
 and the daily suggestion is rotated per learner, so two people at the same
 level are not shown the same thing. Progress is stored per account and follows

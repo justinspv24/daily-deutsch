@@ -104,7 +104,8 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
       accountButton.title = learner ? t().account : t().signInTitle;
     },
     setRoute(route) {
-      stepper.hidden = route === "loading" || route === "login" || route === "level";
+      stepper.hidden =
+        route === "loading" || route === "login" || route === "recovery" || route === "level";
       accountButton.hidden = route === "loading" || route === "login";
     },
     refreshChrome() {

@@ -89,7 +89,33 @@ export interface Strings {
   readonly loginTitle: string;
   readonly loginBlurb: string;
   readonly loginPoints: readonly [string, string, string];
-  readonly sent: string;
+  readonly signInTab: string;
+  readonly signUpTab: string;
+  readonly password: string;
+  readonly passwordPlaceholder: string;
+  readonly passwordRule: string;
+  readonly showPassword: string;
+  readonly hidePassword: string;
+  readonly signInAction: string;
+  readonly signUpAction: string;
+  readonly forgotPassword: string;
+  readonly resetAction: string;
+  readonly resetBlurb: string;
+  readonly resetSentTitle: string;
+  readonly resetSent: (email: string) => string;
+  readonly confirmTitle: string;
+  readonly confirmSent: (email: string) => string;
+  readonly backToSignIn: string;
+  readonly newPasswordTitle: string;
+  readonly newPasswordBlurb: string;
+  readonly newPasswordAction: string;
+  readonly passwordUpdated: string;
+  readonly changePassword: string;
+  readonly authWrongCredentials: string;
+  readonly authNotConfirmed: string;
+  readonly authAlreadyRegistered: string;
+  readonly authWeakPassword: string;
+  readonly authRateLimit: string;
 
   /* level */
   readonly levelEyebrow: string;
@@ -126,11 +152,8 @@ export interface Strings {
   readonly signOut: string;
   readonly account: string;
   readonly signInTitle: string;
-  readonly signInBlurb: string;
   readonly emailLabel: string;
   readonly emailPlaceholder: string;
-  readonly sendLink: string;
-  readonly linkSent: (email: string) => string;
   readonly badEmail: string;
   readonly signInFailed: string;
   readonly syncedAs: (who: string) => string;
@@ -220,13 +243,41 @@ const de: Strings = {
   loading: "Einen Moment …",
   loginTitle: "Dein Deutsch. Jeden Tag.",
   loginBlurb:
-    "Ein Drill pro Tag, der sich merkt, was du falsch machst. Melde dich mit deiner E-Mail an — ganz ohne Passwort.",
+    "Ein Drill pro Tag, der sich merkt, was du falsch machst. Erstell ein Konto mit E-Mail und Passwort — dein Fortschritt folgt dir auf jedes Gerät.",
   loginPoints: [
     "Vokabeln, Tabellen und Wiederholung in 25 Minuten",
     "Fehler kommen morgen wieder, bis sie sitzen",
     "Dein Niveau, deine Themen — auf jedem Gerät"
   ],
-  sent: "Gesendet",
+  signInTab: "Anmelden",
+  signUpTab: "Konto erstellen",
+  password: "Passwort",
+  passwordPlaceholder: "••••••••",
+  passwordRule:
+    "Mindestens 8 Zeichen. Danach schicken wir dir einen Bestätigungslink — erst damit ist das Konto aktiv.",
+  showPassword: "Passwort anzeigen",
+  hidePassword: "Passwort verbergen",
+  signInAction: "Anmelden",
+  signUpAction: "Konto erstellen",
+  forgotPassword: "Passwort vergessen?",
+  resetAction: "Link senden",
+  resetBlurb: "Gib deine E-Mail ein — wir schicken dir einen Link, mit dem du ein neues Passwort setzen kannst.",
+  resetSentTitle: "Schau in dein Postfach.",
+  resetSent: (email) => `Wir haben einen Link an ${email} geschickt. Öffne ihn und wähl ein neues Passwort.`,
+  confirmTitle: "Fast geschafft.",
+  confirmSent: (email) =>
+    `Wir haben einen Bestätigungslink an ${email} geschickt. Öffne ihn — damit ist dein Konto aktiv und du bist direkt angemeldet.`,
+  backToSignIn: "Zur Anmeldung",
+  newPasswordTitle: "Neues Passwort",
+  newPasswordBlurb: "Wähl ein Passwort mit mindestens 8 Zeichen.",
+  newPasswordAction: "Passwort speichern",
+  passwordUpdated: "Passwort gespeichert.",
+  changePassword: "Passwort ändern",
+  authWrongCredentials: "E-Mail oder Passwort stimmt nicht.",
+  authNotConfirmed: "Bitte bestätige zuerst deine E-Mail-Adresse — schau in dein Postfach.",
+  authAlreadyRegistered: "Für diese E-Mail gibt es schon ein Konto. Melde dich an oder setz das Passwort zurück.",
+  authWeakPassword: "Das Passwort braucht mindestens 8 Zeichen.",
+  authRateLimit: "Zu viele Versuche. Warte kurz und versuch es dann noch einmal.",
 
   levelEyebrow: "Dein Niveau",
   levelTitle: "Wo stehst du?",
@@ -262,12 +313,8 @@ const de: Strings = {
   signOut: "Abmelden",
   account: "Konto",
   signInTitle: "Fortschritt überall",
-  signInBlurb:
-    "Melde dich an, und dein Fortschritt folgt dir auf jedes Gerät. Kein Passwort — du bekommst einen Link per E-Mail.",
   emailLabel: "E-Mail",
   emailPlaceholder: "du@beispiel.de",
-  sendLink: "Link senden",
-  linkSent: (email) => `Link an ${email} geschickt. Öffne ihn auf diesem Gerät.`,
   badEmail: "Diese E-Mail-Adresse sieht nicht richtig aus.",
   signInFailed: "Das hat nicht geklappt. Versuch es bitte noch einmal.",
   syncedAs: (who) => `angemeldet als ${who}`,
@@ -357,13 +404,41 @@ const en: Strings = {
   loading: "One moment …",
   loginTitle: "Your German. Every day.",
   loginBlurb:
-    "One drill a day that remembers what you get wrong. Sign in with your email — no password at all.",
+    "One drill a day that remembers what you get wrong. Create an account with your email and a password — your progress follows you to every device.",
   loginPoints: [
     "Vocabulary, tables and review in 25 minutes",
     "Mistakes come back tomorrow until they stick",
     "Your level, your topics — on every device"
   ],
-  sent: "Sent",
+  signInTab: "Sign in",
+  signUpTab: "Create account",
+  password: "Password",
+  passwordPlaceholder: "••••••••",
+  passwordRule:
+    "At least 8 characters. We then send you a confirmation link — the account is active once you open it.",
+  showPassword: "Show password",
+  hidePassword: "Hide password",
+  signInAction: "Sign in",
+  signUpAction: "Create account",
+  forgotPassword: "Forgot your password?",
+  resetAction: "Send the link",
+  resetBlurb: "Enter your email — we'll send you a link that lets you set a new password.",
+  resetSentTitle: "Check your inbox.",
+  resetSent: (email) => `We've sent a link to ${email}. Open it and choose a new password.`,
+  confirmTitle: "Almost there.",
+  confirmSent: (email) =>
+    `We've sent a confirmation link to ${email}. Open it — that activates your account and signs you straight in.`,
+  backToSignIn: "Back to sign in",
+  newPasswordTitle: "New password",
+  newPasswordBlurb: "Choose a password of at least 8 characters.",
+  newPasswordAction: "Save password",
+  passwordUpdated: "Password saved.",
+  changePassword: "Change password",
+  authWrongCredentials: "That email and password don't match.",
+  authNotConfirmed: "Please confirm your email address first — check your inbox.",
+  authAlreadyRegistered: "There's already an account for this email. Sign in, or reset the password.",
+  authWeakPassword: "The password needs at least 8 characters.",
+  authRateLimit: "Too many attempts. Wait a moment and try again.",
 
   levelEyebrow: "Your level",
   levelTitle: "Where do you stand?",
@@ -398,12 +473,8 @@ const en: Strings = {
   signOut: "Sign out",
   account: "Account",
   signInTitle: "Your progress, everywhere",
-  signInBlurb:
-    "Sign in and your progress follows you to any device. No password — we email you a link.",
   emailLabel: "Email",
   emailPlaceholder: "you@example.com",
-  sendLink: "Send the link",
-  linkSent: (email) => `Link sent to ${email}. Open it on this device.`,
   badEmail: "That email address doesn't look right.",
   signInFailed: "That didn't work. Please try again.",
   syncedAs: (who) => `signed in as ${who}`,

@@ -84,6 +84,11 @@ svg {
   flex: none;
 }
 
+/* The hidden attribute always wins, whatever display the class sets. */
+[hidden] {
+  display: none !important;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;

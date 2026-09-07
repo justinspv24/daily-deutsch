@@ -102,7 +102,8 @@
   color: var(--ink);
 }
 
-.segmented button[aria-pressed="true"] {
+.segmented button[aria-pressed="true"],
+.segmented button[aria-selected="true"] {
   background: var(--surface-raised);
   color: var(--ink);
   box-shadow: var(--shadow-card);
@@ -543,6 +544,136 @@
 
 .login__status[data-tone="no"] {
   color: var(--no);
+}
+
+.login__status:empty {
+  display: none;
+}
+
+.segmented--wide {
+  align-self: flex-start;
+  margin-top: var(--sp-6);
+}
+
+.segmented--wide button {
+  padding: 8px 18px;
+  font-family: var(--font-ui);
+  font-size: var(--step--1);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.login__hint {
+  margin-top: var(--sp-3);
+  max-width: 52ch;
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+}
+
+.login__hint:empty {
+  display: none;
+}
+
+.login__form--stacked {
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-width: 440px;
+}
+
+.login__form--stacked .login__label {
+  margin-top: var(--sp-4);
+  margin-bottom: 0;
+}
+
+.login__form--stacked .login__input {
+  flex: none;
+  width: 100%;
+}
+
+.login__password {
+  position: relative;
+  display: flex;
+}
+
+.login__password .login__input {
+  padding-right: 52px;
+}
+
+.login__reveal {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-faint);
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.login__reveal:hover {
+  color: var(--ink);
+  background: var(--surface-sunk);
+}
+
+.login__reveal svg {
+  width: 18px;
+  height: 18px;
+}
+
+.login__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin-top: var(--sp-4);
+}
+
+.login__link {
+  border: 0;
+  padding: 6px 0;
+  background: transparent;
+  color: var(--accent-text);
+  font-size: var(--step--1);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.login__link:hover {
+  text-decoration-color: currentColor;
+}
+
+.login__done {
+  margin-top: var(--sp-5);
+}
+
+.login__tick--big {
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--sp-4);
+}
+
+.login__tick--big svg {
+  width: 22px;
+  height: 22px;
+}
+
+.login__done-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-2);
+  letter-spacing: -0.02em;
+}
+
+.login__done .lede {
+  margin-top: var(--sp-2);
 }
 
 /* ----------------------------------------------------------- level picker */
@@ -1688,8 +1819,10 @@ td.is-meta {
     grid-template-columns: 1fr;
   }
 
-  .login__form .btn {
+  .login__form .btn,
+  .login__actions .btn {
     flex: 1 1 auto;
+    width: 100%;
   }
 
   .field {

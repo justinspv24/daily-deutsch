@@ -28,7 +28,7 @@ import { clear } from "./ui/dom";
 import { renderDrill } from "./ui/drill";
 import { renderHome } from "./ui/home";
 import { renderLevel } from "./ui/level";
-import { renderLoading, renderLogin } from "./ui/login";
+import { renderLoading, renderLogin, renderRecovery } from "./ui/login";
 import { renderProgress } from "./ui/progress";
 import { buildShell, paintStepper, type Shell } from "./ui/shell";
 import { renderSummary } from "./ui/summary";
@@ -38,13 +38,15 @@ import { openTranslator } from "./ui/translate";
 const AUTH_TIMEOUT_MS = 8000;
 
 /** Routes without the session stepper — nothing is being drilled yet. */
-const BARE_ROUTES: ReadonlySet<Route> = new Set(["loading", "login", "level"]);
+const BARE_ROUTES: ReadonlySet<Route> = new Set(["loading", "login", "recovery", "level"]);
 
 class App {
   private progress: Progress;
   private session: SessionState | null = null;
   private route: Route;
   private learner: Learner | null = null;
+  /** True between a password-reset link landing and the new password being saved. */
+  private recovering = false;
   private repository: Repository = new LocalRepository();
   private shell: Shell;
   private summaryScored = false;
@@ -71,11 +73,14 @@ class App {
       },
       onChat: () => openChat(),
       onTranslate: () => openTranslator(),
-      onAccount: () =>
+      onAccount: () => {
+        if (!this.learner) return;
         openAccount(this.learner, this.progress.level, {
           onSignedOut: () => void this.adoptLearner(null, { wipeLocal: true }),
-          onChangeLevel: () => this.context().go("level")
-        })
+          onChangeLevel: () => this.context().go("level"),
+          onChangePassword: () => this.context().go("recovery")
+        });
+      }
     });
     this.shell.setLearner(null);
     this.paint();
@@ -106,8 +111,17 @@ class App {
     // in next; a network timeout, on the other hand, proves nothing.
     await this.adoptLearner(learner, { wipeLocal: !learner && !timedOut });
 
-    onAuthChange((next) => {
-      if (next?.id === this.learner?.id) return;
+    onAuthChange((next, event) => {
+      // A reset link signs the learner in and announces itself; hold them on
+      // the new-password screen until it has been saved.
+      if (event === "PASSWORD_RECOVERY") this.recovering = true;
+      if (next?.id === this.learner?.id) {
+        if (this.recovering && this.route !== "recovery") {
+          this.route = "recovery";
+          this.paint();
+        }
+        return;
+      }
       void this.adoptLearner(next, { wipeLocal: !next });
     });
   }
@@ -163,6 +177,7 @@ class App {
   private landing(): Route {
     if (!CLOUD_ENABLED) return "home";
     if (!this.learner) return "login";
+    if (this.recovering) return "recovery";
     if (!this.progress.level) return "level";
     return "home";
   }
@@ -203,6 +218,11 @@ class App {
         this.persist();
         this.session = null;
         this.route = "home";
+        this.paint();
+      },
+      finishRecovery: () => {
+        this.recovering = false;
+        this.route = this.landing();
         this.paint();
       },
       commit: () => this.persist()
@@ -271,6 +291,9 @@ class App {
         break;
       case "login":
         view.append(renderLogin());
+        break;
+      case "recovery":
+        view.append(renderRecovery(ctx));
         break;
       case "level":
         view.append(renderLevel(ctx));
