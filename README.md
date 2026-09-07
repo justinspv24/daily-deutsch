@@ -84,10 +84,14 @@ Every push to `main` redeploys; every pull request gets its own preview URL.
 
 ## Turning the assistant on, later
 
-`api/ai.ts` is written and waiting. It backs two things: the `cc` chat with a
-German teacher, and the `tt` translator that detects direction automatically.
-Both stay hidden in the interface until you enable them, which is deliberate —
-they are the only part of this project that costs money.
+`api/ai.ts` is written and waiting. It backs three things: the `cc` chat with
+a German teacher, the `tt` translator that detects direction automatically,
+and the `vv` voice mode — a spoken conversation where the browser listens
+(Web Speech recognition, so Chrome, Edge or Safari) and reads the teacher's
+answer aloud in a German voice with the English line in an English one. Voice
+turns count against the chat limit. Until the endpoint is enabled the three
+buttons open and explain that the assistant is switched off; enabling it is
+deliberate — it is the only part of this project that costs money.
 
 To switch them on, add these to Vercel (no `VITE_` prefix, so they never leave
 the server) and set `VITE_AI_ENABLED=true`:

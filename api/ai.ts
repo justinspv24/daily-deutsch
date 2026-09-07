@@ -19,7 +19,9 @@ interface VercelResponse {
   setHeader(name: string, value: string): void;
 }
 
-type Mode = "chat" | "translate";
+type Mode = "chat" | "translate" | "voice";
+/** What the daily counter is keyed on — voice shares the chat budget. */
+type MeterKind = "chat" | "translate";
 
 interface Turn {
   role: "user" | "assistant";
@@ -29,6 +31,16 @@ interface Turn {
 const MODEL = "claude-haiku-4-5-20251001";
 const MAX_TURNS = 24;
 const MAX_CHARS = 4000;
+
+const VOICE_BRIEF = [
+  "You are a native German teacher with fifty years of experience, talking with your student out loud: warm, patient, precise.",
+  "Your student is an English speaker working from A1 towards B2, and may speak German or English.",
+  "This is a spoken conversation. Reply in at most three short, simple German sentences at their level.",
+  "Then add exactly one final line that begins with EN: and contains, in English, the translation of what you said. Nothing may follow that line.",
+  "If their German contained a mistake, say the corrected sentence first, and put the reason briefly in English inside the EN: line.",
+  "Everything you write is read aloud by a speech synthesiser: no markdown, no lists, no symbols, no emoji, no stage directions.",
+  "Keep the conversation going by ending with a short question when it fits."
+].join(" ");
 
 const TEACHER_BRIEF = [
   "You are a native German teacher with fifty years of experience: patient, precise, encouraging.",
@@ -68,7 +80,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   const body = (req.body ?? {}) as { mode?: Mode; turns?: Turn[]; text?: string };
-  const mode: Mode = body.mode === "translate" ? "translate" : "chat";
+  const mode: Mode = body.mode === "translate" ? "translate" : body.mode === "voice" ? "voice" : "chat";
+  const kind: MeterKind = mode === "translate" ? "translate" : "chat";
 
   const token = bearer(req.headers["authorization"]);
   if (!token) {
@@ -83,11 +96,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   const limit = Number(
-    mode === "chat"
+    kind === "chat"
       ? (process.env["AI_DAILY_CHAT_LIMIT"] ?? 40)
       : (process.env["AI_DAILY_TRANSLATE_LIMIT"] ?? 120)
   );
-  const allowed = await countCall(userId, mode, limit);
+  const allowed = await countCall(userId, kind, limit);
   if (!allowed) {
     res.status(429).json({
       error: "daily_limit",
@@ -98,9 +111,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   try {
     const payload =
-      mode === "chat"
-        ? chatPayload(body.turns ?? [])
-        : translatePayload(String(body.text ?? "").slice(0, MAX_CHARS));
+      mode === "translate"
+        ? translatePayload(String(body.text ?? "").slice(0, MAX_CHARS))
+        : mode === "voice"
+          ? chatPayload(body.turns ?? [], VOICE_BRIEF, 400)
+          : chatPayload(body.turns ?? [], TEACHER_BRIEF, 700);
 
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -137,7 +152,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
 /* ------------------------------------------------------------- payloads */
 
-function chatPayload(turns: Turn[]): unknown {
+function chatPayload(turns: Turn[], system: string, maxTokens: number): unknown {
   const clean = turns
     .filter((turn) => turn && typeof turn.content === "string" && turn.content.trim())
     .slice(-MAX_TURNS)
@@ -152,7 +167,7 @@ function chatPayload(turns: Turn[]): unknown {
     throw new Error("conversation must end with a question");
   }
 
-  return { model: MODEL, max_tokens: 700, system: TEACHER_BRIEF, messages: clean };
+  return { model: MODEL, max_tokens: maxTokens, system, messages: clean };
 }
 
 function translatePayload(text: string): unknown {
@@ -216,7 +231,7 @@ async function verifyUser(token: string): Promise<string | null> {
  * Increment today's counter and report whether the call is within budget.
  * Uses the service-role key, so a learner cannot clear their own quota.
  */
-async function countCall(userId: string, kind: Mode, limit: number): Promise<boolean> {
+async function countCall(userId: string, kind: MeterKind, limit: number): Promise<boolean> {
   const url = process.env["SUPABASE_URL"];
   const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
   // Without a service key there is no counter; fail closed rather than

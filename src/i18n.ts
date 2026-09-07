@@ -147,6 +147,18 @@ export interface Strings {
   readonly aiOffline: string;
   readonly aiFailed: string;
 
+  /* voice */
+  readonly voiceTitle: string;
+  readonly voiceButtonTitle: string;
+  readonly voiceIdle: string;
+  readonly voiceListening: string;
+  readonly voiceSpeaking: string;
+  readonly voiceUnsupported: string;
+  readonly voiceMicDenied: string;
+  readonly voiceNoSpeech: string;
+  readonly voiceHint: string;
+  readonly voiceSpeakIn: string;
+
   /* account */
   readonly signIn: string;
   readonly signOut: string;
@@ -309,6 +321,18 @@ const de: Strings = {
   aiOffline: "Keine Verbindung. Prüf dein Netz und versuch es noch einmal.",
   aiFailed: "Das hat nicht geklappt. Versuch es bitte noch einmal.",
 
+  voiceTitle: "Sprich mit deinem Lehrer",
+  voiceButtonTitle: "Sprachmodus öffnen — zweimal v drücken",
+  voiceIdle: "Mikrofon antippen und sprechen",
+  voiceListening: "Ich höre zu … antippen, wenn du fertig bist",
+  voiceSpeaking: "Zum Unterbrechen antippen",
+  voiceUnsupported:
+    "Dieser Browser unterstützt keine Spracherkennung. Nimm Chrome, Edge oder Safari — oder schreib im Chat (cc).",
+  voiceMicDenied: "Kein Zugriff auf das Mikrofon. Erlaube es in den Browser-Einstellungen und versuch es noch einmal.",
+  voiceNoSpeech: "Ich habe nichts gehört. Tipp das Mikrofon noch einmal an und sprich.",
+  voiceHint: "Sprich Deutsch oder Englisch · Esc schließen",
+  voiceSpeakIn: "Ich spreche",
+
   signIn: "Anmelden",
   signOut: "Abmelden",
   account: "Konto",
@@ -468,6 +492,18 @@ const en: Strings = {
   aiDailyLimit: "That's today's limit. It resets at midnight UTC.",
   aiOffline: "No connection. Check your network and try again.",
   aiFailed: "That didn't work. Please try again.",
+
+  voiceTitle: "Talk with your teacher",
+  voiceButtonTitle: "Open voice mode — press v twice",
+  voiceIdle: "Tap and speak",
+  voiceListening: "Listening … tap when you're done",
+  voiceSpeaking: "Tap to interrupt",
+  voiceUnsupported:
+    "This browser can't recognise speech. Use Chrome, Edge or Safari — or type in the chat (cc).",
+  voiceMicDenied: "No microphone access. Allow it in your browser settings and try again.",
+  voiceNoSpeech: "I didn't hear anything. Tap again and speak.",
+  voiceHint: "Speak German or English · Esc to close",
+  voiceSpeakIn: "I'm speaking",
 
   signIn: "Sign in",
   signOut: "Sign out",

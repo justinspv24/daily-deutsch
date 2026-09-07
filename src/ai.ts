@@ -82,3 +82,9 @@ export async function askTeacher(history: readonly Turn[]): Promise<string> {
 export async function translate(text: string): Promise<Translation> {
   return call<Translation>({ mode: "translate", text });
 }
+
+/** Spoken-style answer: a few short German sentences, then an "EN:" line. */
+export async function askVoice(history: readonly Turn[]): Promise<string> {
+  const { text } = await call<{ text: string }>({ mode: "voice", turns: history });
+  return text;
+}

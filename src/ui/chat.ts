@@ -1,4 +1,4 @@
-import { AiError, askTeacher, type Turn } from "../ai";
+import { AiError, aiAvailable, askTeacher, type Turn } from "../ai";
 import { t } from "../i18n";
 import { h } from "./dom";
 import { openPanel, type Overlay } from "./overlay";
@@ -27,7 +27,10 @@ export function openChat(): Overlay {
   );
 
   for (const turn of history) bubble(stream, turn.role, turn.content);
-  if (history.length === 0) bubble(stream, "assistant", s.chatWelcome);
+  if (history.length === 0) {
+    const opener = bubble(stream, "assistant", aiAvailable() ? s.chatWelcome : s.aiDisabled);
+    if (!aiAvailable()) opener.dataset["error"] = "true";
+  }
   scrollToEnd(stream);
   composer.focus();
 

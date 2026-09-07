@@ -353,6 +353,249 @@
   display: none;
 }
 
+/* ------------------------------------------------------------------ voice */
+
+.voice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.voice__top {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.orb {
+  --orb-size: 132px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--orb-size);
+  height: var(--orb-size);
+  margin-top: var(--sp-3);
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  transition: transform var(--dur) var(--ease-spring);
+}
+
+.orb:hover {
+  transform: scale(1.03);
+}
+
+.orb:active {
+  transform: scale(0.97);
+}
+
+.orb[disabled] {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+
+.orb__core {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  color: var(--accent-ink);
+  background: linear-gradient(145deg, var(--hero-a), var(--hero-b));
+  box-shadow: 0 18px 40px -16px var(--accent-glow), inset 0 1px 0 rgb(255 255 255 / 45%);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.orb__core svg {
+  width: 34px;
+  height: 34px;
+  stroke-width: 2;
+}
+
+.orb__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  transform: scale(0.7);
+}
+
+.orb[data-state="listening"] .orb__ring {
+  animation: orb-pulse 1.6s var(--ease) infinite;
+}
+
+.orb[data-state="listening"] .orb__ring--2 {
+  animation-delay: 0.8s;
+}
+
+.orb[data-state="speaking"] .orb__ring {
+  border-color: var(--info);
+  animation: orb-pulse 1s var(--ease) infinite;
+}
+
+.orb[data-state="speaking"] .orb__ring--2 {
+  animation-delay: 0.5s;
+}
+
+.orb[data-state="speaking"] .orb__core {
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--hero-c), var(--info));
+}
+
+.orb[data-state="thinking"] .orb__core {
+  color: var(--ink);
+  background: var(--surface-sunk);
+  box-shadow: inset 0 0 0 2px var(--line-strong);
+  animation: orb-think 1.2s ease-in-out infinite;
+}
+
+@keyframes orb-pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes orb-think {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.94);
+  }
+}
+
+.voice__status {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-1);
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-wrap: balance;
+  max-width: 34ch;
+}
+
+.voice__live {
+  min-height: 1.5em;
+  color: var(--ink-muted);
+  font-style: italic;
+  text-align: center;
+  max-width: 40ch;
+}
+
+.voice__live:empty {
+  display: none;
+}
+
+.voice__stream {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  max-height: 260px;
+  overflow-y: auto;
+  padding-top: var(--sp-2);
+}
+
+.voice__stream:empty {
+  display: none;
+}
+
+.voice__stream .bubble .gloss {
+  margin-top: 4px;
+}
+
+/* ------------------------------------------------------ phone assistant */
+
+.assist {
+  display: inline-flex;
+  gap: var(--sp-2);
+}
+
+.fab {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.fab__btn {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: var(--shadow-lift);
+  transition: transform var(--dur) var(--ease-spring);
+}
+
+.fab__btn:active {
+  transform: scale(0.94);
+}
+
+.fab__btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.fab__btn--primary {
+  width: 56px;
+  height: 56px;
+  border: 0;
+  color: var(--accent-ink);
+  background: linear-gradient(145deg, var(--hero-a), var(--hero-b));
+  box-shadow: 0 14px 30px -10px var(--accent-glow);
+}
+
+.fab__btn--primary svg {
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 600px) {
+  .assist {
+    display: none;
+  }
+
+  .fab {
+    display: flex;
+  }
+
+  .fab[hidden] {
+    display: none;
+  }
+
+  /* Room below the last card so the floating buttons never sit on a "Prüfen". */
+  .main {
+    padding-bottom: calc(var(--sp-7) + 190px);
+  }
+
+  .voice__stream {
+    max-height: 200px;
+  }
+}
+
 /* ------------------------------------------------- top-bar trigger keys */
 
 .keycap {

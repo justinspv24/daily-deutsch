@@ -3,7 +3,6 @@ import "./styles/base.css";
 import "./styles/components.css";
 import "./styles/overlay.css";
 
-import { aiAvailable } from "./ai";
 import { currentLearner, onAuthChange, supabase } from "./auth";
 import { CLOUD_ENABLED } from "./config";
 import { getLang, setLang, t } from "./i18n";
@@ -33,6 +32,7 @@ import { renderProgress } from "./ui/progress";
 import { buildShell, paintStepper, type Shell } from "./ui/shell";
 import { renderSummary } from "./ui/summary";
 import { openTranslator } from "./ui/translate";
+import { openVoice } from "./ui/voice";
 
 /** How long the boot screen waits for Supabase before falling back to sign-in. */
 const AUTH_TIMEOUT_MS = 8000;
@@ -73,6 +73,7 @@ class App {
       },
       onChat: () => openChat(),
       onTranslate: () => openTranslator(),
+      onVoice: () => openVoice(),
       onAccount: () => {
         if (!this.learner) return;
         openAccount(this.learner, this.progress.level, {
@@ -85,9 +86,9 @@ class App {
     this.shell.setLearner(null);
     this.paint();
 
-    if (aiAvailable()) {
-      registerDoubleTap({ c: () => openChat(), t: () => openTranslator() });
-    }
+    // Always live, so a double-tap explains itself ("not switched on yet")
+    // instead of silently doing nothing when the assistant is off.
+    registerDoubleTap({ c: () => openChat(), t: () => openTranslator(), v: () => openVoice() });
 
     void this.restoreSession();
   }

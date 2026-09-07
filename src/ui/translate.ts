@@ -1,4 +1,4 @@
-import { translate } from "../ai";
+import { aiAvailable, translate } from "../ai";
 import { t } from "../i18n";
 import { describe } from "./chat";
 import { h } from "./dom";
@@ -45,10 +45,16 @@ export function openTranslator(): Overlay {
   source.value = lastInput;
   source.focus();
 
+  if (!aiAvailable()) {
+    output.dataset["state"] = "error";
+    output.textContent = s.aiDisabled;
+  }
+
   let timer: ReturnType<typeof setTimeout> | null = null;
   let latest = 0;
 
   const run = async (): Promise<void> => {
+    if (!aiAvailable()) return;
     const text = source.value.trim();
     lastInput = source.value;
 

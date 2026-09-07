@@ -1,10 +1,19 @@
-import { aiAvailable } from "../ai";
 import { CLOUD_ENABLED, SITE_NAME } from "../config";
 import { getLang, setLang, t } from "../i18n";
 import { getTheme, toggleTheme } from "../theme";
 import type { Lang, Learner } from "../types";
 import type { Route } from "./context";
-import { clear, h, ICON_CHECK, ICON_MOON, ICON_SUN, svgIcon } from "./dom";
+import {
+  clear,
+  h,
+  ICON_CHAT,
+  ICON_CHECK,
+  ICON_MIC,
+  ICON_MOON,
+  ICON_SUN,
+  ICON_TRANSLATE,
+  svgIcon
+} from "./dom";
 
 export interface Shell {
   readonly stepper: HTMLElement;
@@ -20,6 +29,7 @@ export interface ShellHandlers {
   onThemeChange(): void;
   onChat(): void;
   onTranslate(): void;
+  onVoice(): void;
   onAccount(): void;
 }
 
@@ -65,24 +75,30 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
   });
 
   /* assistant ----------------------------------------------------------- */
-  // Only offered when the deployment actually has a model behind it.
+  // Keyboard users get the double-tap keycaps in the top bar; on a phone the
+  // same three actions float bottom-right, where a thumb can reach them.
   const chatKey = h("button", { class: "keycap", type: "button", title: t().chatButtonTitle }, "cc");
+  const translateKey = h("button", { class: "keycap", type: "button", title: t().translateButtonTitle }, "tt");
+  const voiceKey = h("button", { class: "keycap", type: "button", title: t().voiceButtonTitle }, "vv");
   chatKey.addEventListener("click", () => handlers.onChat());
-  const translateKey = h(
-    "button",
-    { class: "keycap", type: "button", title: t().translateButtonTitle },
-    "tt"
-  );
   translateKey.addEventListener("click", () => handlers.onTranslate());
+  voiceKey.addEventListener("click", () => handlers.onVoice());
+  const assist = h("span", { class: "assist" }, chatKey, translateKey, voiceKey);
+
+  const fabChat = h("button", { class: "fab__btn", type: "button" }, svgIcon(ICON_CHAT, "chat"));
+  const fabTranslate = h("button", { class: "fab__btn", type: "button" }, svgIcon(ICON_TRANSLATE, "translate"));
+  const fabVoice = h("button", { class: "fab__btn fab__btn--primary", type: "button" }, svgIcon(ICON_MIC, "voice"));
+  fabChat.addEventListener("click", () => handlers.onChat());
+  fabTranslate.addEventListener("click", () => handlers.onTranslate());
+  fabVoice.addEventListener("click", () => handlers.onVoice());
+  const fab = h("div", { class: "fab" }, fabChat, fabTranslate, fabVoice);
 
   /* account ------------------------------------------------------------- */
   const accountLabel = h("span", { class: "account__label" }, t().signIn);
   const accountButton = h("button", { class: "account", type: "button" }, accountLabel);
   accountButton.addEventListener("click", () => handlers.onAccount());
 
-  const controls = h("div", { class: "controls" });
-  if (aiAvailable()) controls.append(chatKey, translateKey);
-  controls.append(langGroup, themeButton);
+  const controls = h("div", { class: "controls" }, assist, langGroup, themeButton);
   if (CLOUD_ENABLED) controls.append(accountButton);
 
   const topbar = h("header", { class: "topbar" }, wordmark, controls);
@@ -91,7 +107,22 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
   const main = h("main", { class: "main" }, stepper, view);
   const foot = h("footer", { class: "pagefoot" }, t().footer);
 
-  root.append(h("div", { class: "app" }, topbar, main, foot));
+  root.append(h("div", { class: "app" }, topbar, main, foot, fab));
+
+  const paintTitles = (): void => {
+    for (const [button, title] of [
+      [chatKey, t().chatButtonTitle],
+      [translateKey, t().translateButtonTitle],
+      [voiceKey, t().voiceButtonTitle],
+      [fabChat, t().chatTitle],
+      [fabTranslate, t().translateTitle],
+      [fabVoice, t().voiceTitle]
+    ] as const) {
+      button.title = title;
+      button.setAttribute("aria-label", title);
+    }
+  };
+  paintTitles();
 
   return {
     stepper,
@@ -104,14 +135,15 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
       accountButton.title = learner ? t().account : t().signInTitle;
     },
     setRoute(route) {
-      stepper.hidden =
-        route === "loading" || route === "login" || route === "recovery" || route === "level";
-      accountButton.hidden = route === "loading" || route === "login";
+      const bare = route === "loading" || route === "login";
+      stepper.hidden = bare || route === "recovery" || route === "level";
+      accountButton.hidden = bare;
+      assist.hidden = bare;
+      fab.hidden = bare;
     },
     refreshChrome() {
       tag.textContent = t().tagline;
-      chatKey.title = t().chatButtonTitle;
-      translateKey.title = t().translateButtonTitle;
+      paintTitles();
       themeButton.title = t().themeLabel;
       themeButton.setAttribute("aria-label", t().themeLabel);
       langGroup.setAttribute("aria-label", t().langLabel);
