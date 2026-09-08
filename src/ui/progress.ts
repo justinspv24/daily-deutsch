@@ -1,6 +1,9 @@
 import { curriculumFor } from "../data/curriculum";
 import { formatDate, pick, t } from "../i18n";
+import { isCustomId } from "../repository";
 import { REVIEW_INTERVALS, daysBetween, todayISO } from "../scheduler";
+import { allVocab } from "../session";
+import { openAddWord } from "./addword";
 import { h } from "./dom";
 import type { AppContext } from "./context";
 import { statsRow } from "./widgets";
@@ -29,32 +32,50 @@ export function renderProgress(ctx: AppContext): HTMLElement {
 
   /* ------------------------------------------------------ vocabulary table */
   const vocabBody = h("tbody");
-  for (const item of bank.vocab) {
+  for (const item of allVocab(ctx.progress)) {
     const state = ctx.progress.vocab[item.id];
     const streak = state?.streak ?? 0;
+    const own = isCustomId(item.id);
     const dots = h(
       "span",
       { class: "dots" },
       h("i", { "data-on": String(streak >= 1) }),
       h("i", { "data-on": String(streak >= 2) })
     );
+
+    const word = h("td", { class: "is-word" }, item.word);
+    if (own) word.append(h("span", { class: "chip chip--own" }, s.ownWord));
+
+    const last = h(
+      "td",
+      { class: "is-actions" },
+      h(
+        "span",
+        { class: "pill", "data-tone": streak >= 2 ? "mastered" : "due" },
+        streak >= 2 ? s.mastered : s.inDrill
+      )
+    );
+    if (own) {
+      const remove = h(
+        "button",
+        { class: "linkbtn", type: "button", title: s.removeWord, "aria-label": `${s.removeWord}: ${item.word}` },
+        s.removeWord
+      );
+      remove.addEventListener("click", () => {
+        if (confirm(s.removeWordConfirm(item.word))) ctx.removeWord(item.id);
+      });
+      last.append(remove);
+    }
+
     vocabBody.append(
       h(
         "tr",
         {},
-        h("td", { class: "is-word" }, item.word),
+        word,
         h("td", {}, item.en[0] ?? ""),
         h("td", {}, dots),
         h("td", { class: "is-meta" }, state?.lastDate ? formatDate(state.lastDate) : "—"),
-        h(
-          "td",
-          {},
-          h(
-            "span",
-            { class: "pill", "data-tone": streak >= 2 ? "mastered" : "due" },
-            streak >= 2 ? s.mastered : s.inDrill
-          )
-        )
+        last
       )
     );
   }
@@ -92,6 +113,9 @@ export function renderProgress(ctx: AppContext): HTMLElement {
 
   const back = h("button", { class: "btn", type: "button" }, s.backToDrill);
   back.addEventListener("click", () => ctx.go("home"));
+
+  const addWord = h("button", { class: "btn btn--ghost", type: "button" }, s.addWordButton);
+  addWord.addEventListener("click", () => openAddWord((item) => ctx.addWord(item)));
 
   const card = h(
     "section",
@@ -151,7 +175,7 @@ export function renderProgress(ctx: AppContext): HTMLElement {
       `${s.tablesSecure(secure, bank.grammar.length)} `,
       h("span", {}, s.intervals)
     ),
-    h("div", { class: "actions" }, back)
+    h("div", { class: "actions" }, back, addWord)
   );
 
   return h("div", { class: "home" }, statsRow(ctx.progress), card);

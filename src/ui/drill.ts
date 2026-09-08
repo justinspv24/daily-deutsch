@@ -1,6 +1,7 @@
 import { judgeEnglish, judgeGerman } from "../grading";
 import { getLang, pick, t } from "../i18n";
 import { todayISO } from "../scheduler";
+import { nextUnanswered } from "../session";
 import type { BlankTask, Task, Verdict, VocabTask } from "../types";
 import type { AppContext } from "./context";
 import { esc, h, ICON_CHECK, ICON_TILDE, ICON_X, svgIcon } from "./dom";
@@ -32,7 +33,7 @@ export function renderDrill(ctx: AppContext): HTMLElement {
       { class: "rail" },
       h("i", {
         class: "rail__fill",
-        style: `width:${Math.round((session.index / session.tasks.length) * 100)}%`
+        style: `width:${Math.round((session.answered.length / session.tasks.length) * 100)}%`
       })
     ),
     body,
@@ -48,21 +49,22 @@ export function renderDrill(ctx: AppContext): HTMLElement {
     task.kind === "vocab" ? buildVocabFields(body, task) : buildBlankField(body, task);
 
   let graded = false;
-  const advance = (): void => {
-    session.index += 1;
-    ctx.refresh();
-  };
 
   action.addEventListener("click", () => {
     if (graded) {
-      if (session.index + 1 >= session.tasks.length) ctx.go("summary");
-      else advance();
+      const next = nextUnanswered(session, session.index);
+      if (next === -1) ctx.go("summary");
+      else {
+        session.index = next;
+        ctx.refresh();
+      }
       return;
     }
     graded = true;
+    session.answered.push(session.index);
     grade(ctx, task, inputs, body);
     ctx.commit();
-    action.textContent = session.index + 1 >= session.tasks.length ? s.finish : s.next;
+    action.textContent = nextUnanswered(session, session.index) === -1 ? s.finish : s.next;
     action.focus();
   });
 

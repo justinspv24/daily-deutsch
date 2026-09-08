@@ -183,10 +183,34 @@
   align-items: center;
   padding: 10px 12px;
   min-width: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+/* Clickable only while a round is running, and only where work is left. */
+button.stepper__item {
+  cursor: pointer;
+}
+
+button.stepper__item:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+
+button.stepper__item[data-state="done"] {
+  cursor: default;
+  opacity: 0.7;
+}
+
+button.stepper__item[data-state="done"]:hover {
+  transform: none;
+  border-color: var(--line);
 }
 
 .stepper__n {
@@ -818,6 +842,69 @@
   height: 44px;
   border-radius: 13px;
   font-size: 1.05rem;
+}
+
+/* ------------------------------------------------------- add a word form */
+
+.addword {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.addword__row {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  column-gap: var(--sp-3);
+  row-gap: 4px;
+  align-items: center;
+}
+
+.addword__hint {
+  grid-column: 2;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+
+.chip--own {
+  margin-left: var(--sp-3);
+  color: var(--accent-text);
+  background: var(--accent-wash);
+  vertical-align: middle;
+}
+
+td.is-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  white-space: nowrap;
+}
+
+.linkbtn {
+  border: 0;
+  padding: 2px 0;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: var(--step--1);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--dur) var(--ease);
+}
+
+.linkbtn:hover {
+  color: var(--no);
+}
+
+@media (max-width: 720px) {
+  .addword__row {
+    grid-template-columns: 1fr;
+  }
+
+  .addword__hint {
+    grid-column: 1;
+  }
 }
 
 /* ----------------------------------------------------------------- stats */

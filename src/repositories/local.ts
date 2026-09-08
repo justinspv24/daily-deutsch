@@ -1,5 +1,5 @@
 import { normalise, type Repository } from "../repository";
-import type { Progress, SessionRecord } from "../types";
+import type { Progress, SessionRecord, VocabItem } from "../types";
 
 const KEY = "daily-deutsch.progress.v1";
 
@@ -24,6 +24,18 @@ export class LocalRepository implements Repository {
    * the round twice in the history chart and the streak.
    */
   async recordSession(_record: SessionRecord): Promise<void> {
+    /* handled by save() */
+  }
+
+  /**
+   * Also deliberately nothing. Added words live inside the progress document,
+   * so the caller's save() has already written them.
+   */
+  async addWord(_item: VocabItem): Promise<void> {
+    /* handled by save() */
+  }
+
+  async removeWord(_id: string): Promise<void> {
     /* handled by save() */
   }
 }

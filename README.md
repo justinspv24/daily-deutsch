@@ -14,6 +14,16 @@ and the daily suggestion is rotated per learner, so two people at the same
 level are not shown the same thing. Progress is stored per account and follows
 you to any device; the level can be changed at any time from the account panel.
 
+A round has four steps, and they are not a queue: the stepper across the top
+is clickable, so vocabulary, tables and review can be done in any order and
+left half-finished. Each question is graded once however often you pass it.
+
+Alongside the bundled banks, a learner can **add their own words** from the
+home screen or the progress page. An added word is drilled exactly like a bank
+word and leaves the drill after two consecutive fully-correct answers. Those
+live in `custom_vocab`, one row per learner, so they sync across devices and
+stay private.
+
 Without Supabase configured (the test suites, a bare checkout) there is no
 sign-in and the drill opens directly on the A2 bank with progress kept in the
 browser.
@@ -34,12 +44,13 @@ Three services, in this order. Nothing here needs a paid plan.
 1. [supabase.com](https://supabase.com) → **New project**. Pick a region near
    your users (`eu-central-1` for Germany). Save the database password
    somewhere safe; you will not need it for this app.
-2. **SQL Editor** → paste `supabase/migrations/0001_init.sql` → **Run**. That
+2. **SQL Editor** → run every file in `supabase/migrations/` in order. That
    creates the tables, the sign-up trigger, and the row-level security
    policies that keep each learner's rows private.
-3. **Authentication → Providers → Email**: turn on *Email*, and leave
-   *Confirm email* on. Turn **off** *Enable email provider password*, since
-   this app only uses magic links.
+3. **Authentication → Providers → Email**: turn on *Email*, leave *Confirm
+   email* on, and leave *Enable email provider password* on — accounts here
+   are an address plus a password, and the confirmation link is what activates
+   them.
 4. **Authentication → URL Configuration**: set *Site URL* to your Vercel
    domain once you have it, and add `http://localhost:5173` to *Redirect URLs*
    so sign-in works while developing.
@@ -126,7 +137,7 @@ api/ai.ts              serverless endpoint: the only place the API key exists
 src/
   main.ts              app controller — routes, session lifecycle, storage switching
   config.ts            build-time environment, and what does not reach the browser
-  auth.ts              Supabase client, magic-link sign-in, session changes
+  auth.ts              Supabase client, password sign-up/in/reset, session changes
   repository.ts        storage interface + the merge that runs on first sign-in
   repositories/        local (this browser) and supabase (this learner)
   ai.ts                client half of /api/ai
@@ -135,9 +146,10 @@ src/
   session.ts           builds a round: which words, sentences and topics
   i18n.ts              the whole interface in German and English
   theme.ts             light/dark, stored, applied before first paint
-  shortcuts.ts         cc / tt double-tap detection
-  data/                the question banks
-  ui/                  shell, home, drill, summary, progress, account, overlays
+  shortcuts.ts         cc / tt / vv double-tap detection
+  data/                the question banks, one per level
+  ui/                  shell, login, level, home, drill, summary, progress,
+                       addword, account, chat, translate, voice
   styles/              tokens → base → components → overlay
 supabase/migrations/   the schema, including row-level security
 test/

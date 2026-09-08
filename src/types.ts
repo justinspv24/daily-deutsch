@@ -83,6 +83,8 @@ export interface Progress {
   updatedAt: string;
   /** Chosen on first sign-in; null until then (the A2 bank is drilled meanwhile). */
   level: Level | null;
+  /** Words the learner added themselves. Drilled alongside the level's bank. */
+  custom: VocabItem[];
   vocab: Record<string, VocabProgress>;
   grammar: Record<string, GrammarProgress>;
   topics: Record<string, TopicProgress>;
@@ -129,6 +131,11 @@ export interface ResultRow {
 export interface SessionState {
   tasks: Task[];
   index: number;
+  /** Indices of tasks already graded, so a revisited question is never counted twice. */
+  answered: number[];
   results: ResultRow[];
   topicHits: Record<string, { right: number; wrong: number }>;
 }
+
+/** How one of the four session steps is drawn in the stepper. */
+export type StepState = "idle" | "active" | "done";

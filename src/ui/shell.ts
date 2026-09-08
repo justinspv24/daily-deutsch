@@ -1,7 +1,7 @@
 import { CLOUD_ENABLED, SITE_NAME } from "../config";
 import { getLang, setLang, t } from "../i18n";
 import { getTheme, toggleTheme } from "../theme";
-import type { Lang, Learner } from "../types";
+import type { Lang, Learner, StepState } from "../types";
 import type { Route } from "./context";
 import {
   clear,
@@ -156,33 +156,46 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
   };
 }
 
-/** The four-step session plan, rendered as the progress rail. */
+/**
+ * The four-step session plan. During a round each step with unanswered
+ * questions is a button, so the learner can move between vocabulary, tables
+ * and review in any order instead of being held at the first one.
+ */
 export function paintStepper(
   stepper: HTMLElement,
   counts: readonly [string, string, string, string],
-  activeStep: number | null
+  states: readonly StepState[],
+  onSelect: ((step: number) => void) | null
 ): void {
   clear(stepper);
   t().steps.forEach((label, index) => {
-    const state =
-      activeStep === null
-        ? "idle"
-        : index < activeStep
-          ? "done"
-          : index === activeStep
-            ? "active"
-            : "idle";
+    const state = states[index] ?? "idle";
     const badge = h("div", { class: "stepper__n" });
     if (state === "done") badge.append(svgIcon(ICON_CHECK, "done"));
     else badge.append(`0${index + 1}`);
-    stepper.append(
-      h(
-        "div",
-        { class: "stepper__item", "data-state": state },
-        badge,
-        h("div", { class: "stepper__label" }, label),
-        h("div", { class: "stepper__meta" }, counts[index] ?? "")
-      )
+
+    const body = [
+      badge,
+      h("div", { class: "stepper__label" }, label),
+      h("div", { class: "stepper__meta" }, counts[index] ?? "")
+    ];
+
+    if (!onSelect) {
+      stepper.append(h("div", { class: "stepper__item", "data-state": state }, ...body));
+      return;
+    }
+    const item = h(
+      "button",
+      {
+        class: "stepper__item",
+        type: "button",
+        "data-state": state,
+        title: t().jumpToStep(label),
+        "aria-current": state === "active" ? "step" : undefined
+      },
+      ...body
     );
+    item.addEventListener("click", () => onSelect(index));
+    stepper.append(item);
   });
 }

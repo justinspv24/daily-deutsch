@@ -5,6 +5,7 @@ import type {
   GrammarItem,
   Progress,
   SessionState,
+  StepState,
   Task,
   TopicItem,
   UpcomingTopic,
@@ -23,11 +24,14 @@ function shuffle<T>(items: readonly T[]): T[] {
   return copy;
 }
 
-/** Words of the learner's level still short of two consecutive correct answers. */
+/** Every word in play for this learner: the level's bank plus their own additions. */
+export function allVocab(progress: Progress): VocabItem[] {
+  return [...curriculumFor(progress.level).vocab, ...progress.custom];
+}
+
+/** Words still short of two consecutive correct answers. */
 export function activeVocab(progress: Progress): VocabItem[] {
-  return curriculumFor(progress.level).vocab.filter(
-    (item) => (progress.vocab[item.id]?.streak ?? 0) < 2
-  );
+  return allVocab(progress).filter((item) => (progress.vocab[item.id]?.streak ?? 0) < 2);
 }
 
 export function dueTopics(progress: Progress): TopicItem[] {
@@ -107,5 +111,37 @@ export function buildSession(progress: Progress): SessionState {
     }
   }
 
-  return { tasks, index: 0, results: [], topicHits };
+  return { tasks, index: 0, answered: [], results: [], topicHits };
+}
+
+/** First task of a step the learner has not answered yet, or -1 if there is none. */
+export function firstUnanswered(session: SessionState, step: number): number {
+  return session.tasks.findIndex((task, index) => task.step === step && !session.answered.includes(index));
+}
+
+/**
+ * Next unanswered task after `from`, wrapping to the beginning so skipping a
+ * step never strands the questions that were skipped. -1 once none are left.
+ */
+export function nextUnanswered(session: SessionState, from: number): number {
+  const total = session.tasks.length;
+  for (let step = 1; step <= total; step += 1) {
+    const index = (from + step) % total;
+    if (!session.answered.includes(index)) return index;
+  }
+  return -1;
+}
+
+/** How each of the four steps is drawn while a round is in progress. */
+export function stepStates(session: SessionState): readonly StepState[] {
+  const current = session.tasks[session.index]?.step ?? null;
+  return [0, 1, 2, 3].map((step) => {
+    if (step === current) return "active";
+    const indices = session.tasks.reduce<number[]>((found, task, index) => {
+      if (task.step === step) found.push(index);
+      return found;
+    }, []);
+    if (indices.length > 0 && indices.every((index) => session.answered.includes(index))) return "done";
+    return "idle";
+  });
 }

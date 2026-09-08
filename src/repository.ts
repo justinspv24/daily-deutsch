@@ -1,6 +1,14 @@
 import { DEFAULT_LEVEL, allCurricula, curriculumFor, isLevel } from "./data/curriculum";
 import { todayISO } from "./scheduler";
-import type { GrammarProgress, Level, Progress, SessionRecord, TopicProgress, VocabProgress } from "./types";
+import type {
+  GrammarProgress,
+  Level,
+  Progress,
+  SessionRecord,
+  TopicProgress,
+  VocabItem,
+  VocabProgress
+} from "./types";
 
 /**
  * Everything the app needs from storage. Two implementations satisfy it —
@@ -17,6 +25,14 @@ export interface Repository {
    * this as a no-op rather than writing the round a second time.
    */
   recordSession(record: SessionRecord): Promise<void>;
+  /** Persist a learner-added word. The local store keeps it inside the progress document. */
+  addWord(item: VocabItem): Promise<void>;
+  removeWord(id: string): Promise<void>;
+}
+
+/** True for ids minted by the "add a word" panel, as opposed to the bundled banks. */
+export function isCustomId(id: string): boolean {
+  return id.startsWith("cv_");
 }
 
 /* -------------------------------------------------------------- defaults */
@@ -25,6 +41,7 @@ export function emptyProgress(level: Level | null = null): Progress {
   const progress: Progress = {
     updatedAt: new Date().toISOString(),
     level,
+    custom: [],
     vocab: {},
     grammar: {},
     topics: {},
@@ -55,14 +72,21 @@ export function normalise(raw: unknown): Progress {
   const input = raw as Partial<Progress>;
   const level = isLevel(input.level) ? input.level : null;
 
+  const custom = Array.isArray(input.custom) ? input.custom.filter(isVocabItem) : [];
   const merged: Progress = {
     updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : new Date().toISOString(),
     level,
+    custom,
     vocab: {},
     grammar: {},
     topics: {},
     sessions: Array.isArray(input.sessions) ? input.sessions.filter(isSessionRecord) : []
   };
+
+  // Added words are drilled like bank words, so they get the same state.
+  for (const item of custom) {
+    merged.vocab[item.id] = { streak: 0, seen: 0, lastDate: null, ...(input.vocab?.[item.id] ?? {}) };
+  }
 
   for (const bank of allCurricula()) {
     const current = bank.level === (level ?? DEFAULT_LEVEL);
@@ -84,6 +108,23 @@ export function normalise(raw: unknown): Progress {
   return merged;
 }
 
+export function isVocabItem(value: unknown): value is VocabItem {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Partial<VocabItem>;
+  return (
+    typeof v.id === "string" &&
+    (v.kind === "verb" || v.kind === "noun") &&
+    typeof v.word === "string" &&
+    typeof v.key === "string" &&
+    Array.isArray(v.en) &&
+    v.en.length > 0 &&
+    Array.isArray(v.form) &&
+    v.form.length > 0 &&
+    typeof v.note === "object" &&
+    v.note !== null
+  );
+}
+
 function isSessionRecord(value: unknown): value is SessionRecord {
   if (!value || typeof value !== "object") return false;
   const r = value as Record<string, unknown>;
@@ -100,7 +141,17 @@ function isSessionRecord(value: unknown): value is SessionRecord {
  * item, because losing a hard-won streak is worse than keeping an easy one.
  */
 export function mergeProgress(local: Progress, remote: Progress): Progress {
-  const merged = normalise({ ...remote, level: remote.level ?? local.level });
+  // Added words are a union: a word created on one device must survive
+  // signing in on another, whichever side the account already knew about.
+  const custom = [...remote.custom];
+  const seenWords = new Set(custom.map((item) => item.id));
+  for (const item of local.custom) {
+    if (!seenWords.has(item.id)) {
+      custom.push(item);
+      seenWords.add(item.id);
+    }
+  }
+  const merged = normalise({ ...remote, custom, level: remote.level ?? local.level });
 
   for (const [id, localState] of Object.entries(local.vocab)) {
     const remoteState = merged.vocab[id];

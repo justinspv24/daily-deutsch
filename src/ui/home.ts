@@ -7,6 +7,7 @@ import {
   dueTopics,
   suggestedTopic
 } from "../session";
+import { openAddWord } from "./addword";
 import { h, ICON_ARROW, svgIcon } from "./dom";
 import type { AppContext } from "./context";
 import { statsRow } from "./widgets";
@@ -88,13 +89,16 @@ export function renderHome(ctx: AppContext): HTMLElement {
   const progressButton = h("button", { class: "btn btn--ghost", type: "button" }, s.viewProgress);
   progressButton.addEventListener("click", () => ctx.go("progress"));
 
+  const addButton = h("button", { class: "btn btn--ghost", type: "button" }, s.addWordButton);
+  addButton.addEventListener("click", () => openAddWord((item) => ctx.addWord(item)));
+
   const hero = h(
     "section",
     { class: "card hero" },
     h("p", { class: "eyebrow" }, level ? `${level} · ${formatToday()}` : formatToday()),
     h("h2", { class: "display" }, s.greeting(ctx.learner?.displayName ?? null)),
     lede,
-    h("div", { class: "actions" }, start, progressButton)
+    h("div", { class: "actions" }, start, progressButton, addButton)
   );
 
   const plan = h("section", { class: "plan" }, h("h3", { class: "sectiontitle" }, s.todayPlan), agenda);

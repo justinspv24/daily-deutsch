@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { allCurricula, isLevel } from "../data/curriculum";
-import { normalise, type Repository } from "../repository";
+import { isVocabItem, normalise, type Repository } from "../repository";
 import { todayISO } from "../scheduler";
-import type { Progress, SessionRecord } from "../types";
+import type { Progress, SessionRecord, VocabItem } from "../types";
 
 /**
  * Progress kept in Postgres, one row per learner per item. Row-level security
@@ -18,8 +18,12 @@ export class SupabaseRepository implements Repository {
   ) {}
 
   async load(): Promise<Progress> {
-    const [profile, vocab, grammar, topics, sessions] = await Promise.all([
+    const [profile, custom, vocab, grammar, topics, sessions] = await Promise.all([
       this.client.from("profiles").select("level").eq("id", this.userId).maybeSingle(),
+      this.client
+        .from("custom_vocab")
+        .select("id, kind, word, key, en, form, note_de, note_en")
+        .order("created_at", { ascending: true }),
       this.client.from("vocab_state").select("word_id, streak, seen, last_date"),
       this.client.from("grammar_state").select("item_id, streak, seen"),
       this.client.from("topic_state").select("topic_id, stage, due, last_date"),
@@ -31,11 +35,13 @@ export class SupabaseRepository implements Repository {
     ]);
 
     const storedLevel = (profile.data as { level?: unknown } | null)?.level;
-    const progress = normalise({ level: isLevel(storedLevel) ? storedLevel : null });
+    const added = (custom.data ?? []).map(toVocabItem).filter(isVocabItem);
+    const progress = normalise({ level: isLevel(storedLevel) ? storedLevel : null, custom: added });
 
     // Rows for every level are loaded, not just the current one, so a learner
     // who switches level and back finds their old streaks where they left them.
     const known = knownIds();
+    for (const item of added) known.vocab.add(item.id);
 
     for (const row of vocab.data ?? []) {
       const id = row.word_id as string;
@@ -129,6 +135,43 @@ export class SupabaseRepository implements Repository {
     });
     if (error) throw new Error(error.message);
   }
+
+  async addWord(item: VocabItem): Promise<void> {
+    const { error } = await this.client.from("custom_vocab").insert({
+      id: item.id,
+      user_id: this.userId,
+      kind: item.kind,
+      word: item.word,
+      key: item.key,
+      en: [...item.en],
+      form: [...item.form],
+      note_de: item.note.de || null,
+      note_en: item.note.en || null
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  async removeWord(id: string): Promise<void> {
+    const { error } = await this.client.from("custom_vocab").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    // The progress row would otherwise linger and be loaded back as a ghost.
+    await this.client.from("vocab_state").delete().eq("word_id", id);
+  }
+}
+
+function toVocabItem(row: Record<string, unknown>): VocabItem {
+  return {
+    id: String(row["id"] ?? ""),
+    kind: row["kind"] === "verb" ? "verb" : "noun",
+    word: String(row["word"] ?? ""),
+    key: String(row["key"] ?? ""),
+    en: Array.isArray(row["en"]) ? (row["en"] as string[]) : [],
+    form: Array.isArray(row["form"]) ? (row["form"] as string[]) : [],
+    note: {
+      de: typeof row["note_de"] === "string" ? row["note_de"] : "",
+      en: typeof row["note_en"] === "string" ? row["note_en"] : ""
+    }
+  };
 }
 
 function knownIds(): { vocab: Set<string>; grammar: Set<string>; topics: Set<string> } {

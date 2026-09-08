@@ -15,11 +15,13 @@ import {
   TOPICS_PER_SESSION,
   activeVocab,
   buildSession,
-  dueTopics
+  dueTopics,
+  firstUnanswered,
+  stepStates as computeStepStates
 } from "./session";
 import { registerDoubleTap } from "./shortcuts";
 import { initTheme } from "./theme";
-import type { Learner, Progress, SessionState } from "./types";
+import type { Learner, Progress, SessionState, StepState } from "./types";
 import { openAccount } from "./ui/account";
 import { openChat } from "./ui/chat";
 import type { AppContext, Route } from "./ui/context";
@@ -226,6 +228,25 @@ class App {
         this.route = this.landing();
         this.paint();
       },
+      addWord: (item) => {
+        this.progress.custom.push(item);
+        this.progress.vocab[item.id] = { streak: 0, seen: 0, lastDate: null };
+        this.persist();
+        void this.repository.addWord(item).catch(() => {
+          /* the local mirror has it; the next sign-in merge will carry it */
+        });
+        this.paint();
+      },
+      removeWord: (id) => {
+        this.progress.custom = this.progress.custom.filter((item) => item.id !== id);
+        delete this.progress.vocab[id];
+        this.persist();
+        void this.repository.removeWord(id).catch(() => {
+          /* gone locally; the row is cleaned up on the next successful call */
+        });
+        this.paint();
+      },
+      jumpToStep: (step) => this.jumpToStep(step),
       commit: () => this.persist()
     };
   }
@@ -268,12 +289,20 @@ class App {
     ];
   }
 
-  private activeStep(): number | null {
-    if (this.route === "drill" && this.session) {
-      return this.session.tasks[this.session.index]?.step ?? null;
-    }
-    if (this.route === "summary") return 3;
-    return null;
+  private stepStates(): readonly StepState[] {
+    if (this.route === "summary") return ["done", "done", "done", "active"];
+    if (this.route === "drill" && this.session) return computeStepStates(this.session);
+    return ["idle", "idle", "idle", "idle"];
+  }
+
+  /** Move to the first unanswered question of a step; ignored once it is finished. */
+  private jumpToStep(step: number): void {
+    const session = this.session;
+    if (!session) return;
+    const index = firstUnanswered(session, step);
+    if (index === -1) return;
+    session.index = index;
+    this.paint();
   }
 
   private paint(): void {
@@ -281,7 +310,13 @@ class App {
 
     this.shell.setRoute(this.route);
     if (!BARE_ROUTES.has(this.route)) {
-      paintStepper(this.shell.stepper, this.stepperCounts(), this.activeStep());
+      const drilling = this.route === "drill" && this.session !== null;
+      paintStepper(
+        this.shell.stepper,
+        this.stepperCounts(),
+        this.stepStates(),
+        drilling ? (step) => this.jumpToStep(step) : null
+      );
     }
     const ctx = this.context();
     const view = clear(this.shell.view);

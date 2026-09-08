@@ -83,6 +83,27 @@ export interface Strings {
   readonly statMastered: string;
   readonly statAccuracy: string;
   readonly todayPlan: string;
+  readonly jumpToStep: (label: string) => string;
+
+  /* learner-added vocabulary */
+  readonly addWordButton: string;
+  readonly addWordTitle: string;
+  readonly addWordKind: string;
+  readonly addWordWord: string;
+  readonly addWordWordPlaceholder: string;
+  readonly addWordNote: string;
+  readonly addWordNotePlaceholder: string;
+  readonly addWordCommaHint: string;
+  readonly addWordAction: string;
+  readonly addWordNeedWord: string;
+  readonly addWordNeedArticle: string;
+  readonly addWordNeedAuxiliary: string;
+  readonly addWordNeedMeaning: string;
+  readonly addWordNeedPlural: string;
+  readonly addWordNeedParticiple: string;
+  readonly ownWord: string;
+  readonly removeWord: string;
+  readonly removeWordConfirm: (word: string) => string;
 
   /* front door */
   readonly loading: string;
@@ -251,6 +272,26 @@ const de: Strings = {
   statMastered: "gemeistert",
   statAccuracy: "Trefferquote",
   todayPlan: "Dein Plan für heute",
+  jumpToStep: (label) => `Zu „${label}“ springen`,
+
+  addWordButton: "Wort hinzufügen",
+  addWordTitle: "Eigenes Wort hinzufügen",
+  addWordKind: "Wortart",
+  addWordWord: "Wort",
+  addWordWordPlaceholder: "Ärztin",
+  addWordNote: "Notiz (optional)",
+  addWordNotePlaceholder: "Weibliche Formen auf -in bilden den Plural auf -innen.",
+  addWordCommaHint: "Mehrere Antworten mit Komma trennen",
+  addWordAction: "Hinzufügen",
+  addWordNeedWord: "Schreib zuerst das Wort.",
+  addWordNeedArticle: "Der Artikel muss der, die oder das sein.",
+  addWordNeedAuxiliary: "Das Hilfsverb muss sein oder haben sein.",
+  addWordNeedMeaning: "Gib mindestens eine englische Bedeutung an.",
+  addWordNeedPlural: "Gib den Plural an.",
+  addWordNeedParticiple: "Gib das Partizip II an.",
+  ownWord: "eigenes Wort",
+  removeWord: "Entfernen",
+  removeWordConfirm: (word) => `„${word}“ aus dem Drill entfernen?`,
 
   loading: "Einen Moment …",
   loginTitle: "Dein Deutsch. Jeden Tag.",
@@ -424,6 +465,26 @@ const en: Strings = {
   statMastered: "mastered",
   statAccuracy: "accuracy",
   todayPlan: "Your plan for today",
+  jumpToStep: (label) => `Jump to "${label}"`,
+
+  addWordButton: "Add a word",
+  addWordTitle: "Add your own word",
+  addWordKind: "Word type",
+  addWordWord: "Word",
+  addWordWordPlaceholder: "Ärztin",
+  addWordNote: "Note (optional)",
+  addWordNotePlaceholder: "Feminine forms ending in -in take -innen in the plural.",
+  addWordCommaHint: "Separate several answers with commas",
+  addWordAction: "Add",
+  addWordNeedWord: "Write the word first.",
+  addWordNeedArticle: "The article must be der, die or das.",
+  addWordNeedAuxiliary: "The auxiliary must be sein or haben.",
+  addWordNeedMeaning: "Give at least one English meaning.",
+  addWordNeedPlural: "Give the plural.",
+  addWordNeedParticiple: "Give the past participle.",
+  ownWord: "your word",
+  removeWord: "Remove",
+  removeWordConfirm: (word) => `Remove "${word}" from the drill?`,
 
   loading: "One moment …",
   loginTitle: "Your German. Every day.",
