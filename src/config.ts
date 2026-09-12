@@ -15,4 +15,11 @@ export const CLOUD_ENABLED: boolean = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY)
 /** Chat and translation stay hidden until this is switched on. */
 export const AI_ENABLED: boolean = env["VITE_AI_ENABLED"] === "true";
 
+/**
+ * Voice mode has a switch of its own. It runs on a different provider and is
+ * billed by the minute rather than by the call, so it is possible to want the
+ * chat on and the microphone off — and it should never turn on by accident.
+ */
+export const VOICE_ENABLED: boolean = env["VITE_VOICE_ENABLED"] === "true";
+
 export const SITE_NAME = "Daily Deutsch";

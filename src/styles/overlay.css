@@ -652,3 +652,45 @@
     }
   }
 }
+
+/* ----------------------------------------------------------- voice picker */
+
+/* The top row carries the tutor's voice and, once a call is up, how long is
+   left on it. The countdown is deliberately quiet: it is reassurance, not a
+   deadline to watch. */
+.voice__picker {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 15rem;
+  padding: 0.4rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.voice__picker:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.voice__picker[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.voice__timer {
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+  min-width: 2.8rem;
+  text-align: right;
+}
+
+.voice__timer:empty {
+  display: none;
+}

@@ -83,8 +83,6 @@ export async function translate(text: string): Promise<Translation> {
   return call<Translation>({ mode: "translate", text });
 }
 
-/** Spoken-style answer: a few short German sentences, then an "EN:" line. */
-export async function askVoice(history: readonly Turn[]): Promise<string> {
-  const { text } = await call<{ text: string }>({ mode: "voice", turns: history });
-  return text;
-}
+/* Voice mode no longer goes through here. It streams audio straight to the
+   Live API instead — see src/realtime.ts. The "voice" mode in api/ai.ts is
+   kept as a fallback, but nothing in the client calls it. */

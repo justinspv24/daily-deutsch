@@ -95,17 +95,19 @@ Every push to `main` redeploys; every pull request gets its own preview URL.
 
 ## Turning the assistant on, later
 
-`api/ai.ts` is written and waiting. It backs three things: the `cc` chat with
-a German teacher, the `tt` translator that detects direction automatically,
-and the `vv` voice mode — a spoken conversation where the browser listens
-(Web Speech recognition, so Chrome, Edge or Safari) and reads the teacher's
-answer aloud in a German voice with the English line in an English one. Voice
-turns count against the chat limit. Until the endpoint is enabled the three
-buttons open and explain that the assistant is switched off; enabling it is
-deliberate — it is the only part of this project that costs money.
+Three things sit behind one decision: the `cc` chat with a German teacher, the
+`tt` translator that detects direction automatically, and the `vv` voice mode —
+a live spoken conversation. They are off by default because they are the only
+part of this project that costs money.
 
-To switch them on, add these to Vercel (no `VITE_` prefix, so they never leave
-the server) and set `VITE_AI_ENABLED=true`:
+Chat and translation run on Claude through `api/ai.ts`. Voice runs on Google's
+Gemini Live API through `api/realtime-token.ts`, because it needs a model that
+hears and speaks audio directly rather than one that reads and writes text.
+`docs/realtime-voice.md` explains that choice, what it costs, and how the
+audio path is put together.
+
+To switch chat and translation on, add these to Vercel (no `VITE_` prefix, so
+they never leave the server) and set `VITE_AI_ENABLED=true`:
 
 | Name | Where it comes from |
 |---|---|
@@ -116,24 +118,38 @@ the server) and set `VITE_AI_ENABLED=true`:
 | `AI_DAILY_CHAT_LIMIT` | e.g. `40` |
 | `AI_DAILY_TRANSLATE_LIMIT` | e.g. `120` |
 
-Two things to understand before you do:
+For voice, run `supabase/migrations/0004_voice_sessions.sql`, then add these and
+set `VITE_VOICE_ENABLED=true`:
+
+| Name | Where it comes from |
+|---|---|
+| `GOOGLE_API_KEY` | aistudio.google.com → Get API key |
+| `AI_DAILY_VOICE_SESSIONS` | e.g. `6` |
+| `VOICE_SESSION_MINUTES` | e.g. `10` |
+
+Three things to understand before you do:
 
 **A Claude.ai subscription cannot pay for this.** Subscriptions cover
 Anthropic's own apps only; a site you host needs an API key with its own
-billing. They are separate products.
+billing. They are separate products. The same goes for a Gemini subscription.
 
-**The endpoint refuses to run unmetered.** It requires a signed-in learner, and
-without `SUPABASE_SERVICE_ROLE_KEY` it fails closed rather than serving calls
-it cannot count. Every call increments a per-learner daily counter in
-`ai_usage`, which learners can read but only the server can write. On Haiku a
-translation is roughly 0.07 cents and a chat turn about 0.3 cents, so the
-default limits cap one learner at well under a euro a day — but set a spend
-limit in the Anthropic console too, as a floor under the whole thing.
+**The endpoints refuse to run unmetered.** Both require a signed-in learner,
+and without `SUPABASE_SERVICE_ROLE_KEY` they fail closed rather than serving
+calls they cannot count. Chat and translation increment a per-learner daily
+counter in `ai_usage`; voice counts sessions there too, and each session's
+token expires on its own, so one account's worst case is
+`AI_DAILY_VOICE_SESSIONS × VOICE_SESSION_MINUTES`.
+
+**Voice is the expensive one.** On Haiku a translation is roughly 0.07 cents and
+a chat turn about 0.3 cents. A ten-minute spoken conversation is about 11
+cents — forty times a chat turn. The defaults cap one learner near 60 cents a
+day. Set a spend limit in both consoles as a floor under the whole thing.
 
 ## How it is put together
 
 ```
-api/ai.ts              serverless endpoint: the only place the API key exists
+api/ai.ts              serverless endpoint: the only place the Anthropic key exists
+api/realtime-token.ts  mints Live API tokens; the only place the Google key exists
 src/
   main.ts              app controller — routes, session lifecycle, storage switching
   config.ts            build-time environment, and what does not reach the browser
@@ -141,6 +157,7 @@ src/
   repository.ts        storage interface + the merge that runs on first sign-in
   repositories/        local (this browser) and supabase (this learner)
   ai.ts                client half of /api/ai
+  realtime.ts          the voice socket: mic capture, playback, codecs
   grading.ts           answer judging (exact, umlaut-near, lenient English)
   scheduler.ts         the 1·3·7·21·35 review ladder and streak counting
   session.ts           builds a round: which words, sentences and topics

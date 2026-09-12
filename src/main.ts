@@ -75,7 +75,7 @@ class App {
       },
       onChat: () => openChat(),
       onTranslate: () => openTranslator(),
-      onVoice: () => openVoice(),
+      onVoice: () => openVoice(this.progress.level),
       onAccount: () => {
         if (!this.learner) return;
         openAccount(this.learner, this.progress.level, {
@@ -90,7 +90,11 @@ class App {
 
     // Always live, so a double-tap explains itself ("not switched on yet")
     // instead of silently doing nothing when the assistant is off.
-    registerDoubleTap({ c: () => openChat(), t: () => openTranslator(), v: () => openVoice() });
+    registerDoubleTap({
+      c: () => openChat(),
+      t: () => openTranslator(),
+      v: () => openVoice(this.progress.level)
+    });
 
     void this.restoreSession();
   }

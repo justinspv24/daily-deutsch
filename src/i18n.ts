@@ -179,6 +179,9 @@ export interface Strings {
   readonly voiceNoSpeech: string;
   readonly voiceHint: string;
   readonly voiceSpeakIn: string;
+  readonly voiceConnecting: string;
+  readonly voiceEnded: string;
+  readonly voiceVoiceLabel: string;
 
   /* account */
   readonly signIn: string;
@@ -364,15 +367,18 @@ const de: Strings = {
 
   voiceTitle: "Sprich mit deinem Lehrer",
   voiceButtonTitle: "Sprachmodus öffnen — zweimal v drücken",
-  voiceIdle: "Mikrofon antippen und sprechen",
-  voiceListening: "Ich höre zu … antippen, wenn du fertig bist",
-  voiceSpeaking: "Zum Unterbrechen antippen",
+  voiceIdle: "Antippen, um das Gespräch zu beginnen",
+  voiceListening: "Ich höre zu — sprich einfach los",
+  voiceSpeaking: "Dein Lehrer spricht — du kannst ihn unterbrechen",
   voiceUnsupported:
-    "Dieser Browser unterstützt keine Spracherkennung. Nimm Chrome, Edge oder Safari — oder schreib im Chat (cc).",
+    "Dieser Browser kann kein Audio aufnehmen. Nimm einen aktuellen Browser — oder schreib im Chat (cc).",
   voiceMicDenied: "Kein Zugriff auf das Mikrofon. Erlaube es in den Browser-Einstellungen und versuch es noch einmal.",
   voiceNoSpeech: "Ich habe nichts gehört. Tipp das Mikrofon noch einmal an und sprich.",
   voiceHint: "Sprich Deutsch oder Englisch · Esc schließen",
   voiceSpeakIn: "Ich spreche",
+  voiceConnecting: "Verbinde …",
+  voiceEnded: "Gespräch beendet. Antippen für ein neues.",
+  voiceVoiceLabel: "Stimme",
 
   signIn: "Anmelden",
   signOut: "Abmelden",
@@ -556,15 +562,18 @@ const en: Strings = {
 
   voiceTitle: "Talk with your teacher",
   voiceButtonTitle: "Open voice mode — press v twice",
-  voiceIdle: "Tap and speak",
-  voiceListening: "Listening … tap when you're done",
-  voiceSpeaking: "Tap to interrupt",
+  voiceIdle: "Tap to start the conversation",
+  voiceListening: "Listening — just talk",
+  voiceSpeaking: "Your teacher is speaking — you can cut in",
   voiceUnsupported:
-    "This browser can't recognise speech. Use Chrome, Edge or Safari — or type in the chat (cc).",
+    "This browser can't capture audio. Use a current browser — or type in the chat (cc).",
   voiceMicDenied: "No microphone access. Allow it in your browser settings and try again.",
   voiceNoSpeech: "I didn't hear anything. Tap again and speak.",
   voiceHint: "Speak German or English · Esc to close",
   voiceSpeakIn: "I'm speaking",
+  voiceConnecting: "Connecting …",
+  voiceEnded: "Call ended. Tap to start another.",
+  voiceVoiceLabel: "Voice",
 
   signIn: "Sign in",
   signOut: "Sign out",
