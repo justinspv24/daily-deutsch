@@ -95,7 +95,11 @@ export function describeVoiceError(error: unknown): string {
   if (!(error instanceof VoiceError)) return s.aiFailed;
   switch (error.code) {
     case "ai_disabled":
-      return s.aiDisabled;
+      return s.voiceDisabled;
+    case "misconfigured":
+      // The endpoint says exactly what it is missing; pass that through rather
+      // than flattening it into "something went wrong".
+      return error.message || s.voiceMisconfigured;
     case "sign_in_required":
       return s.aiSignInRequired;
     case "daily_limit":
@@ -251,7 +255,11 @@ export function openVoice(level: Level | null): Overlay {
 
   /* ------------------------------------------------------- can we do this */
 
-  const blocker = !voiceAvailable() ? s.aiDisabled : !voiceSupported() ? s.voiceUnsupported : null;
+  const blocker = !voiceAvailable()
+    ? s.voiceDisabled
+    : !voiceSupported()
+      ? s.voiceUnsupported
+      : null;
   if (blocker) {
     setState("idle", blocker);
     orb.setAttribute("disabled", "true");

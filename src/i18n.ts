@@ -181,6 +181,8 @@ export interface Strings {
   readonly voiceSpeakIn: string;
   readonly voiceConnecting: string;
   readonly voiceEnded: string;
+  readonly voiceDisabled: string;
+  readonly voiceMisconfigured: string;
   readonly voiceVoiceLabel: string;
   readonly voiceModeLabel: string;
   readonly voiceModes: readonly [string, string, string, string];
@@ -381,6 +383,8 @@ const de: Strings = {
   voiceSpeakIn: "Ich spreche",
   voiceConnecting: "Verbinde …",
   voiceEnded: "Gespräch beendet. Antippen für ein neues.",
+  voiceDisabled: "Der Sprachmodus ist noch nicht eingeschaltet (VITE_VOICE_ENABLED).",
+  voiceMisconfigured: "Dem Server fehlt eine Einstellung für den Sprachmodus.",
   voiceVoiceLabel: "Stimme",
   voiceModeLabel: "Übung",
   voiceModes: ["Frei", "Teil 1", "Teil 2", "Teil 3"],
@@ -584,6 +588,8 @@ const en: Strings = {
   voiceSpeakIn: "I'm speaking",
   voiceConnecting: "Connecting …",
   voiceEnded: "Call ended. Tap to start another.",
+  voiceDisabled: "Voice mode is not switched on yet (VITE_VOICE_ENABLED).",
+  voiceMisconfigured: "The server is missing a setting voice mode needs.",
   voiceVoiceLabel: "Voice",
   voiceModeLabel: "Practice",
   voiceModes: ["Free", "Teil 1", "Teil 2", "Teil 3"],
