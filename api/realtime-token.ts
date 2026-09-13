@@ -1,13 +1,13 @@
 /**
- * POST /api/realtime-token — mints a short-lived Google ephemeral token so the
- * browser can hold a Gemini Live socket open directly.
+ * POST /api/realtime-token — mints a short-lived Google ephemeral token, and
+ * composes the session config that goes with it.
  *
- * The Google API key never leaves this function. What the browser receives is
- * a token that expires in minutes and — this is the important part — carries
- * `liveConnectConstraints`, so the model, the teacher prompt and the voice are
- * fixed server-side. A learner cannot re-point the socket at a different model
- * or talk the tutor out of being a tutor: the constrained endpoint refuses any
- * setup that disagrees with the token.
+ * The Google API key never leaves this function. What the browser gets back is
+ * a token that expires in minutes plus the `config` object it must send in its
+ * setup frame: the teacher's instructions, the voice, the transcription
+ * settings. Composing that here rather than in the bundle means the prompt is
+ * built from the learner's actual level and is not sitting in a JavaScript file
+ * for anyone to read.
  *
  * Metering works differently from /api/ai. There the server sees every turn and
  * can count them; here the audio goes straight to Google, so the only moment we
@@ -28,10 +28,9 @@ interface VercelResponse {
   setHeader(name: string, value: string): void;
 }
 
-/** Native-audio dialogue model. Same one voize.space runs. */
+/** Native-audio dialogue model. */
 const MODEL = "models/gemini-3.1-flash-live-preview";
 
-/** Google's v1alpha endpoint is where auth_tokens and the Live socket both live. */
 const TOKEN_URL = "https://generativelanguage.googleapis.com/v1alpha/auth_tokens";
 
 /** The learner picks from these; anything else is refused rather than passed on. */
@@ -46,28 +45,119 @@ const DEFAULT_VOICE = "Kore";
 
 const LEVELS = ["A1", "A2", "B1", "B2"] as const;
 type Level = (typeof LEVELS)[number];
+const DEFAULT_LEVEL: Level = "B1";
 
-/** Roughly where each level sits, so the tutor pitches the conversation right. */
-const LEVEL_BRIEF: Record<Level, string> = {
-  A1: "They are a beginner. Use present tense, the most common 500 words, and very short sentences. Speak slowly.",
-  A2: "They know the present and the Perfekt, modal verbs, and the four cases in simple sentences. Speak slowly and keep sentences short.",
-  B1: "They can hold an everyday conversation. Use subordinate clauses and Präteritum where it is natural. Speak at a gentle normal pace.",
-  B2: "They are comfortable. Speak at a normal pace, use idiom and richer vocabulary, and correct only what is genuinely wrong."
-};
+const SCENARIOS = ["freestyle", "teil1", "teil2", "teil3"] as const;
+type Scenario = (typeof SCENARIOS)[number];
 
-function brief(level: Level): string {
+/* ------------------------------------------------------------- the teacher */
+
+/**
+ * House rules, shared by every mode.
+ *
+ * Two decisions here are worth defending, because the obvious alternative is
+ * tempting and wrong.
+ *
+ * The teacher corrects *everything*. The instinct is to let small slips go so
+ * the conversation flows — that is what a kind human tutor does. But a learner
+ * who is never corrected keeps their mistakes, and a spoken conversation
+ * offers no other moment to catch them. Corrections are therefore short and
+ * frequent rather than saved up into a lesson, which is what keeps them
+ * bearable.
+ *
+ * And it is German only. Dropping into English is a relief in the moment and a
+ * loss over weeks: the learner stops reaching. English is available the instant
+ * they ask for it, and not before.
+ */
+function houseRules(level: Level, target: Level | null): string {
+  const range =
+    target && target !== level
+      ? `Speak mainly at ${level} level and let ${target}-level structures in when they fit naturally.`
+      : `Speak at ${level} level.`;
+
   return [
-    "You are a native German teacher with fifty years of experience, speaking with your student out loud.",
-    "You are warm, patient and precise, and you never lecture: this is a conversation, not a lesson.",
-    `Your student is an English speaker working towards B2. ${LEVEL_BRIEF[level]}`,
-    "Speak German. If they answer in English, accept it and reply in German anyway, one notch simpler.",
-    "Keep every turn to one or two short sentences, then ask something back so the conversation keeps moving.",
-    "When they make a mistake that matters, say the corrected sentence once, naturally, as if repeating them back — then carry on. Do not stop to explain grammar unless they ask.",
-    "Let small slips go. Correcting everything makes a person stop speaking, and speaking is the whole point.",
-    "Never read out lists, markdown, bullet points or stage directions. Everything you say is heard, not read.",
-    "If they go quiet, ask an easier question or offer a topic."
-  ].join(" ");
+    "Rules:",
+    "- You speak first. The moment the call connects, greet the learner and say in one or two sentences what the two of you are going to practise. Never wait for them to begin.",
+    "- Speak German only, clearly, and a little slower than you would with a native speaker.",
+    `- ${range}`,
+    "- Listen for mistakes and correct every one that matters: grammar, case, gender, plural, article, word order, tense, word choice, or an unnatural turn of phrase.",
+    "- Never let a mistake pass just to keep things flowing. A learner who is not corrected keeps the mistake.",
+    "- Ignore capitalisation entirely, including German nouns. This is speech, not writing.",
+    "- If something is understandable but not how a German would say it, give them the natural version.",
+    "- If they make several mistakes at once, correct the ones that matter most rather than all of them.",
+    "",
+    "How to correct:",
+    '- Say "Korrektur:" and then the sentence said properly.',
+    '- Then "Kurz erklärt:" and the reason, in simple German, in one sentence.',
+    "- Then carry straight on with a follow-up question. Never turn a correction into a lecture.",
+    "- Be warm and brief about it. Short and frequent beats long and rare.",
+    "",
+    "- Keep the conversation moving with real questions, and answer theirs properly — this is a conversation, not an interview.",
+    "- If they get stuck, offer them an easier way to say what they are reaching for.",
+    "- If the conversation stalls, suggest something: Alltag, Reisen, Hobbys, Arbeit, Essen, Kultur, Nachrichten, Meinungen.",
+    "- Switch to English only if they ask for an English explanation, then return to German.",
+    "- Everything you say is heard, not read: no markdown, no lists, no bullet points, no stage directions, no emoji."
+  ].join("\n");
 }
+
+function instruction(scenario: Scenario, level: Level, target: Level | null): string {
+  const rules = houseRules(level, target);
+
+  switch (scenario) {
+    case "teil1":
+      return [
+        `You are playing Teilnehmer/in B in Teil 1 (Einander kennenlernen) of the telc Deutsch ${level} oral exam, with a learner practising for it.`,
+        "",
+        rules,
+        "",
+        "This part:",
+        "- It is a getting-to-know-you conversation, and you take turns: you ask, they answer, then they ask and you answer.",
+        "- Introduce yourself first with a plausible German name and a few invented details, then hand the turn to them.",
+        "- Work through these over the course of the conversation, not as a checklist: Name; woher sie oder er kommt; wie sie oder er wohnt; Familie; wo sie oder er Deutsch gelernt hat; was sie oder er macht (Schule, Studium, Beruf); Sprachen — welche, wie lange, warum.",
+        "- Stay in character as a fellow candidate, but keep correcting: that is why they are here rather than in the real exam."
+      ].join("\n");
+
+    case "teil2":
+      return [
+        `You are playing Teilnehmer/in B in Teil 2 (Über ein Thema sprechen) of the telc Deutsch ${level} oral exam, with a learner practising for it.`,
+        "",
+        rules,
+        "",
+        "This part:",
+        "- Open by naming a topic of the kind a magazine article would raise — Handy am Arbeitsplatz, Fahrrad oder Auto in der Stadt, Fernsehen, Urlaub, Einkaufen im Internet — and say briefly what it is about.",
+        "- Give your own view first, with a reason and something from your own (invented) experience, so they hear the shape of an answer before they attempt one.",
+        "- Then ask for theirs, and respond to what they actually say: agree, disagree politely, ask why.",
+        "- Keep the talking roughly even between you. It should feel like two people exchanging views, not an interview."
+      ].join("\n");
+
+    case "teil3":
+      return [
+        `You are playing Teilnehmer/in B in Teil 3 (Gemeinsam etwas planen) of the telc Deutsch ${level} oral exam, with a learner practising for it.`,
+        "",
+        rules,
+        "",
+        "This part:",
+        "- Propose something the two of you have to organise together: a farewell party for a colleague, a weekend trip, a surprise for a friend, a class outing.",
+        "- Work through the practical questions together — wann, wo, was mitbringen, wer macht was, wie viel kostet es, wie kommen alle hin.",
+        "- Make suggestions and also raise objections, so they have to respond rather than just agree.",
+        "- Push for an actual decision by the end. The point of this part is reaching agreement, not listing options."
+      ].join("\n");
+
+    case "freestyle":
+    default:
+      return [
+        "You are a warm, very attentive German conversation partner for someone practising their spoken German.",
+        "",
+        rules,
+        "",
+        "This mode:",
+        "- There is no set task. Follow what interests them, and if nothing does, offer a topic.",
+        "- Ask about their week, their work, what they did yesterday — ordinary things that get them talking in the tenses they need."
+      ].join("\n");
+  }
+}
+
+/* ------------------------------------------------------------------ handler */
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   res.setHeader("Cache-Control", "no-store");
@@ -93,11 +183,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const sessionMinutes = clamp(Number(process.env["VOICE_SESSION_MINUTES"] ?? 10), 1, 15);
+  const sessionMinutes = clamp(Number(process.env["VOICE_SESSION_MINUTES"] ?? 10), 1, 30);
   const dailySessions = clamp(Number(process.env["AI_DAILY_VOICE_SESSIONS"] ?? 6), 1, 100);
 
-  const allowed = await countSession(userId, dailySessions);
-  if (!allowed) {
+  if (!(await countSession(userId, dailySessions))) {
     res.status(429).json({
       error: "daily_limit",
       message: "That is today's speaking time. It resets at midnight UTC."
@@ -105,13 +194,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const body = (req.body ?? {}) as { level?: string; voice?: string };
-  const level: Level = (LEVELS as readonly string[]).includes(body.level ?? "")
-    ? (body.level as Level)
-    : "A2";
-  const voice: string = (VOICES as readonly string[]).includes(body.voice ?? "")
-    ? (body.voice as string)
-    : DEFAULT_VOICE;
+  const body = (req.body ?? {}) as {
+    level?: string;
+    target?: string;
+    voice?: string;
+    scenario?: string;
+  };
+
+  const level = pick(LEVELS, body.level) ?? DEFAULT_LEVEL;
+  const target = pick(LEVELS, body.target);
+  const voice = pick(VOICES, body.voice) ?? DEFAULT_VOICE;
+  const scenario = pick(SCENARIOS, body.scenario) ?? "freestyle";
 
   const now = Date.now();
   // expireTime bounds the whole conversation; newSessionExpireTime is the much
@@ -124,27 +217,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const upstream = await fetch(`${TOKEN_URL}?key=${encodeURIComponent(apiKey)}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        uses: 1,
-        expireTime,
-        newSessionExpireTime,
-        liveConnectConstraints: {
-          model: MODEL,
-          config: {
-            responseModalities: ["AUDIO"],
-            temperature: 0.8,
-            systemInstruction: { parts: [{ text: brief(level) }] },
-            speechConfig: {
-              languageCode: "de-DE",
-              voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } }
-            },
-            // Both sides transcribed: the learner sees what the tutor heard,
-            // which is half the value of the exercise.
-            inputAudioTranscription: {},
-            outputAudioTranscription: {}
-          }
-        }
-      })
+      body: JSON.stringify({ uses: 1, expireTime, newSessionExpireTime })
     });
 
     if (!upstream.ok) {
@@ -164,8 +237,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       token: data.name,
       model: MODEL,
       voice,
+      scenario,
       expiresAt: expireTime,
-      sessionSeconds: sessionMinutes * 60
+      sessionSeconds: sessionMinutes * 60,
+      // Sent verbatim by the browser in its setup frame.
+      config: {
+        responseModalities: ["AUDIO"],
+        // The tutor should answer like someone in a conversation, not deliberate
+        // first. Reasoning time is the one thing a spoken exchange cannot afford.
+        thinkingConfig: { thinkingLevel: "minimal" },
+        temperature: 0.8,
+        speechConfig: {
+          languageCode: "de-DE",
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } }
+        },
+        systemInstruction: { parts: [{ text: instruction(scenario, level, target) }] },
+        // Both sides transcribed: seeing what the tutor *heard* is half the lesson.
+        inputAudioTranscription: {},
+        outputAudioTranscription: {},
+        // Without this the API cuts audio sessions off at 15 minutes. With it a
+        // long conversation keeps going on a sliding window instead.
+        contextWindowCompression: { slidingWindow: {} }
+      }
     });
   } catch (error) {
     res.status(500).json({ error: "failed", message: (error as Error).message });
@@ -173,6 +266,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 }
 
 /* ----------------------------------------------------------------- helpers */
+
+function pick<T extends readonly string[]>(allowed: T, value: unknown): T[number] | null {
+  return typeof value === "string" && (allowed as readonly string[]).includes(value)
+    ? (value as T[number])
+    : null;
+}
 
 function clamp(value: number, low: number, high: number): number {
   if (!Number.isFinite(value)) return low;

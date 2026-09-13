@@ -23,7 +23,18 @@ import { openPanel, type Overlay } from "./overlay";
  *
  * The session is capped server-side, so the timer here is only a courtesy: it
  * tells the learner what the token already knows.
+ *
+ * Four modes. Freestyle is an open conversation; the three Teile mirror the
+ * telc oral exam — einander kennenlernen, über ein Thema sprechen, gemeinsam
+ * etwas planen — because that is the shape the exam actually takes, and
+ * practising it is different from just chatting.
  */
+
+/** Ids the token endpoint accepts. Order matches the labels in i18n. */
+const SCENARIOS = ["freestyle", "teil1", "teil2", "teil3"] as const;
+type Scenario = (typeof SCENARIOS)[number];
+
+const SCENARIO_KEY = "dd.voiceScenario";
 
 /** Google's prebuilt voices. The character notes are the docs' own descriptors. */
 const VOICES: ReadonlyArray<readonly [string, string]> = [
@@ -51,6 +62,24 @@ function storedVoice(): string {
     /* private mode, or storage switched off */
   }
   return DEFAULT_VOICE;
+}
+
+function storedScenario(): Scenario {
+  try {
+    const saved = localStorage.getItem(SCENARIO_KEY);
+    if (saved && (SCENARIOS as readonly string[]).includes(saved)) return saved as Scenario;
+  } catch {
+    /* private mode, or storage switched off */
+  }
+  return "freestyle";
+}
+
+function rememberScenario(id: Scenario): void {
+  try {
+    localStorage.setItem(SCENARIO_KEY, id);
+  } catch {
+    /* not worth telling anyone about */
+  }
 }
 
 function rememberVoice(name: string): void {
@@ -88,6 +117,7 @@ export function openVoice(level: Level | null): Overlay {
   let state: VoiceState = "idle";
   let closed = false;
   let ticker: number | null = null;
+  let scenario: Scenario = storedScenario();
 
   const overlay = openPanel({
     title: s.voiceTitle,
@@ -101,6 +131,36 @@ export function openVoice(level: Level | null): Overlay {
   });
 
   /* ------------------------------------------------------------- chrome */
+
+  const modeButtons = SCENARIOS.map((id, index) =>
+    h(
+      "button",
+      { type: "button", "aria-pressed": String(id === scenario) },
+      s.voiceModes[index] ?? id
+    )
+  );
+  const modes = h(
+    "div",
+    { class: "segmented voice__modes", role: "group", "aria-label": s.voiceModeLabel },
+    ...modeButtons
+  );
+  const modeHint = h("p", { class: "voice__modehint" });
+
+  const showMode = (): void => {
+    const index = SCENARIOS.indexOf(scenario);
+    modeButtons.forEach((button, i) => button.setAttribute("aria-pressed", String(i === index)));
+    modeHint.textContent = s.voiceModeHints[index] ?? "";
+  };
+
+  modeButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      // Changing mode mid-call would mean a new session and a new prompt; the
+      // buttons are disabled while one is up, so this only fires when idle.
+      scenario = SCENARIOS[index] ?? "freestyle";
+      rememberScenario(scenario);
+      showMode();
+    });
+  });
 
   const picker = h("select", { class: "voice__picker", "aria-label": s.voiceVoiceLabel });
   for (const [name, character] of VOICES) {
@@ -127,6 +187,8 @@ export function openVoice(level: Level | null): Overlay {
     h(
       "div",
       { class: "voice" },
+      modes,
+      modeHint,
       h(
         "div",
         { class: "voice__top" },
@@ -194,6 +256,7 @@ export function openVoice(level: Level | null): Overlay {
     setState("idle", blocker);
     orb.setAttribute("disabled", "true");
     picker.setAttribute("disabled", "true");
+    for (const button of modeButtons) button.setAttribute("disabled", "true");
     queueMicrotask(() => overlay.root.querySelector<HTMLElement>(".panel__close")?.focus());
     return overlay;
   }
@@ -204,11 +267,16 @@ export function openVoice(level: Level | null): Overlay {
     if (session || closed) return;
     setState("connecting");
     picker.setAttribute("disabled", "true");
+    for (const button of modeButtons) button.setAttribute("disabled", "true");
 
     try {
       session = await startVoice({
-        level: level ?? "A2",
+        // Level drives how hard the tutor pitches it. Without one chosen we
+        // follow the exam the Teile are modelled on and assume B1.
+        level: level ?? "B1",
+        target: level === "B2" ? null : "B2",
         voice: picker.value,
+        scenario,
 
         onState: (next) => {
           if (closed) return;
@@ -248,6 +316,7 @@ export function openVoice(level: Level | null): Overlay {
           live.textContent = "";
           if (closed) return;
           picker.removeAttribute("disabled");
+          for (const button of modeButtons) button.removeAttribute("disabled");
           if (error) {
             const message = describeVoiceError(error);
             bubble("assistant", message).dataset["error"] = "true";
@@ -277,6 +346,7 @@ export function openVoice(level: Level | null): Overlay {
     void begin();
   });
 
+  showMode();
   for (const line of transcript) bubble(line.role, line.text);
 
   queueMicrotask(() => orb.focus());

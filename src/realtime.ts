@@ -57,7 +57,10 @@ export interface VoiceHandlers {
 
 export interface VoiceOptions extends VoiceHandlers {
   level: string;
+  /** Where the learner is heading; lets the tutor stretch them a little. */
+  target: string | null;
   voice: string;
+  scenario: string;
 }
 
 export interface VoiceSession {
@@ -70,8 +73,15 @@ interface TokenResponse {
   token: string;
   model: string;
   voice: string;
+  scenario: string;
   expiresAt: string;
   sessionSeconds: number;
+  /**
+   * The setup config, composed server-side and sent on verbatim. It carries the
+   * teacher's instructions, so it is built from the learner's level rather than
+   * hardcoded in this bundle.
+   */
+  config: Record<string, unknown>;
 }
 
 /** Whether the interface should offer voice mode at all. */
@@ -93,7 +103,7 @@ export async function startVoice(options: VoiceOptions): Promise<VoiceSession> {
   if (!voiceAvailable()) throw new VoiceError("ai_disabled");
   if (!voiceSupported()) throw new VoiceError("unsupported");
 
-  const credentials = await mintToken(options.level, options.voice);
+  const credentials = await mintToken(options);
   const microphone = await openMicrophone();
 
   try {
@@ -106,7 +116,7 @@ export async function startVoice(options: VoiceOptions): Promise<VoiceSession> {
 
 /* --------------------------------------------------------------- the token */
 
-async function mintToken(level: string, voice: string): Promise<TokenResponse> {
+async function mintToken(options: VoiceOptions): Promise<TokenResponse> {
   const db = supabase();
   const token = db ? (await db.auth.getSession()).data.session?.access_token : null;
   if (!token) throw new VoiceError("sign_in_required");
@@ -116,7 +126,12 @@ async function mintToken(level: string, voice: string): Promise<TokenResponse> {
     response = await fetch("/api/realtime-token", {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-      body: JSON.stringify({ level, voice })
+      body: JSON.stringify({
+        level: options.level,
+        target: options.target,
+        voice: options.voice,
+        scenario: options.scenario
+      })
     });
   } catch {
     throw new VoiceError("offline");
@@ -343,10 +358,10 @@ async function connect(
     })();
   };
 
-  // The setup is deliberately thin: the token already carries the model, the
-  // teacher prompt, the voice and the transcription settings, and the
-  // constrained endpoint will reject anything that contradicts them.
-  socket.send(JSON.stringify({ setup: { model: credentials.model } }));
+  // Everything the session needs goes in the setup frame: the model, and the
+  // config the server composed — teacher prompt, voice, transcription,
+  // compression. The token itself only proves the learner is allowed to be here.
+  socket.send(JSON.stringify({ setup: { model: credentials.model, ...credentials.config } }));
   options.onState("connecting");
 
   return {

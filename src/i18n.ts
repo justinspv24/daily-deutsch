@@ -182,6 +182,9 @@ export interface Strings {
   readonly voiceConnecting: string;
   readonly voiceEnded: string;
   readonly voiceVoiceLabel: string;
+  readonly voiceModeLabel: string;
+  readonly voiceModes: readonly [string, string, string, string];
+  readonly voiceModeHints: readonly [string, string, string, string];
 
   /* account */
   readonly signIn: string;
@@ -379,6 +382,14 @@ const de: Strings = {
   voiceConnecting: "Verbinde …",
   voiceEnded: "Gespräch beendet. Antippen für ein neues.",
   voiceVoiceLabel: "Stimme",
+  voiceModeLabel: "Übung",
+  voiceModes: ["Frei", "Teil 1", "Teil 2", "Teil 3"],
+  voiceModeHints: [
+    "Offenes Gespräch mit Korrekturen",
+    "Einander kennenlernen — Prüfungssimulation",
+    "Über ein Thema sprechen — Prüfungssimulation",
+    "Gemeinsam etwas planen — Prüfungssimulation"
+  ],
 
   signIn: "Anmelden",
   signOut: "Abmelden",
@@ -574,6 +585,14 @@ const en: Strings = {
   voiceConnecting: "Connecting …",
   voiceEnded: "Call ended. Tap to start another.",
   voiceVoiceLabel: "Voice",
+  voiceModeLabel: "Practice",
+  voiceModes: ["Free", "Teil 1", "Teil 2", "Teil 3"],
+  voiceModeHints: [
+    "Open conversation with corrections",
+    "Getting to know each other — exam simulation",
+    "Talking about a topic — exam simulation",
+    "Planning something together — exam simulation"
+  ],
 
   signIn: "Sign in",
   signOut: "Sign out",
