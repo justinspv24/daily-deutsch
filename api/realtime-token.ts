@@ -162,16 +162,41 @@ function instruction(scenario: Scenario, level: Level, target: Level | null): st
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   res.setHeader("Cache-Control", "no-store");
 
+  // GET is a health check: which configuration is present, never what it is.
+  // Voice has four separate switches and a missing one used to look exactly
+  // like a rejected login, which is a bad hour to spend.
+  if (req.method === "GET") {
+    const config = configReport();
+    res.status(200).json({
+      ok: Object.values(config).every(Boolean),
+      config,
+      model: MODEL
+    });
+    return;
+  }
+
   if (req.method !== "POST") {
     res.status(405).json({ error: "method_not_allowed" });
     return;
   }
 
-  const apiKey = process.env["GOOGLE_API_KEY"];
+  const apiKey = env("GOOGLE_API_KEY");
   if (!apiKey) {
     res.status(503).json({
       error: "ai_disabled",
       message: "Voice mode is not switched on for this deployment."
+    });
+    return;
+  }
+
+  // A 401 here has two very different causes, and they need different fixes.
+  // Distinguish them: a deployment missing its Supabase settings is a config
+  // problem, not a signed-out learner.
+  if (!supabaseUrl() || !supabaseAnon()) {
+    res.status(503).json({
+      error: "misconfigured",
+      message: "Voice mode cannot verify sign-ins on this deployment.",
+      config: configReport()
     });
     return;
   }
@@ -183,8 +208,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const sessionMinutes = clamp(Number(process.env["VOICE_SESSION_MINUTES"] ?? 10), 1, 30);
-  const dailySessions = clamp(Number(process.env["AI_DAILY_VOICE_SESSIONS"] ?? 6), 1, 100);
+  if (!env("SUPABASE_SERVICE_ROLE_KEY")) {
+    res.status(503).json({
+      error: "misconfigured",
+      message: "Voice mode cannot meter usage on this deployment, so it will not start a session.",
+      config: configReport()
+    });
+    return;
+  }
+
+  const sessionMinutes = clamp(Number(env("VOICE_SESSION_MINUTES") || 10), 1, 30);
+  const dailySessions = clamp(Number(env("AI_DAILY_VOICE_SESSIONS") || 6), 1, 100);
 
   if (!(await countSession(userId, dailySessions))) {
     res.status(429).json({
@@ -265,6 +299,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 }
 
+/* --------------------------------------------------------------------- env */
+
+/**
+ * Read an environment variable, treating an empty string as absent.
+ *
+ * This matters more than it looks. A dashboard row created as a placeholder and
+ * never filled in arrives here as "" rather than undefined, and `??` happily
+ * returns it — so a fallback chain built with `??` silently prefers the empty
+ * value over the good one. `||` is correct for this, and the bug it prevents
+ * (auth failing with no explanation because a URL was blank) costs an hour to
+ * find by hand.
+ */
+function env(...names: string[]): string {
+  for (const name of names) {
+    const value = process.env[name];
+    if (value && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+/** The Supabase project URL, without a trailing slash. */
+function supabaseUrl(): string {
+  return env("SUPABASE_URL", "VITE_SUPABASE_URL").replace(/\/+$/, "");
+}
+
+function supabaseAnon(): string {
+  return env("SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY");
+}
+
+/**
+ * Which pieces of configuration are present. Booleans only — this is reported
+ * over the wire so that a misconfigured deployment says what is wrong instead
+ * of failing with a generic 401, and no value may ever leak through it.
+ */
+function configReport(): Record<string, boolean> {
+  return {
+    GOOGLE_API_KEY: Boolean(env("GOOGLE_API_KEY")),
+    SUPABASE_URL: Boolean(supabaseUrl()),
+    SUPABASE_ANON_KEY: Boolean(supabaseAnon()),
+    SUPABASE_SERVICE_ROLE_KEY: Boolean(env("SUPABASE_SERVICE_ROLE_KEY"))
+  };
+}
+
 /* ----------------------------------------------------------------- helpers */
 
 function pick<T extends readonly string[]>(allowed: T, value: unknown): T[number] | null {
@@ -286,8 +363,8 @@ function bearer(header: string | string[] | undefined): string | null {
 
 /** Ask Supabase who this access token belongs to. */
 async function verifyUser(token: string): Promise<string | null> {
-  const url = process.env["SUPABASE_URL"];
-  const anon = process.env["SUPABASE_ANON_KEY"] ?? process.env["VITE_SUPABASE_ANON_KEY"];
+  const url = supabaseUrl();
+  const anon = supabaseAnon();
   if (!url || !anon) return null;
 
   try {
@@ -308,8 +385,8 @@ async function verifyUser(token: string): Promise<string | null> {
  * we fail closed rather than mint unmetered tokens.
  */
 async function countSession(userId: string, limit: number): Promise<boolean> {
-  const url = process.env["SUPABASE_URL"];
-  const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+  const url = supabaseUrl();
+  const serviceKey = env("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !serviceKey) return false;
 
   const today = new Date().toISOString().slice(0, 10);
