@@ -274,16 +274,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       scenario,
       expiresAt: expireTime,
       sessionSeconds: sessionMinutes * 60,
-      // Sent verbatim by the browser in its setup frame.
+      // The Live API answers turns; it does not start them. Telling the tutor
+      // to "speak first" in the prompt changes nothing until something arrives
+      // for it to respond to, so the client sends this as a single user turn
+      // the moment setup completes. Verified live: silence without it, a
+      // greeting within 600 ms with it.
+      opener: "(Der Lernende ist jetzt in der Leitung. Begrüße ihn und beginne.)",
+      // Sent verbatim by the browser in its setup frame. The nesting is not
+      // optional: generation settings live under `generationConfig`, and the
+      // socket closes with a 1007 naming the first stray field if they are
+      // placed one level up.
       config: {
-        responseModalities: ["AUDIO"],
-        // The tutor should answer like someone in a conversation, not deliberate
-        // first. Reasoning time is the one thing a spoken exchange cannot afford.
-        thinkingConfig: { thinkingLevel: "minimal" },
-        temperature: 0.8,
-        speechConfig: {
-          languageCode: "de-DE",
-          voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } }
+        generationConfig: {
+          responseModalities: ["AUDIO"],
+          // The tutor should answer like someone in a conversation, not
+          // deliberate first. Reasoning time is the one thing a spoken
+          // exchange cannot afford.
+          thinkingConfig: { thinkingLevel: "minimal" },
+          temperature: 0.8,
+          speechConfig: {
+            languageCode: "de-DE",
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } }
+          }
         },
         systemInstruction: { parts: [{ text: instruction(scenario, level, target) }] },
         // Both sides transcribed: seeing what the tutor *heard* is half the lesson.

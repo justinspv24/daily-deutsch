@@ -83,6 +83,8 @@ interface TokenResponse {
    * hardcoded in this bundle.
    */
   config: Record<string, unknown>;
+  /** One user turn sent right after setup, so the tutor has something to answer. */
+  opener: string;
 }
 
 /** Whether the interface should offer voice mode at all. */
@@ -289,7 +291,14 @@ async function connect(
   socket.onerror = () => end(new VoiceError("offline"));
   socket.onclose = (event) => {
     // 1000 is a clean close, and we also treat our own teardown as clean.
-    end(event.code === 1000 || finished ? null : new VoiceError("offline"));
+    if (event.code === 1000 || finished) return end(null);
+    // 1007/1008 mean Google understood us and said no — a bad setup frame, an
+    // expired token. That is not a network problem, and telling the learner
+    // to check their wifi would send them looking in the wrong place.
+    if ((event.code === 1007 || event.code === 1008) && event.reason) {
+      return end(new VoiceError("failed", event.reason.split("\n")[0]?.slice(0, 200)));
+    }
+    end(new VoiceError("offline"));
   };
 
   socket.onmessage = (event) => {
@@ -298,6 +307,19 @@ async function connect(
       if (!message) return;
 
       if (message.setupComplete) {
+        // Kick the conversation off before the microphone opens. The model only
+        // ever responds to a turn, and the learner should hear the teacher
+        // first, not sit in silence wondering whether it worked.
+        if (credentials.opener) {
+          socket.send(
+            JSON.stringify({
+              clientContent: {
+                turns: [{ role: "user", parts: [{ text: credentials.opener }] }],
+                turnComplete: true
+              }
+            })
+          );
+        }
         options.onState("listening");
         void microphone.pipe((frame) => {
           if (socket.readyState !== WebSocket.OPEN) return;
@@ -375,18 +397,17 @@ async function connect(
 }
 
 /**
- * Open the socket. Google has spelled the ephemeral-token parameter both ways
- * across versions, so if the first attempt is rejected before it opens we try
- * the other rather than telling the learner their microphone is broken.
+ * Open the socket. Ephemeral tokens go in `access_token` — confirmed against
+ * the live endpoint; the constrained endpoint opens with it and rejects `key`.
+ * One retry covers a flaky first connect.
  */
 async function open(token: string): Promise<WebSocket> {
-  const params = ["access_token", "key"];
   let lastError: unknown = null;
 
-  for (const param of params) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       return await new Promise<WebSocket>((resolve, reject) => {
-        const socket = new WebSocket(`${SOCKET_BASE}?${param}=${encodeURIComponent(token)}`);
+        const socket = new WebSocket(`${SOCKET_BASE}?access_token=${encodeURIComponent(token)}`);
         socket.binaryType = "arraybuffer";
         const settle = window.setTimeout(() => {
           socket.close();

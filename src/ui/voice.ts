@@ -111,7 +111,9 @@ export function describeVoiceError(error: unknown): string {
     case "offline":
       return s.aiOffline;
     default:
-      return s.aiFailed;
+      // A "failed" from the socket carries Google's own one-line reason, which
+      // is more useful than a generic apology when the setup frame is wrong.
+      return error.message && error.message !== "failed" ? error.message : s.aiFailed;
   }
 }
 

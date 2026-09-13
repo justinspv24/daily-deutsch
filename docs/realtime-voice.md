@@ -204,16 +204,21 @@ before every sentence stops feeling like a conversation.
 4. Redeploy. The panel explains itself if anything is missing rather than
    failing silently.
 
-## To verify on the first live run
+## Verified on the first live run (2026-09-13)
 
-**The token query parameter.** The client opens the socket with
-`?access_token=…` and retries once with `?key=…` if refused, because Google has
-spelled it both ways across versions. Open devtools → Network → WS, see which
-connects, then delete the loser from the `params` array in `open()`.
+Three things could only be settled against the real endpoint, and all three
+now are:
 
-**That the tutor speaks first.** If the call connects silently and waits for
-you, the `systemInstruction` is not reaching the session — check the setup frame
-in the WS panel and confirm `config` is being spread into it.
+- **The token goes in `?access_token=`.** The constrained endpoint opens with
+  it. The `?key=` fallback has been removed.
+- **Generation settings must sit under `generationConfig`.** Placed one level
+  up, the socket opens and then closes with `1007: Unknown name
+  "responseModalities" at 'setup'`. That close reason now reaches the panel
+  verbatim instead of being reported as a network problem.
+- **The model does not speak first on its own.** With the prompt alone the
+  session sits open and silent. One `clientContent` user turn sent right after
+  `setupComplete` — the `opener` the token endpoint returns — produced a
+  9-second German greeting with first audio 570 ms later.
 
 ## Known limits
 
