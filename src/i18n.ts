@@ -204,6 +204,7 @@ export interface Strings {
   readonly voiceKeyInvalid: string;
   readonly voiceKeyRequired: string;
   readonly voiceKeyOpenAccount: string;
+  readonly aiKeyRejected: string;
   readonly voiceModes: readonly [string, string, string, string];
   readonly voiceModeHints: readonly [string, string, string, string];
 
@@ -409,7 +410,7 @@ const de: Strings = {
   voiceVoiceLabel: "Stimme",
   voiceModeLabel: "Übung",
   voiceKeyTitle: "Dein Google-AI-Schlüssel",
-  voiceKeyBlurb: "Der Sprachmodus läuft über deinen eigenen Google-Schlüssel — kostenlos für den Anfang, und nur du bezahlst, was du nutzt. Er wird geprüft, verschlüsselt gespeichert und nie wieder angezeigt.",
+  voiceKeyBlurb: "Chat, Übersetzer und Sprachmodus laufen über deinen eigenen Google-Schlüssel — kostenlos für den Anfang, und nur du bezahlst, was du nutzt. Er wird geprüft, verschlüsselt gespeichert und nie wieder angezeigt.",
   voiceKeyWhere: "Schlüssel bei Google AI Studio holen ↗",
   voiceKeyChecking: "Wird geprüft …",
   voiceKeySet: (last4) => `Gespeichert · endet auf …${last4}`,
@@ -422,8 +423,9 @@ const de: Strings = {
   voiceKeyRemoved: "Schlüssel entfernt.",
   voiceKeyEmpty: "Bitte zuerst einen Schlüssel einfügen.",
   voiceKeyInvalid: "Google hat diesen Schlüssel nicht akzeptiert.",
-  voiceKeyRequired: "Für den Sprachmodus brauchst du deinen eigenen Google-AI-Schlüssel.",
+  voiceKeyRequired: "Dafür brauchst du deinen eigenen Google-AI-Schlüssel — einmal im Konto hinterlegen, dann gilt er für Chat, Übersetzer und Sprachmodus.",
   voiceKeyOpenAccount: "Schlüssel im Konto hinterlegen",
+  aiKeyRejected: "Google hat deinen Schlüssel abgelehnt. Prüf ihn im Konto — vielleicht wurde er gelöscht oder das Limit ist erreicht.",
   voiceModes: ["Frei", "Teil 1", "Teil 2", "Teil 3"],
   voiceModeHints: [
     "Offenes Gespräch mit Korrekturen",
@@ -632,7 +634,7 @@ const en: Strings = {
   voiceVoiceLabel: "Voice",
   voiceModeLabel: "Practice",
   voiceKeyTitle: "Your Google AI key",
-  voiceKeyBlurb: "Voice mode runs on your own Google key — free to start, and only you pay for what you use. It is checked, stored encrypted, and never shown again.",
+  voiceKeyBlurb: "Chat, translator and voice all run on your own Google key — free to start, and only you pay for what you use. It is checked, stored encrypted, and never shown again.",
   voiceKeyWhere: "Get a key at Google AI Studio ↗",
   voiceKeyChecking: "Checking …",
   voiceKeySet: (last4) => `Saved · ends in …${last4}`,
@@ -645,8 +647,9 @@ const en: Strings = {
   voiceKeyRemoved: "Key removed.",
   voiceKeyEmpty: "Paste a key first.",
   voiceKeyInvalid: "Google did not accept that key.",
-  voiceKeyRequired: "Voice mode needs your own Google AI key.",
+  voiceKeyRequired: "This needs your own Google AI key — add it once in Account and it covers chat, translator and voice.",
   voiceKeyOpenAccount: "Add a key in Account",
+  aiKeyRejected: "Google rejected your key. Check it in Account — it may have been deleted, or hit its limit.",
   voiceModes: ["Free", "Teil 1", "Teil 2", "Teil 3"],
   voiceModeHints: [
     "Open conversation with corrections",

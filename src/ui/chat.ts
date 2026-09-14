@@ -7,7 +7,12 @@ import { openPanel, type Overlay } from "./overlay";
 
 const history: Turn[] = [];
 
-export function openChat(): Overlay {
+export interface ChatHandlers {
+  /** The learner needs to add their Google AI key; take them to where that lives. */
+  onNeedKey(): void;
+}
+
+export function openChat(handlers: ChatHandlers): Overlay {
   const s = t();
   const overlay = openPanel({ title: s.chatTitle, badge: "cc" });
 
@@ -62,6 +67,14 @@ export function openChat(): Overlay {
       answer.dataset["error"] = "true";
       answer.textContent = describe(error);
       history.pop();
+      if (error instanceof AiError && error.code === "key_required") {
+        const go = h("button", { class: "btn chat__keycta", type: "button" }, s.voiceKeyOpenAccount);
+        go.addEventListener("click", () => {
+          overlay.close();
+          handlers.onNeedKey();
+        });
+        stream.append(go);
+      }
     } finally {
       busy = false;
       send.removeAttribute("disabled");
@@ -87,6 +100,12 @@ export function describe(error: unknown): string {
   switch (error.code) {
     case "ai_disabled":
       return s.aiDisabled;
+    case "misconfigured":
+      return error.message || s.voiceMisconfigured;
+    case "key_required":
+      return s.voiceKeyRequired;
+    case "key_rejected":
+      return s.aiKeyRejected;
     case "sign_in_required":
       return s.aiSignInRequired;
     case "daily_limit":

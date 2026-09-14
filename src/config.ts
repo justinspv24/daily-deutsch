@@ -1,7 +1,7 @@
 /**
  * Build-time configuration. Only `VITE_`-prefixed variables reach the browser;
- * the Anthropic key and the Supabase service-role key deliberately have no
- * prefix and exist solely inside the serverless functions under /api.
+ * the encryption secret and the Supabase service-role key deliberately have
+ * no prefix and exist solely inside the serverless functions under /api.
  */
 
 const env = import.meta.env;
@@ -12,14 +12,16 @@ export const SUPABASE_ANON_KEY: string = env["VITE_SUPABASE_ANON_KEY"] ?? "";
 /** True once a Supabase project is wired up; otherwise the app runs offline. */
 export const CLOUD_ENABLED: boolean = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
-/** Chat and translation stay hidden until this is switched on. */
-export const AI_ENABLED: boolean = env["VITE_AI_ENABLED"] === "true";
-
 /**
- * Voice mode has a switch of its own. It runs on a different provider and is
- * billed by the minute rather than by the call, so it is possible to want the
- * chat on and the microphone off — and it should never turn on by accident.
+ * One switch for the whole assistant — chat, translator and voice all run on
+ * Gemini, on the learner's own key, so there is nothing left to switch on
+ * separately. Either variable turns it on: VITE_AI_ENABLED is the name, and
+ * VITE_VOICE_ENABLED is honoured for deployments that set that one first.
  */
-export const VOICE_ENABLED: boolean = env["VITE_VOICE_ENABLED"] === "true";
+export const AI_ENABLED: boolean =
+  env["VITE_AI_ENABLED"] === "true" || env["VITE_VOICE_ENABLED"] === "true";
+
+/** Kept as a name for the voice code; it is the same switch. */
+export const VOICE_ENABLED: boolean = AI_ENABLED;
 
 export const SITE_NAME = "Daily Deutsch";

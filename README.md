@@ -103,42 +103,34 @@ Google sign-in needs a one-time setup — see "Google sign-in" below.
 
 ## Turning the assistant on, later
 
-Three things sit behind switches: the `cc` chat with a German teacher, the
+Three things sit behind one switch: the `cc` chat with a German teacher, the
 `tt` translator that detects direction automatically, and the `vv` voice mode —
 a live spoken conversation.
 
-Chat and translation run on Claude through `api/ai.ts`, on **your** Anthropic
-key. Voice runs on Google's Gemini Live API through `api/realtime-token.ts` —
-on **each learner's own** Google AI key, which they save once in the account
-panel. You never pay for anyone else's speaking practice, and a learner without
-a key is told so and pointed at where to get one (free, at aistudio.google.com).
-`docs/realtime-voice.md` has the full picture.
+All three run on Google's Gemini — text through `api/ai.ts`, voice through the
+Live API in `api/realtime-token.ts` — and all three run on **each learner's
+own** Google AI key, which they save once in the account panel. You never pay
+for anyone else's practice; a learner without a key is told so and pointed at
+where to get one (free, at aistudio.google.com). `docs/realtime-voice.md` has
+the full picture.
 
-To switch chat and translation on, add these to Vercel (no `VITE_` prefix, so
-they never leave the server) and set `VITE_AI_ENABLED=true` (as a **Config**
-variable — Vercel refuses to save a `VITE_` variable as Secret):
-
-| Name | Where it comes from |
-|---|---|
-| `ANTHROPIC_API_KEY` | console.anthropic.com → API keys |
-| `SUPABASE_URL` | same project URL as above |
-| `SUPABASE_ANON_KEY` | same anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → Legacy → service_role |
-| `AI_DAILY_CHAT_LIMIT` | e.g. `40` |
-| `AI_DAILY_TRANSLATE_LIMIT` | e.g. `120` |
-
-For voice, run migrations `0004` and `0005`, then add these and set
-`VITE_VOICE_ENABLED=true` (Config type):
+To switch it on: run migrations `0004` and `0005`, add these to Vercel (no
+`VITE_` prefix, so they never leave the server), and set `VITE_AI_ENABLED=true`
+as a **Config** variable (Vercel refuses to save a `VITE_` variable as Secret):
 
 | Name | Where it comes from |
 |---|---|
 | `KEY_ENCRYPTION_SECRET` | any long random string, e.g. `openssl rand -base64 48` |
-| `AI_DAILY_VOICE_SESSIONS` | e.g. `12` |
-| `VOICE_SESSION_MINUTES` | e.g. `15` |
+| `SUPABASE_URL` | same project URL as above |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API Keys → Legacy → service_role |
+| `AI_DAILY_CHAT_LIMIT` · `AI_DAILY_TRANSLATE_LIMIT` · `AI_DAILY_VOICE_SESSIONS` · `VOICE_SESSION_MINUTES` | optional; sensible defaults |
+| `GEMINI_TEXT_MODEL` | optional; defaults to `gemini-3.5-flash-lite` |
 
-`https://<your-site>/api/realtime-token` opened in a browser reports which of
-these are present, so a misconfigured deployment says so instead of failing
-with a generic error.
+`ANTHROPIC_API_KEY` and `GOOGLE_API_KEY` are no longer read and can be deleted.
+
+`https://<your-site>/api/ai` and `/api/realtime-token` opened in a browser
+each report which settings are present, so a misconfigured deployment says so
+instead of failing with a generic error.
 
 ### Google sign-in
 
@@ -156,21 +148,21 @@ and Supabase does the rest.
 
 ### Two things to understand
 
-**A Claude.ai subscription cannot pay for chat.** Subscriptions cover
-Anthropic's own apps only; a site you host needs an API key with its own
-billing. Likewise a Gemini subscription is not a Gemini API key.
+**A Gemini subscription is not a Gemini API key.** Subscriptions cover
+Google's own apps; the key a learner pastes here comes from AI Studio and has
+its own (free) quota.
 
-**The endpoints refuse to run unmetered.** Both require a signed-in learner
-and fail closed without `SUPABASE_SERVICE_ROLE_KEY`. Chat and translation
-count calls per learner per day in `ai_usage`; voice counts sessions there
-too, and each session's token expires on its own. For voice that cap now
-protects the learner's bill rather than yours — but set a spend limit in the
-Anthropic console for chat, as a floor under the whole thing.
+**The endpoints refuse to run unmetered.** All of them require a signed-in
+learner and fail closed without `SUPABASE_SERVICE_ROLE_KEY`. Chat and
+translation count calls per learner per day in `ai_usage`; voice counts
+sessions there too. Since every learner is on their own key, those caps
+protect the learner's quota — a runaway tab, a leaked key — rather than
+anyone else's bill.
 
 ## How it is put together
 
 ```
-api/ai.ts              serverless endpoint: the only place the Anthropic key exists
+api/ai.ts              chat + translator on Gemini, on the learner's own key
 api/realtime-token.ts  mints Live API tokens on the learner's own key
 api/voice-key.ts       checks, encrypts and stores that key; never returns it
 src/

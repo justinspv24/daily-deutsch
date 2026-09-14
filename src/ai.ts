@@ -2,9 +2,9 @@ import { supabase } from "./auth";
 import { AI_ENABLED } from "./config";
 
 /**
- * Client half of /api/ai. The Anthropic key lives only on the server; this
- * module just carries the learner's Supabase access token so the endpoint can
- * identify them and meter the call.
+ * Client half of /api/ai. The learner's Google key lives only on the server;
+ * this module just carries their Supabase access token so the endpoint can
+ * identify them, find their key, and meter the call.
  */
 
 export interface Turn {
@@ -20,6 +20,9 @@ export interface Translation {
 
 export type AiErrorCode =
   | "ai_disabled"
+  | "misconfigured"
+  | "key_required"
+  | "key_rejected"
   | "sign_in_required"
   | "daily_limit"
   | "offline"
@@ -63,14 +66,23 @@ async function call<T>(payload: Record<string, unknown>): Promise<T> {
 
   if (response.ok) return (await response.json()) as T;
 
-  const detail = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
-  const code: AiErrorCode =
-    detail.error === "ai_disabled" ||
-    detail.error === "sign_in_required" ||
-    detail.error === "daily_limit"
-      ? detail.error
-      : "failed";
-  throw new AiError(code, detail.message);
+  const detail = (await response.json().catch(() => ({}))) as {
+    error?: string;
+    message?: string;
+    detail?: string;
+  };
+  const known: readonly AiErrorCode[] = [
+    "ai_disabled",
+    "misconfigured",
+    "key_required",
+    "key_rejected",
+    "sign_in_required",
+    "daily_limit"
+  ];
+  const code = (known as readonly string[]).includes(detail.error ?? "")
+    ? (detail.error as AiErrorCode)
+    : "failed";
+  throw new AiError(code, detail.message ?? detail.detail);
 }
 
 /** The whole conversation goes up each time; the endpoint keeps no state. */
@@ -83,6 +95,5 @@ export async function translate(text: string): Promise<Translation> {
   return call<Translation>({ mode: "translate", text });
 }
 
-/* Voice mode no longer goes through here. It streams audio straight to the
-   Live API instead — see src/realtime.ts. The "voice" mode in api/ai.ts is
-   kept as a fallback, but nothing in the client calls it. */
+/* Voice mode does not go through here; it streams audio straight to the Live
+   API — see src/realtime.ts. All three run on the same learner-owned key. */

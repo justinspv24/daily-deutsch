@@ -1,11 +1,19 @@
 /**
- * POST /api/ai — the only place an Anthropic key is ever touched.
+ * POST /api/ai — the `cc` chat and the `tt` translator.
  *
- * The browser never sees the key. A caller must present a valid Supabase
- * access token, and every call is counted against a daily per-learner ceiling,
- * so a single account cannot run the API bill away. Returns 503 until
- * ANTHROPIC_API_KEY is configured, which is the deliberate default.
+ * Both run on Gemini, on the learner's own Google AI key — the same key that
+ * voice mode uses, saved once through /api/voice-key and stored encrypted.
+ * It is decrypted here just long enough to make one request, and never
+ * reaches a browser. A learner without a key is told so and pointed at the
+ * account panel; there is no shared key to fall back on, so nobody's chat
+ * lands on anybody else's bill.
+ *
+ * Every call is still counted against a per-learner daily ceiling. With each
+ * learner on their own key that ceiling protects *their* quota (a runaway tab,
+ * a leaked key), not the owner's, which is why it is generous.
  */
+
+import { createDecipheriv, createHash } from "node:crypto";
 
 interface VercelRequest {
   method?: string;
@@ -19,28 +27,22 @@ interface VercelResponse {
   setHeader(name: string, value: string): void;
 }
 
-type Mode = "chat" | "translate" | "voice";
-/** What the daily counter is keyed on — voice shares the chat budget. */
-type MeterKind = "chat" | "translate";
+type Mode = "chat" | "translate";
 
 interface Turn {
   role: "user" | "assistant";
   content: string;
 }
 
-const MODEL = "claude-haiku-4-5-20251001";
+/**
+ * The text model. Fast and cheap is the right trade for a chat that answers
+ * in a few sentences; the Live model is a different animal and is chosen in
+ * /api/realtime-token. Overridable without a deploy, because model names
+ * move under you.
+ */
+const DEFAULT_TEXT_MODEL = "gemini-3.5-flash-lite";
 const MAX_TURNS = 24;
 const MAX_CHARS = 4000;
-
-const VOICE_BRIEF = [
-  "You are a native German teacher with fifty years of experience, talking with your student out loud: warm, patient, precise.",
-  "Your student is an English speaker working from A1 towards B2, and may speak German or English.",
-  "This is a spoken conversation. Reply in at most three short, simple German sentences at their level.",
-  "Then add exactly one final line that begins with EN: and contains, in English, the translation of what you said. Nothing may follow that line.",
-  "If their German contained a mistake, say the corrected sentence first, and put the reason briefly in English inside the EN: line.",
-  "Everything you write is read aloud by a speech synthesiser: no markdown, no lists, no symbols, no emoji, no stage directions.",
-  "Keep the conversation going by ending with a short question when it fits."
-].join(" ");
 
 const TEACHER_BRIEF = [
   "You are a native German teacher with fifty years of experience: patient, precise, encouraging.",
@@ -56,52 +58,58 @@ const TRANSLATE_BRIEF = [
   "You translate between German and English for a learner at A2 level.",
   "Detect the language of the input.",
   "If it is German, translate into natural English; if English, into natural German at A2–B1 level.",
-  'Reply with JSON only: {"direction":"de→en"|"en→de","translation":string,"note":string}.',
+  'Reply with JSON only, of the shape {"direction":"de→en"|"en→de","translation":string,"note":string}.',
   "The note is at most one short English sentence about a case, ending or word choice",
-  "worth noticing — an empty string when there is nothing useful to say.",
-  "Never write anything outside the JSON."
+  "worth noticing — an empty string when there is nothing useful to say."
 ].join(" ");
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   res.setHeader("Cache-Control", "no-store");
+
+  // GET is a health check: which configuration is present, never what it is.
+  if (req.method === "GET") {
+    const config = configReport();
+    res.status(200).json({ ok: Object.values(config).every(Boolean), config, model: textModel() });
+    return;
+  }
 
   if (req.method !== "POST") {
     res.status(405).json({ error: "method_not_allowed" });
     return;
   }
 
-  const apiKey = process.env["ANTHROPIC_API_KEY"];
-  if (!apiKey) {
+  if (!supabaseUrl() || !supabaseAnon() || !env("SUPABASE_SERVICE_ROLE_KEY") || !env("KEY_ENCRYPTION_SECRET")) {
     res.status(503).json({
-      error: "ai_disabled",
-      message: "The assistant is not switched on for this deployment."
+      error: "misconfigured",
+      message: "The assistant is not fully set up on this deployment.",
+      config: configReport()
     });
     return;
   }
 
-  const body = (req.body ?? {}) as { mode?: Mode; turns?: Turn[]; text?: string };
-  const mode: Mode = body.mode === "translate" ? "translate" : body.mode === "voice" ? "voice" : "chat";
-  const kind: MeterKind = mode === "translate" ? "translate" : "chat";
-
   const token = bearer(req.headers["authorization"]);
-  if (!token) {
-    res.status(401).json({ error: "sign_in_required" });
-    return;
-  }
-
-  const userId = await verifyUser(token);
+  const userId = token ? await verifyUser(token) : null;
   if (!userId) {
     res.status(401).json({ error: "sign_in_required" });
     return;
   }
 
+  const apiKey = await learnerKey(userId);
+  if (!apiKey) {
+    res.status(403).json({
+      error: "key_required",
+      message: "Add your Google AI key in the account panel to use the assistant."
+    });
+    return;
+  }
+
+  const body = (req.body ?? {}) as { mode?: string; turns?: Turn[]; text?: string };
+  const mode: Mode = body.mode === "translate" ? "translate" : "chat";
+
   const limit = Number(
-    kind === "chat"
-      ? (process.env["AI_DAILY_CHAT_LIMIT"] ?? 40)
-      : (process.env["AI_DAILY_TRANSLATE_LIMIT"] ?? 120)
+    mode === "chat" ? env("AI_DAILY_CHAT_LIMIT") || 200 : env("AI_DAILY_TRANSLATE_LIMIT") || 400
   );
-  const allowed = await countCall(userId, kind, limit);
-  if (!allowed) {
+  if (!(await countCall(userId, mode, limit))) {
     res.status(429).json({
       error: "daily_limit",
       message: "That is today's limit. It resets at midnight UTC."
@@ -113,30 +121,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const payload =
       mode === "translate"
         ? translatePayload(String(body.text ?? "").slice(0, MAX_CHARS))
-        : mode === "voice"
-          ? chatPayload(body.turns ?? [], VOICE_BRIEF, 400)
-          : chatPayload(body.turns ?? [], TEACHER_BRIEF, 700);
+        : chatPayload(body.turns ?? []);
 
-    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify(payload)
-    });
+    const upstream = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${textModel()}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload)
+      }
+    );
 
     if (!upstream.ok) {
-      const detail = await upstream.text();
-      res.status(502).json({ error: "upstream", status: upstream.status, detail: detail.slice(0, 400) });
+      // Google's error text is usually the useful part ("model not found",
+      // "API key not valid"), so it goes through — minus anything that looks
+      // like it might echo the key back.
+      const detail = (await upstream.text()).replace(/key=[^&\s"]+/g, "key=…");
+      res.status(502).json({
+        error: upstream.status === 400 || upstream.status === 403 ? "key_rejected" : "upstream",
+        status: upstream.status,
+        detail: detail.slice(0, 400)
+      });
       return;
     }
 
-    const data = (await upstream.json()) as { content?: Array<{ type: string; text?: string }> };
-    const text = (data.content ?? [])
-      .filter((block) => block.type === "text")
-      .map((block) => block.text ?? "")
+    const data = (await upstream.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const text = (data.candidates?.[0]?.content?.parts ?? [])
+      .map((part) => part.text ?? "")
       .join("")
       .trim();
 
@@ -152,31 +165,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
 /* ------------------------------------------------------------- payloads */
 
-function chatPayload(turns: Turn[], system: string, maxTokens: number): unknown {
+function chatPayload(turns: Turn[]): unknown {
   const clean = turns
     .filter((turn) => turn && typeof turn.content === "string" && turn.content.trim())
     .slice(-MAX_TURNS)
     .map((turn) => ({
-      role: turn.role === "assistant" ? "assistant" : "user",
-      content: turn.content.slice(0, MAX_CHARS)
+      role: turn.role === "assistant" ? "model" : "user",
+      parts: [{ text: turn.content.slice(0, MAX_CHARS) }]
     }));
 
-  // The API requires the conversation to start and end with a user turn.
+  // The conversation has to start and end with the learner.
   while (clean.length && clean[0]!.role !== "user") clean.shift();
   if (!clean.length || clean[clean.length - 1]!.role !== "user") {
     throw new Error("conversation must end with a question");
   }
 
-  return { model: MODEL, max_tokens: maxTokens, system, messages: clean };
+  return {
+    systemInstruction: { parts: [{ text: TEACHER_BRIEF }] },
+    contents: clean,
+    generationConfig: { maxOutputTokens: 700, temperature: 0.7 }
+  };
 }
 
 function translatePayload(text: string): unknown {
   if (!text.trim()) throw new Error("nothing to translate");
   return {
-    model: MODEL,
-    max_tokens: 400,
-    system: TRANSLATE_BRIEF,
-    messages: [{ role: "user", content: text }]
+    systemInstruction: { parts: [{ text: TRANSLATE_BRIEF }] },
+    contents: [{ role: "user", parts: [{ text }] }],
+    // Ask for JSON outright rather than hoping the model resists chatter.
+    generationConfig: { maxOutputTokens: 400, temperature: 0.3, responseMimeType: "application/json" }
   };
 }
 
@@ -200,24 +217,49 @@ function parseTranslation(raw: string): unknown {
   return { direction: "de→en", translation: raw, note: "" };
 }
 
+/* ------------------------------------------------------------------ env */
+
+function env(...names: string[]): string {
+  for (const name of names) {
+    const value = process.env[name];
+    if (value && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+function supabaseUrl(): string {
+  return env("SUPABASE_URL", "VITE_SUPABASE_URL").replace(/\/+$/, "");
+}
+
+function supabaseAnon(): string {
+  return env("SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY");
+}
+
+function textModel(): string {
+  return env("GEMINI_TEXT_MODEL") || DEFAULT_TEXT_MODEL;
+}
+
+function configReport(): Record<string, boolean> {
+  return {
+    SUPABASE_URL: Boolean(supabaseUrl()),
+    SUPABASE_ANON_KEY: Boolean(supabaseAnon()),
+    SUPABASE_SERVICE_ROLE_KEY: Boolean(env("SUPABASE_SERVICE_ROLE_KEY")),
+    KEY_ENCRYPTION_SECRET: Boolean(env("KEY_ENCRYPTION_SECRET"))
+  };
+}
+
 /* ----------------------------------------------------------------- auth */
 
 function bearer(header: string | string[] | undefined): string | null {
   const value = Array.isArray(header) ? header[0] : header;
   if (!value?.startsWith("Bearer ")) return null;
-  const token = value.slice(7).trim();
-  return token || null;
+  return value.slice(7).trim() || null;
 }
 
-/** Ask Supabase who this access token belongs to. */
 async function verifyUser(token: string): Promise<string | null> {
-  const url = process.env["SUPABASE_URL"];
-  const anon = process.env["SUPABASE_ANON_KEY"] ?? process.env["VITE_SUPABASE_ANON_KEY"];
-  if (!url || !anon) return null;
-
   try {
-    const response = await fetch(`${url}/auth/v1/user`, {
-      headers: { apikey: anon, authorization: `Bearer ${token}` }
+    const response = await fetch(`${supabaseUrl()}/auth/v1/user`, {
+      headers: { apikey: supabaseAnon(), authorization: `Bearer ${token}` }
     });
     if (!response.ok) return null;
     const user = (await response.json()) as { id?: string };
@@ -227,17 +269,36 @@ async function verifyUser(token: string): Promise<string | null> {
   }
 }
 
-/**
- * Increment today's counter and report whether the call is within budget.
- * Uses the service-role key, so a learner cannot clear their own quota.
- */
-async function countCall(userId: string, kind: MeterKind, limit: number): Promise<boolean> {
-  const url = process.env["SUPABASE_URL"];
-  const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-  // Without a service key there is no counter; fail closed rather than
-  // silently serving an unmetered endpoint.
-  if (!url || !serviceKey) return false;
+/* -------------------------------------------------------------- the key */
 
+/** The learner's Google AI key, decrypted — mirrors /api/voice-key exactly. */
+async function learnerKey(userId: string): Promise<string | null> {
+  const serviceKey = env("SUPABASE_SERVICE_ROLE_KEY");
+  try {
+    const response = await fetch(
+      `${supabaseUrl()}/rest/v1/voice_keys?user_id=eq.${userId}&select=ciphertext,iv,tag`,
+      { headers: { apikey: serviceKey, authorization: `Bearer ${serviceKey}` } }
+    );
+    if (!response.ok) return null;
+    const rows = (await response.json()) as Array<{ ciphertext: string; iv: string; tag: string }>;
+    const row = rows[0];
+    if (!row) return null;
+
+    const key = createHash("sha256").update(env("KEY_ENCRYPTION_SECRET")).digest();
+    const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(row.iv, "base64"));
+    decipher.setAuthTag(Buffer.from(row.tag, "base64"));
+    const plain = Buffer.concat([decipher.update(Buffer.from(row.ciphertext, "base64")), decipher.final()]);
+    return plain.toString("utf8") || null;
+  } catch {
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------- metering */
+
+async function countCall(userId: string, kind: Mode, limit: number): Promise<boolean> {
+  const url = supabaseUrl();
+  const serviceKey = env("SUPABASE_SERVICE_ROLE_KEY");
   const today = new Date().toISOString().slice(0, 10);
   const headers = {
     apikey: serviceKey,

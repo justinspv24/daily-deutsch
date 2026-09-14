@@ -73,7 +73,7 @@ class App {
       onThemeChange: () => {
         /* the tokens do the work */
       },
-      onChat: () => openChat(),
+      onChat: () => openChat({ onNeedKey: () => this.openAccountPanel() }),
       onTranslate: () => openTranslator(),
       onVoice: () => openVoice(this.progress.level, { onNeedKey: () => this.openAccountPanel() }),
       onAccount: () => this.openAccountPanel()
@@ -84,7 +84,7 @@ class App {
     // Always live, so a double-tap explains itself ("not switched on yet")
     // instead of silently doing nothing when the assistant is off.
     registerDoubleTap({
-      c: () => openChat(),
+      c: () => openChat({ onNeedKey: () => this.openAccountPanel() }),
       t: () => openTranslator(),
       v: () => openVoice(this.progress.level, { onNeedKey: () => this.openAccountPanel() })
     });

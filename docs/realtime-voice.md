@@ -22,9 +22,11 @@ The rebuild replaces all three with one model that hears and speaks audio
 directly — `gemini-3.1-flash-live-preview` over the Live API. Latency drops to
 roughly half a second, the German is native, and the learner can cut in.
 
-The `cc` chat and the `tt` translator still run on Claude through `/api/ai`.
-Only voice changed providers, because Anthropic's API is text-only and a spoken
-tutor needs a model with ears.
+The `cc` chat and the `tt` translator run on Gemini too, through `/api/ai`,
+on the same learner-owned key — one vendor, one key, three features. (They
+began on Claude; the voice rebuild forced Google in, and once every learner
+was bringing a Google key anyway, keeping a second vendor for text made no
+sense.)
 
 ## What the teacher actually does
 

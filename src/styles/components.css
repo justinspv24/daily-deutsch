@@ -2045,3 +2045,8 @@ td.is-meta {
   align-self: center;
   margin-top: var(--sp-2);
 }
+
+.chat__keycta {
+  align-self: center;
+  margin-top: var(--sp-2);
+}
