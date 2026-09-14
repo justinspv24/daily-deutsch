@@ -97,22 +97,51 @@ tap the orb
 The audio never touches our server. That is what makes it fast, and it is the
 constraint that shapes everything else below.
 
+### Whose key
+
+Every learner's sessions run on **their own** Google AI key. They create one
+(free) at aistudio.google.com, paste it once into the account panel, and from
+then on their speaking practice is billed to them — which, on Google's free
+tier and at ten minutes a day, means billed to nobody.
+
+The alternative — one shared key on the server, the way voize.space does it —
+means the owner pays for every stranger who signs up, and the only defences are
+per-account caps that a second account walks straight past. For a personal app
+that could be shared, per-learner keys are the design that lets you hand out
+the link without handing out your wallet.
+
+The key is handled like a password:
+
+- It arrives at `/api/voice-key` once, over HTTPS, when saved.
+- It is **checked against Google first** (a cheap `models` list call), so a
+  mistyped key fails there with a clear message rather than ten seconds into a
+  call.
+- It is encrypted with AES-256-GCM under `KEY_ENCRYPTION_SECRET` — a secret
+  that exists only in the server's environment — and stored in `voice_keys`,
+  a table with row-level security on and **no policies**, so nothing but the
+  service role can read it.
+- It is never sent back to a browser. The account panel is told the last four
+  characters, nothing more.
+- `/api/realtime-token` decrypts it just long enough to ask Google for a
+  session token, then drops it.
+
+A learner without a key gets `403 key_required` and a button to the account
+panel. There is no fallback to a shared key, on purpose.
+
+Rotating `KEY_ENCRYPTION_SECRET` makes every stored key undecryptable; the
+endpoint treats that as "no key" and learners are simply asked to paste theirs
+again.
+
 ### The token, and what it does not protect
 
-The token is deliberately weak: single-use, expires after
-`VOICE_SESSION_MINUTES`, and can only *open* a session within 60 seconds of
-being minted. A token that leaks afterwards cannot start anything.
+The session token the browser holds is deliberately weak: single-use, expires
+after `VOICE_SESSION_MINUTES`, and can only *open* a session within 60 seconds
+of being minted. It is derived from the learner's key but is not the key —
+a leaked token cannot be used to start anything after that minute.
 
-What it does **not** do is pin the config. The browser sends the full setup
-frame — prompt included — so someone with devtools open could edit the prompt
-of their own session. For a personal learning app that is an acceptable trade:
-the blast radius is their own conversation, and the spend cap sits at token
-minting where they cannot reach it.
-
-Google's API does support pinning this server-side, via
-`liveConnectConstraints` on the token. If this ever serves people other than
-you, that is the upgrade: move the `config` block into the token request and
-have the client send only `{ setup: { model } }`.
+The browser sends the full setup frame — prompt included — so someone with
+devtools open could edit the prompt of their own session. That is their own
+session on their own key; the blast radius is themselves.
 
 ### Metering counts sessions, not turns
 
@@ -120,7 +149,9 @@ have the client send only `{ setup: { model } }`.
 cannot. So the limit lives at the only moment we control: token minting.
 
 The ceiling on one account is `AI_DAILY_VOICE_SESSIONS × VOICE_SESSION_MINUTES`
-— at the defaults, 60 minutes a day, enforced before any audio flows. Sessions
+— at the defaults, 3 hours a day, enforced before any audio flows. With every
+learner on their own key this is a seatbelt for *their* bill (a tab left open,
+a key that leaks), not yours, which is why the defaults are generous. Sessions
 are counted in `ai_usage` under `kind = 'voice'`; migration `0004` adds it to
 the check constraint.
 
@@ -138,14 +169,14 @@ $$\text{in} = 10 \times \$0.005 = \$0.050$$
 $$\text{out} = 4 \times \$0.018 = \$0.072$$
 $$\text{total} = \$0.122 \approx 11\text{ cents}$$
 
-| Usage | Per month |
+| Usage | Per month, **to that learner** |
 |---|---|
-| One learner, 10 min/day | ≈ $3.70 |
-| One learner, at the daily cap | ≈ $22 |
-| 100 learners, 10 min/day | ≈ $370 |
+| 10 min/day | ≈ $3.70 — or nothing, on the free tier |
+| At the daily cap | ≈ $66 |
 
-Set a spend limit in the Google Cloud console too. The per-account cap protects
-you from one learner; only a spend limit protects you from a hundred.
+These are each learner's own numbers on their own key. Nothing here reaches
+the app owner. A learner who wants a ceiling sets a spend limit in their own
+Google Cloud console.
 
 Note that the correct-everything pedagogy costs money as well as time: the
 tutor talks more than a tutor who lets slips go, and audio output is the
@@ -170,7 +201,10 @@ free-tier audio is not used for training.
 
 | Path | What it does |
 |---|---|
-| `api/realtime-token.ts` | Verifies the learner, counts the session, composes the teacher prompt, mints the token. The only place `GOOGLE_API_KEY` exists. |
+| `api/realtime-token.ts` | Verifies the learner, loads and decrypts their key, counts the session, composes the teacher prompt, mints the token. |
+| `api/voice-key.ts` | Checks a pasted key with Google, encrypts it, stores it; reports last-4; deletes. Never returns a key. |
+| `src/voicekey.ts` | Client half of the above. |
+| `supabase/migrations/0005_voice_keys.sql` | The `voice_keys` table — RLS on, no policies, service role only. |
 | `src/realtime.ts` | The socket, the microphone, the playback queue, the codecs. No DOM. |
 | `src/ui/voice.ts` | The panel: mode picker, orb, voice picker, countdown, transcript. No protocol. |
 | `supabase/migrations/0004_voice_sessions.sql` | Adds `'voice'` to the `ai_usage` kinds. |
@@ -195,14 +229,17 @@ before every sentence stops feeling like a conversation.
 
 ## Switching it on
 
-1. `aistudio.google.com` → **Get API key**.
-2. Run `supabase/migrations/0004_voice_sessions.sql` in the SQL editor.
-3. In Vercel → Settings → Environment Variables, for Production and Preview:
-   `GOOGLE_API_KEY`, `AI_DAILY_VOICE_SESSIONS`, `VOICE_SESSION_MINUTES`, and
-   `VITE_VOICE_ENABLED=true`. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
-   are shared with `/api/ai` and are probably already set.
-4. Redeploy. The panel explains itself if anything is missing rather than
-   failing silently.
+1. Run `supabase/migrations/0004_voice_sessions.sql` and
+   `0005_voice_keys.sql` in the SQL editor.
+2. In Vercel → Settings → Environment Variables, for Production and Preview:
+   `KEY_ENCRYPTION_SECRET` (any long random string), `AI_DAILY_VOICE_SESSIONS`,
+   `VOICE_SESSION_MINUTES`, and `VITE_VOICE_ENABLED=true` as a Config variable.
+   `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are shared with `/api/ai`.
+   `GOOGLE_API_KEY` is no longer read and can be deleted.
+3. Redeploy, then open `/api/realtime-token` in a tab: it lists which settings
+   are present.
+4. Each learner — you included — pastes their own key in the account panel.
+   `aistudio.google.com/apikey` → Create API key, no billing needed.
 
 ## Verified on the first live run (2026-09-13)
 

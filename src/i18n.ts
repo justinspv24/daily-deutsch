@@ -110,6 +110,8 @@ export interface Strings {
   readonly loginTitle: string;
   readonly loginBlurb: string;
   readonly loginPoints: readonly [string, string, string];
+  readonly signInWithGoogle: string;
+  readonly orDivider: string;
   readonly signInTab: string;
   readonly signUpTab: string;
   readonly password: string;
@@ -185,6 +187,23 @@ export interface Strings {
   readonly voiceMisconfigured: string;
   readonly voiceVoiceLabel: string;
   readonly voiceModeLabel: string;
+  /* the learner's own Google AI key */
+  readonly voiceKeyTitle: string;
+  readonly voiceKeyBlurb: string;
+  readonly voiceKeyWhere: string;
+  readonly voiceKeyChecking: string;
+  readonly voiceKeySet: (last4: string) => string;
+  readonly voiceKeyNotSet: string;
+  readonly voiceKeyPlaceholder: string;
+  readonly voiceKeyReplacePlaceholder: string;
+  readonly voiceKeySave: string;
+  readonly voiceKeyRemove: string;
+  readonly voiceKeySaved: string;
+  readonly voiceKeyRemoved: string;
+  readonly voiceKeyEmpty: string;
+  readonly voiceKeyInvalid: string;
+  readonly voiceKeyRequired: string;
+  readonly voiceKeyOpenAccount: string;
   readonly voiceModes: readonly [string, string, string, string];
   readonly voiceModeHints: readonly [string, string, string, string];
 
@@ -310,6 +329,8 @@ const de: Strings = {
     "Fehler kommen morgen wieder, bis sie sitzen",
     "Dein Niveau, deine Themen — auf jedem Gerät"
   ],
+  signInWithGoogle: "Mit Google anmelden",
+  orDivider: "oder mit E-Mail",
   signInTab: "Anmelden",
   signUpTab: "Konto erstellen",
   password: "Passwort",
@@ -387,6 +408,22 @@ const de: Strings = {
   voiceMisconfigured: "Dem Server fehlt eine Einstellung für den Sprachmodus.",
   voiceVoiceLabel: "Stimme",
   voiceModeLabel: "Übung",
+  voiceKeyTitle: "Dein Google-AI-Schlüssel",
+  voiceKeyBlurb: "Der Sprachmodus läuft über deinen eigenen Google-Schlüssel — kostenlos für den Anfang, und nur du bezahlst, was du nutzt. Er wird geprüft, verschlüsselt gespeichert und nie wieder angezeigt.",
+  voiceKeyWhere: "Schlüssel bei Google AI Studio holen ↗",
+  voiceKeyChecking: "Wird geprüft …",
+  voiceKeySet: (last4) => `Gespeichert · endet auf …${last4}`,
+  voiceKeyNotSet: "Noch kein Schlüssel gespeichert.",
+  voiceKeyPlaceholder: "Schlüssel hier einfügen",
+  voiceKeyReplacePlaceholder: "Neuen Schlüssel einfügen, um den alten zu ersetzen",
+  voiceKeySave: "Speichern",
+  voiceKeyRemove: "Entfernen",
+  voiceKeySaved: "Schlüssel geprüft und gespeichert.",
+  voiceKeyRemoved: "Schlüssel entfernt.",
+  voiceKeyEmpty: "Bitte zuerst einen Schlüssel einfügen.",
+  voiceKeyInvalid: "Google hat diesen Schlüssel nicht akzeptiert.",
+  voiceKeyRequired: "Für den Sprachmodus brauchst du deinen eigenen Google-AI-Schlüssel.",
+  voiceKeyOpenAccount: "Schlüssel im Konto hinterlegen",
   voiceModes: ["Frei", "Teil 1", "Teil 2", "Teil 3"],
   voiceModeHints: [
     "Offenes Gespräch mit Korrekturen",
@@ -516,6 +553,8 @@ const en: Strings = {
     "Mistakes come back tomorrow until they stick",
     "Your level, your topics — on every device"
   ],
+  signInWithGoogle: "Sign in with Google",
+  orDivider: "or with e-mail",
   signInTab: "Sign in",
   signUpTab: "Create account",
   password: "Password",
@@ -592,6 +631,22 @@ const en: Strings = {
   voiceMisconfigured: "The server is missing a setting voice mode needs.",
   voiceVoiceLabel: "Voice",
   voiceModeLabel: "Practice",
+  voiceKeyTitle: "Your Google AI key",
+  voiceKeyBlurb: "Voice mode runs on your own Google key — free to start, and only you pay for what you use. It is checked, stored encrypted, and never shown again.",
+  voiceKeyWhere: "Get a key at Google AI Studio ↗",
+  voiceKeyChecking: "Checking …",
+  voiceKeySet: (last4) => `Saved · ends in …${last4}`,
+  voiceKeyNotSet: "No key saved yet.",
+  voiceKeyPlaceholder: "Paste your key here",
+  voiceKeyReplacePlaceholder: "Paste a new key to replace the old one",
+  voiceKeySave: "Save",
+  voiceKeyRemove: "Remove",
+  voiceKeySaved: "Key checked and saved.",
+  voiceKeyRemoved: "Key removed.",
+  voiceKeyEmpty: "Paste a key first.",
+  voiceKeyInvalid: "Google did not accept that key.",
+  voiceKeyRequired: "Voice mode needs your own Google AI key.",
+  voiceKeyOpenAccount: "Add a key in Account",
   voiceModes: ["Free", "Teil 1", "Teil 2", "Teil 3"],
   voiceModeHints: [
     "Open conversation with corrections",

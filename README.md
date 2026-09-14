@@ -93,63 +93,86 @@ appears — a leaked key is the one mistake that is genuinely expensive here.
 
 Every push to `main` redeploys; every pull request gets its own preview URL.
 
+## Signing in
+
+Two doors, same account system: **Sign in with Google** (one click, through
+Supabase's OAuth) or an e-mail address and password. Either way Supabase holds
+the credentials and this app only ever sees a session.
+
+Google sign-in needs a one-time setup — see "Google sign-in" below.
+
 ## Turning the assistant on, later
 
-Three things sit behind one decision: the `cc` chat with a German teacher, the
+Three things sit behind switches: the `cc` chat with a German teacher, the
 `tt` translator that detects direction automatically, and the `vv` voice mode —
-a live spoken conversation. They are off by default because they are the only
-part of this project that costs money.
+a live spoken conversation.
 
-Chat and translation run on Claude through `api/ai.ts`. Voice runs on Google's
-Gemini Live API through `api/realtime-token.ts`, because it needs a model that
-hears and speaks audio directly rather than one that reads and writes text.
-`docs/realtime-voice.md` explains that choice, what it costs, and how the
-audio path is put together.
+Chat and translation run on Claude through `api/ai.ts`, on **your** Anthropic
+key. Voice runs on Google's Gemini Live API through `api/realtime-token.ts` —
+on **each learner's own** Google AI key, which they save once in the account
+panel. You never pay for anyone else's speaking practice, and a learner without
+a key is told so and pointed at where to get one (free, at aistudio.google.com).
+`docs/realtime-voice.md` has the full picture.
 
 To switch chat and translation on, add these to Vercel (no `VITE_` prefix, so
-they never leave the server) and set `VITE_AI_ENABLED=true`:
+they never leave the server) and set `VITE_AI_ENABLED=true` (as a **Config**
+variable — Vercel refuses to save a `VITE_` variable as Secret):
 
 | Name | Where it comes from |
 |---|---|
 | `ANTHROPIC_API_KEY` | console.anthropic.com → API keys |
 | `SUPABASE_URL` | same project URL as above |
 | `SUPABASE_ANON_KEY` | same anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → service_role |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → Legacy → service_role |
 | `AI_DAILY_CHAT_LIMIT` | e.g. `40` |
 | `AI_DAILY_TRANSLATE_LIMIT` | e.g. `120` |
 
-For voice, run `supabase/migrations/0004_voice_sessions.sql`, then add these and
-set `VITE_VOICE_ENABLED=true`:
+For voice, run migrations `0004` and `0005`, then add these and set
+`VITE_VOICE_ENABLED=true` (Config type):
 
 | Name | Where it comes from |
 |---|---|
-| `GOOGLE_API_KEY` | aistudio.google.com → Get API key |
-| `AI_DAILY_VOICE_SESSIONS` | e.g. `6` |
-| `VOICE_SESSION_MINUTES` | e.g. `10` |
+| `KEY_ENCRYPTION_SECRET` | any long random string, e.g. `openssl rand -base64 48` |
+| `AI_DAILY_VOICE_SESSIONS` | e.g. `12` |
+| `VOICE_SESSION_MINUTES` | e.g. `15` |
 
-Three things to understand before you do:
+`https://<your-site>/api/realtime-token` opened in a browser reports which of
+these are present, so a misconfigured deployment says so instead of failing
+with a generic error.
 
-**A Claude.ai subscription cannot pay for this.** Subscriptions cover
+### Google sign-in
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → APIs &
+   Services → **Credentials** → Create credentials → **OAuth client ID** →
+   Web application. Under *Authorised redirect URIs* add
+   `https://YOUR-PROJECT.supabase.co/auth/v1/callback`. Copy the client ID and
+   client secret.
+2. Supabase → Authentication → **Providers** → Google → enable, paste both.
+3. Supabase → Authentication → **URL Configuration**: *Site URL* is your Vercel
+   domain; *Redirect URLs* includes it and `http://localhost:5173`.
+
+No code change is involved; the button in the sign-in screen calls Supabase,
+and Supabase does the rest.
+
+### Two things to understand
+
+**A Claude.ai subscription cannot pay for chat.** Subscriptions cover
 Anthropic's own apps only; a site you host needs an API key with its own
-billing. They are separate products. The same goes for a Gemini subscription.
+billing. Likewise a Gemini subscription is not a Gemini API key.
 
-**The endpoints refuse to run unmetered.** Both require a signed-in learner,
-and without `SUPABASE_SERVICE_ROLE_KEY` they fail closed rather than serving
-calls they cannot count. Chat and translation increment a per-learner daily
-counter in `ai_usage`; voice counts sessions there too, and each session's
-token expires on its own, so one account's worst case is
-`AI_DAILY_VOICE_SESSIONS × VOICE_SESSION_MINUTES`.
-
-**Voice is the expensive one.** On Haiku a translation is roughly 0.07 cents and
-a chat turn about 0.3 cents. A ten-minute spoken conversation is about 11
-cents — forty times a chat turn. The defaults cap one learner near 60 cents a
-day. Set a spend limit in both consoles as a floor under the whole thing.
+**The endpoints refuse to run unmetered.** Both require a signed-in learner
+and fail closed without `SUPABASE_SERVICE_ROLE_KEY`. Chat and translation
+count calls per learner per day in `ai_usage`; voice counts sessions there
+too, and each session's token expires on its own. For voice that cap now
+protects the learner's bill rather than yours — but set a spend limit in the
+Anthropic console for chat, as a floor under the whole thing.
 
 ## How it is put together
 
 ```
 api/ai.ts              serverless endpoint: the only place the Anthropic key exists
-api/realtime-token.ts  mints Live API tokens; the only place the Google key exists
+api/realtime-token.ts  mints Live API tokens on the learner's own key
+api/voice-key.ts       checks, encrypts and stores that key; never returns it
 src/
   main.ts              app controller — routes, session lifecycle, storage switching
   config.ts            build-time environment, and what does not reach the browser
@@ -158,6 +181,7 @@ src/
   repositories/        local (this browser) and supabase (this learner)
   ai.ts                client half of /api/ai
   realtime.ts          the voice socket: mic capture, playback, codecs
+  voicekey.ts          client half of /api/voice-key
   grading.ts           answer judging (exact, umlaut-near, lenient English)
   scheduler.ts         the 1·3·7·21·35 review ladder and streak counting
   session.ts           builds a round: which words, sentences and topics

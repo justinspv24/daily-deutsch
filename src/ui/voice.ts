@@ -100,6 +100,8 @@ export function describeVoiceError(error: unknown): string {
       // The endpoint says exactly what it is missing; pass that through rather
       // than flattening it into "something went wrong".
       return error.message || s.voiceMisconfigured;
+    case "key_required":
+      return s.voiceKeyRequired;
     case "sign_in_required":
       return s.aiSignInRequired;
     case "daily_limit":
@@ -117,7 +119,12 @@ export function describeVoiceError(error: unknown): string {
   }
 }
 
-export function openVoice(level: Level | null): Overlay {
+export interface VoiceHandlers {
+  /** The learner needs to add their Google AI key; take them to where that lives. */
+  onNeedKey(): void;
+}
+
+export function openVoice(level: Level | null, handlers: VoiceHandlers): Overlay {
   const s = t();
   let session: VoiceSession | null = null;
   let state: VoiceState = "idle";
@@ -331,6 +338,7 @@ export function openVoice(level: Level | null): Overlay {
             const message = describeVoiceError(error);
             bubble("assistant", message).dataset["error"] = "true";
             setState("idle", message);
+            if (error.code === "key_required") offerKey();
           } else {
             setState("idle", s.voiceEnded);
           }
@@ -344,7 +352,20 @@ export function openVoice(level: Level | null): Overlay {
       const message = describeVoiceError(error);
       bubble("assistant", message).dataset["error"] = "true";
       setState("idle", message);
+      if (error instanceof VoiceError && error.code === "key_required") offerKey();
     }
+  }
+
+  /** A button under the error that goes straight to the account panel. */
+  function offerKey(): void {
+    if (stream.querySelector(".voice__keycta")) return;
+    const go = h("button", { class: "btn voice__keycta", type: "button" }, s.voiceKeyOpenAccount);
+    go.addEventListener("click", () => {
+      overlay.close();
+      handlers.onNeedKey();
+    });
+    stream.append(go);
+    stream.scrollTop = stream.scrollHeight;
   }
 
   orb.addEventListener("click", () => {

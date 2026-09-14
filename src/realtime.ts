@@ -28,6 +28,7 @@ export type VoiceState = "idle" | "connecting" | "listening" | "speaking";
 export type VoiceErrorCode =
   | "ai_disabled"
   | "misconfigured"
+  | "key_required"
   | "sign_in_required"
   | "daily_limit"
   | "mic_denied"
@@ -146,6 +147,7 @@ async function mintToken(options: VoiceOptions): Promise<TokenResponse> {
   const code: VoiceErrorCode =
     detail.error === "ai_disabled" ||
     detail.error === "misconfigured" ||
+    detail.error === "key_required" ||
     detail.error === "sign_in_required" ||
     detail.error === "daily_limit"
       ? detail.error

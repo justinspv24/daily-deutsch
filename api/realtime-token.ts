@@ -2,12 +2,18 @@
  * POST /api/realtime-token — mints a short-lived Google ephemeral token, and
  * composes the session config that goes with it.
  *
- * The Google API key never leaves this function. What the browser gets back is
- * a token that expires in minutes plus the `config` object it must send in its
- * setup frame: the teacher's instructions, the voice, the transcription
- * settings. Composing that here rather than in the bundle means the prompt is
- * built from the learner's actual level and is not sitting in a JavaScript file
- * for anyone to read.
+ * Voice runs on each learner's *own* Google AI key. The key was saved through
+ * /api/voice-key, encrypted; here it is decrypted just long enough to ask
+ * Google for a token, and then dropped. The browser only ever receives the
+ * token — never the key — plus the `config` object it must send in its setup
+ * frame: the teacher's instructions, the voice, the transcription settings.
+ * Composing that here rather than in the bundle means the prompt is built from
+ * the learner's actual level and is not sitting in a JavaScript file for
+ * anyone to read.
+ *
+ * There is no shared fallback key on purpose. A learner without a key of their
+ * own is told so and pointed at the account panel; nobody's usage lands on
+ * anybody else's bill.
  *
  * Metering works differently from /api/ai. There the server sees every turn and
  * can count them; here the audio goes straight to Google, so the only moment we
@@ -15,6 +21,8 @@
  * after VOICE_SESSION_MINUTES. Sessions per day x minutes per session is a hard
  * ceiling on what one account can spend, enforced before any audio flows.
  */
+
+import { createDecipheriv, createHash } from "node:crypto";
 
 interface VercelRequest {
   method?: string;
@@ -180,15 +188,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const apiKey = env("GOOGLE_API_KEY");
-  if (!apiKey) {
-    res.status(503).json({
-      error: "ai_disabled",
-      message: "Voice mode is not switched on for this deployment."
-    });
-    return;
-  }
-
   // A 401 here has two very different causes, and they need different fixes.
   // Distinguish them: a deployment missing its Supabase settings is a config
   // problem, not a signed-out learner.
@@ -208,17 +207,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  if (!env("SUPABASE_SERVICE_ROLE_KEY")) {
+  if (!env("SUPABASE_SERVICE_ROLE_KEY") || !env("KEY_ENCRYPTION_SECRET")) {
     res.status(503).json({
       error: "misconfigured",
-      message: "Voice mode cannot meter usage on this deployment, so it will not start a session.",
+      message: "Voice mode cannot read keys or meter usage on this deployment, so it will not start a session.",
       config: configReport()
     });
     return;
   }
 
-  const sessionMinutes = clamp(Number(env("VOICE_SESSION_MINUTES") || 10), 1, 30);
-  const dailySessions = clamp(Number(env("AI_DAILY_VOICE_SESSIONS") || 6), 1, 100);
+  // The learner's own key, or a clear refusal. Checked before the session is
+  // counted: a refused call should not cost anyone a slot.
+  const apiKey = await learnerKey(userId);
+  if (!apiKey) {
+    res.status(403).json({
+      error: "key_required",
+      message: "Add your Google AI key in the account panel to use voice mode."
+    });
+    return;
+  }
+
+  // With every learner on their own key the daily cap is no longer about the
+  // owner's bill; it is a seatbelt for the learner's, against a tab left open
+  // or a key that leaks. The defaults are generous for that reason.
+  const sessionMinutes = clamp(Number(env("VOICE_SESSION_MINUTES") || 15), 1, 30);
+  const dailySessions = clamp(Number(env("AI_DAILY_VOICE_SESSIONS") || 12), 1, 100);
 
   if (!(await countSession(userId, dailySessions))) {
     res.status(429).json({
@@ -347,10 +360,10 @@ function supabaseAnon(): string {
  */
 function configReport(): Record<string, boolean> {
   return {
-    GOOGLE_API_KEY: Boolean(env("GOOGLE_API_KEY")),
     SUPABASE_URL: Boolean(supabaseUrl()),
     SUPABASE_ANON_KEY: Boolean(supabaseAnon()),
-    SUPABASE_SERVICE_ROLE_KEY: Boolean(env("SUPABASE_SERVICE_ROLE_KEY"))
+    SUPABASE_SERVICE_ROLE_KEY: Boolean(env("SUPABASE_SERVICE_ROLE_KEY")),
+    KEY_ENCRYPTION_SECRET: Boolean(env("KEY_ENCRYPTION_SECRET"))
   };
 }
 
@@ -386,6 +399,37 @@ async function verifyUser(token: string): Promise<string | null> {
     if (!response.ok) return null;
     const user = (await response.json()) as { id?: string };
     return user.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The learner's Google AI key, decrypted, or null if they have not saved one.
+ * Mirrors the encryption in /api/voice-key: AES-256-GCM under a key derived
+ * from KEY_ENCRYPTION_SECRET. A row that will not decrypt (the secret was
+ * rotated, say) is treated as absent, so the learner is asked to save the key
+ * again rather than shown a stack trace.
+ */
+async function learnerKey(userId: string): Promise<string | null> {
+  const url = supabaseUrl();
+  const serviceKey = env("SUPABASE_SERVICE_ROLE_KEY");
+
+  try {
+    const response = await fetch(
+      `${url}/rest/v1/voice_keys?user_id=eq.${userId}&select=ciphertext,iv,tag`,
+      { headers: { apikey: serviceKey, authorization: `Bearer ${serviceKey}` } }
+    );
+    if (!response.ok) return null;
+    const rows = (await response.json()) as Array<{ ciphertext: string; iv: string; tag: string }>;
+    const row = rows[0];
+    if (!row) return null;
+
+    const key = createHash("sha256").update(env("KEY_ENCRYPTION_SECRET")).digest();
+    const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(row.iv, "base64"));
+    decipher.setAuthTag(Buffer.from(row.tag, "base64"));
+    const plain = Buffer.concat([decipher.update(Buffer.from(row.ciphertext, "base64")), decipher.final()]);
+    return plain.toString("utf8") || null;
   } catch {
     return null;
   }

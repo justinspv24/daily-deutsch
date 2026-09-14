@@ -75,15 +75,8 @@ class App {
       },
       onChat: () => openChat(),
       onTranslate: () => openTranslator(),
-      onVoice: () => openVoice(this.progress.level),
-      onAccount: () => {
-        if (!this.learner) return;
-        openAccount(this.learner, this.progress.level, {
-          onSignedOut: () => void this.adoptLearner(null, { wipeLocal: true }),
-          onChangeLevel: () => this.context().go("level"),
-          onChangePassword: () => this.context().go("recovery")
-        });
-      }
+      onVoice: () => openVoice(this.progress.level, { onNeedKey: () => this.openAccountPanel() }),
+      onAccount: () => this.openAccountPanel()
     });
     this.shell.setLearner(null);
     this.paint();
@@ -93,10 +86,20 @@ class App {
     registerDoubleTap({
       c: () => openChat(),
       t: () => openTranslator(),
-      v: () => openVoice(this.progress.level)
+      v: () => openVoice(this.progress.level, { onNeedKey: () => this.openAccountPanel() })
     });
 
     void this.restoreSession();
+  }
+
+  /** The account panel — also where voice mode sends a learner who has no key yet. */
+  private openAccountPanel(): void {
+    if (!this.learner) return;
+    openAccount(this.learner, this.progress.level, {
+      onSignedOut: () => void this.adoptLearner(null, { wipeLocal: true }),
+      onChangeLevel: () => this.context().go("level"),
+      onChangePassword: () => this.context().go("recovery")
+    });
   }
 
   /* --------------------------------------------------------------- auth */

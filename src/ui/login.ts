@@ -2,6 +2,7 @@ import {
   PASSWORD_MIN_LENGTH,
   requestPasswordReset,
   signIn,
+  signInWithGoogle,
   signUp,
   updatePassword,
   validEmail,
@@ -216,6 +217,25 @@ export function renderLogin(): HTMLElement {
     );
   }
 
+  /* Google ------------------------------------------------------------- */
+  const google = h(
+    "button",
+    { class: "btn btn--lg btn--google", type: "button" },
+    h("span", { class: "btn__g", "aria-hidden": "true" }, "G"),
+    s.signInWithGoogle
+  );
+  google.addEventListener("click", () => {
+    google.setAttribute("disabled", "true");
+    void signInWithGoogle().then((result) => {
+      // On success the page is already navigating away; only a failure comes back.
+      if (!result.ok) {
+        google.removeAttribute("disabled");
+        report("no", describeAuthError(result.code));
+      }
+    });
+  });
+  const divider = h("div", { class: "login__or", role: "separator" }, h("span", {}, s.orDivider));
+
   const card = h(
     "section",
     { class: "card hero login" },
@@ -224,6 +244,8 @@ export function renderLogin(): HTMLElement {
     h("h2", { class: "display" }, s.loginTitle),
     h("p", { class: "lede" }, s.loginBlurb),
     points,
+    google,
+    divider,
     tabs,
     hint,
     form

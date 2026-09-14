@@ -1959,3 +1959,89 @@ td.is-meta {
     font-size: 0.5625rem;
   }
 }
+
+/* ------------------------------------------------------------ google sign-in */
+
+.btn--google {
+  width: 100%;
+  justify-content: center;
+  gap: var(--sp-3);
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-btn);
+}
+
+.btn--google:hover {
+  border-color: var(--accent);
+}
+
+/* A plain "G" in a circle stands in for the logo: instantly readable, and
+   nothing here has to load from anywhere. */
+.btn__g {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+  background: conic-gradient(#4285f4 0 25%, #34a853 0 50%, #fbbc05 0 75%, #ea4335 0);
+}
+
+.login__or {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-4) 0;
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+}
+
+.login__or::before,
+.login__or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ------------------------------------------------------------- account key */
+
+.account__key {
+  display: block;
+}
+
+.account__key .notice__body[data-tone="ok"] {
+  color: var(--ok);
+}
+
+.account__key .notice__body[data-tone="no"] {
+  color: var(--no);
+}
+
+.account__keyrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.account__keyinput {
+  flex: 1 1 14rem;
+  min-width: 0;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.account__keyrow .btn[disabled],
+.account__keyinput[disabled] {
+  opacity: 0.55;
+}
+
+.voice__keycta {
+  align-self: center;
+  margin-top: var(--sp-2);
+}

@@ -131,6 +131,30 @@ export async function updatePassword(password: string): Promise<AuthResult> {
   }
 }
 
+/**
+ * One-click sign-in through Google. Supabase handles the whole dance: this
+ * sends the browser to Google, Google sends it back to Supabase, and Supabase
+ * sends it back here with a session in the URL fragment, which the client
+ * picks up because `detectSessionInUrl` is on. Nothing about the Google
+ * account beyond name and address ever reaches this app — and in particular
+ * no Google *API* access: a learner's Gemini key is a separate thing they add
+ * themselves in the account panel.
+ */
+export async function signInWithGoogle(): Promise<AuthResult> {
+  const db = supabase();
+  if (!db) return fail("offline");
+
+  try {
+    const { error } = await db.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${location.origin}/` }
+    });
+    return error ? fail(classify(error.message, error.status)) : OK;
+  } catch {
+    return fail("offline");
+  }
+}
+
 export async function signOut(): Promise<void> {
   await supabase()?.auth.signOut();
 }
