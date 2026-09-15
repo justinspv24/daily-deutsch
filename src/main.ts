@@ -6,7 +6,13 @@ import "./styles/overlay.css";
 import { currentLearner, onAuthChange, supabase } from "./auth";
 import { CLOUD_ENABLED } from "./config";
 import { getLang, setLang, t } from "./i18n";
-import { LocalRepository, clearLocalProgress, readLocalProgress } from "./repositories/local";
+import {
+  ANON_SCOPE,
+  LocalRepository,
+  clearLocalProgress,
+  dropLegacyLocalProgress,
+  readLocalProgress
+} from "./repositories/local";
 import { SupabaseRepository } from "./repositories/supabase";
 import { emptyProgress, mergeProgress, seedLevel, type Repository } from "./repository";
 import { advanceTopic, todayISO } from "./scheduler";
@@ -49,7 +55,7 @@ class App {
   private learner: Learner | null = null;
   /** True between a password-reset link landing and the new password being saved. */
   private recovering = false;
-  private repository: Repository = new LocalRepository();
+  private repository: Repository = new LocalRepository(ANON_SCOPE);
   private shell: Shell;
   private summaryScored = false;
   /** Coalesces the writes that a fast round would otherwise fire off. */
@@ -62,7 +68,8 @@ class App {
     // With an account system behind the app the front door is the sign-in
     // screen; without one (tests, a bare checkout) the drill is open as before.
     this.route = CLOUD_ENABLED ? "loading" : "home";
-    this.progress = readLocalProgress();
+    dropLegacyLocalProgress();
+    this.progress = readLocalProgress(ANON_SCOPE);
 
     this.shell = buildShell(root, {
       onLangChange: () => {
@@ -137,29 +144,38 @@ class App {
   }
 
   /**
-   * Switch storage layers. Signing in merges whatever this device already
-   * holds into the account; signing out drops back to an empty local copy so
-   * the next person at this browser starts from nothing.
+   * Switch storage layers. Every mirror is scoped — to a learner id, or to
+   * `ANON_SCOPE` for drilling done before signing in — so one account can
+   * never read or inherit another's work at the same browser. Only anonymous
+   * work follows someone into their account, and only once.
    */
   private async adoptLearner(learner: Learner | null, options: { wipeLocal: boolean }): Promise<void> {
+    const previous = this.learner;
     this.learner = learner;
     this.shell.setLearner(learner);
     this.session = null;
 
     const client = supabase();
     if (!learner || !client) {
-      this.repository = new LocalRepository();
+      this.repository = new LocalRepository(ANON_SCOPE);
       if (options.wipeLocal) {
-        clearLocalProgress();
+        clearLocalProgress(ANON_SCOPE);
+        // Signing out leaves nothing of that learner on a shared browser.
+        if (previous) clearLocalProgress(previous.id);
         this.progress = emptyProgress();
       } else {
-        this.progress = readLocalProgress();
+        this.progress = readLocalProgress(ANON_SCOPE);
       }
       this.route = this.landing();
       this.paint();
       return;
     }
 
+    const mirror = new LocalRepository(learner.id);
+    // Whatever the previous learner left behind stays in their own mirror;
+    // the only thing that may follow anyone into an account is work done
+    // while signed out.
+    const carried = readLocalProgress(ANON_SCOPE);
     const cloud = new SupabaseRepository(client, learner.id);
     try {
       const remote = await Promise.race([
@@ -168,16 +184,19 @@ class App {
           setTimeout(() => reject(new Error("progress load timed out")), AUTH_TIMEOUT_MS)
         )
       ]);
-      const merged = mergeProgress(this.progress, remote);
+      const merged = mergeProgress(carried, remote);
       this.repository = cloud;
       this.progress = merged;
       await cloud.save(merged);
-      // Keep the local mirror warm so a dropped connection is invisible.
-      await new LocalRepository().save(merged);
+      // Spent: it has landed in this account and must not land in a second.
+      clearLocalProgress(ANON_SCOPE);
+      // Keep this learner's mirror warm so a dropped connection is invisible.
+      await mirror.save(merged);
     } catch {
-      // The account is real but unreachable; carry on locally rather than
-      // blocking the drill on the network.
-      this.repository = new LocalRepository();
+      // The account is real but unreachable; carry on from this learner's own
+      // mirror rather than blocking the drill on the network.
+      this.repository = mirror;
+      this.progress = await mirror.load();
     }
     this.route = this.landing();
     this.paint();
@@ -195,7 +214,7 @@ class App {
   /* -------------------------------------------------------------- state */
 
   private persist(): void {
-    void new LocalRepository().save(this.progress);
+    void new LocalRepository(this.learner?.id ?? ANON_SCOPE).save(this.progress);
     if (this.repository.kind !== "cloud") return;
     if (this.saveTimer) clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => {
