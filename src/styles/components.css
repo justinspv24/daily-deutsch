@@ -2167,3 +2167,122 @@ td.is-meta {
     flex-basis: 100%;
   }
 }
+
+/* -------------------------------------------------------------- installing */
+
+.install {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.install__blurb {
+  flex: 1 1 14rem;
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+}
+
+/* Once it is running from the home screen there is nothing left to offer. */
+@media (display-mode: standalone) {
+  .install {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------- umlaut key strip */
+/* Typing ä ö ü ß means a long-press on a phone keyboard, so touch devices get
+   a strip of real keys. A hardware keyboard does not need it. */
+
+.umlauts {
+  display: none;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.umlauts__key {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  font-family: var(--font-mono);
+  font-size: var(--step-1);
+  line-height: 1;
+  color: var(--ink);
+}
+
+.umlauts__key:active {
+  background: var(--accent-wash);
+  border-color: var(--accent);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .umlauts {
+    display: flex;
+  }
+}
+
+/* ------------------------------------------------------- phones in general */
+
+@media (max-width: 40rem) {
+  /* Never smaller than 16px in a field: anything less makes iOS zoom the
+     whole page on focus, and it never zooms back out. */
+  .field__input,
+  .blank,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    font-size: max(1rem, var(--step-0));
+  }
+
+  /* Comfortable thumb targets. */
+  .btn,
+  .linkbtn,
+  .stepper__item {
+    min-height: 2.75rem;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+  }
+
+  .actions .btn {
+    flex: 1 1 auto;
+  }
+
+  /* The row label stays put while a wide paradigm scrolls sideways, so you
+     can always see which case you are looking at. */
+  .paradigm__rowhead {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    max-width: 9.5rem;
+    box-shadow: 1px 0 0 var(--line);
+  }
+
+  .paradigm__corner {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--surface-sunk);
+  }
+}
+
+/* Installed full screen, the app paints under the notch and the home
+   indicator; the insets put the padding back. */
+@supports (padding: env(safe-area-inset-top)) {
+  @media (display-mode: standalone) {
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+  }
+}

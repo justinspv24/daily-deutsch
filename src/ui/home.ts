@@ -8,6 +8,7 @@ import {
   dueTopics,
   suggestedTopic
 } from "../session";
+import { canInstall, isIOS, isStandalone, promptInstall } from "../pwa";
 import { openAddWord } from "./addword";
 import { h, ICON_ARROW, svgIcon } from "./dom";
 import type { AppContext } from "./context";
@@ -100,6 +101,10 @@ export function renderHome(ctx: AppContext): HTMLElement {
   const addButton = h("button", { class: "btn btn--ghost", type: "button" }, s.addWordButton);
   addButton.addEventListener("click", () => openAddWord((item) => ctx.addWord(item)));
 
+  // Offered only where it can be acted on: never once installed, and on iOS
+  // as a written hint, because Safari has no install prompt to replay.
+  const install = buildInstallOffer();
+
   const hero = h(
     "section",
     { class: "card hero" },
@@ -108,10 +113,29 @@ export function renderHome(ctx: AppContext): HTMLElement {
     lede,
     h("div", { class: "actions" }, start, progressButton, addButton)
   );
+  if (install) hero.append(install);
 
   const plan = h("section", { class: "plan" }, h("h3", { class: "sectiontitle" }, s.todayPlan), agenda);
 
   return h("div", { class: "home" }, hero, statsRow(ctx.progress), plan);
+}
+
+/** The install row, or null when there is nothing useful to offer. */
+function buildInstallOffer(): HTMLElement | null {
+  if (isStandalone()) return null;
+  const s = t();
+
+  if (canInstall()) {
+    const button = h("button", { class: "btn btn--ghost btn--install", type: "button" }, s.installButton);
+    button.addEventListener("click", () => void promptInstall());
+    return h("div", { class: "install" }, h("span", { class: "install__blurb" }, s.installBlurb), button);
+  }
+
+  if (isIOS()) {
+    return h("div", { class: "install" }, h("span", { class: "install__blurb" }, s.installIOSHint));
+  }
+
+  return null;
 }
 
 /** Kept verbatim so the German view can gloss it without a second lookup. */

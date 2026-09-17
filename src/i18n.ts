@@ -32,6 +32,9 @@ export interface Strings {
   readonly gridStatusDay: (n: number) => string;
   readonly gridStatusNew: string;
   readonly overdueSuffix: (n: number) => string;
+  readonly installButton: string;
+  readonly installBlurb: string;
+  readonly installIOSHint: string;
   readonly wordsUnit: (n: number) => string;
   readonly tablesUnit: (n: number) => string;
   readonly sentencesUnit: (n: number) => string;
@@ -267,6 +270,9 @@ const de: Strings = {
   gridStatusDay: (n) => `Tag ${n} von 3`,
   gridStatusNew: "neu",
   overdueSuffix: (n) => ` — ${n} überfällig`,
+  installButton: "App installieren",
+  installBlurb: "Auf den Startbildschirm — offline üben, ohne Browserleiste.",
+  installIOSHint: "Installieren: Teilen-Symbol antippen → „Zum Home-Bildschirm“.",
   wordsUnit: (n) => (n === 1 ? "1 Wort" : `${n} Wörter`),
   tablesUnit: (n) => (n === 1 ? "1 Tabelle" : `${n} Tabellen`),
   sentencesUnit: (n) => (n === 1 ? "1 Satz" : `${n} Sätze`),
@@ -510,6 +516,9 @@ const en: Strings = {
   gridStatusDay: (n) => `day ${n} of 3`,
   gridStatusNew: "new",
   overdueSuffix: (n) => ` — ${n} overdue`,
+  installButton: "Install app",
+  installBlurb: "On your home screen — drill offline, with no browser bar.",
+  installIOSHint: "To install: tap the Share icon → Add to Home Screen.",
   wordsUnit: (n) => (n === 1 ? "1 word" : `${n} words`),
   tablesUnit: (n) => (n === 1 ? "1 table" : `${n} tables`),
   sentencesUnit: (n) => (n === 1 ? "1 sentence" : `${n} sentences`),

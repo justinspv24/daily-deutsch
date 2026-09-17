@@ -5,6 +5,7 @@ import "./styles/overlay.css";
 
 import { currentLearner, onAuthChange, supabase } from "./auth";
 import { CLOUD_ENABLED } from "./config";
+import { initPwa, onInstallChange } from "./pwa";
 import { getLang, setLang, t } from "./i18n";
 import {
   ANON_SCOPE,
@@ -87,6 +88,9 @@ class App {
       onAccount: () => this.openAccountPanel()
     });
     this.shell.setLearner(null);
+    // The browser decides when the install prompt becomes available; redraw
+    // so the offer can appear without a navigation.
+    onInstallChange(() => this.paint());
     this.paint();
 
     // Always live, so a double-tap explains itself ("not switched on yet")
@@ -382,6 +386,8 @@ class App {
     }
   }
 }
+
+initPwa();
 
 const mount = document.getElementById("app");
 if (mount) new App(mount);

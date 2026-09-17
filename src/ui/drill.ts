@@ -55,6 +55,9 @@ export function renderDrill(ctx: AppContext): HTMLElement {
   );
 
   const inputs = buildFields(body, task);
+  // Umlauts need a long-press on a phone keyboard, so the answer fields get
+  // their own key strip. CSS keeps it to touch devices.
+  if (inputs.length > 0) body.append(umlautBar(inputs));
 
   let graded = false;
 
@@ -219,7 +222,9 @@ function buildTableCellField(body: HTMLElement, task: TableCellTask): HTMLInputE
     type: "text",
     autocomplete: "off",
     autocapitalize: "off",
+    autocorrect: "off",
     spellcheck: "false",
+    enterkeyhint: "done",
     "aria-label": "Antwort"
   });
 
@@ -234,6 +239,36 @@ function buildTableCellField(body: HTMLElement, task: TableCellTask): HTMLInputE
     h("p", { class: "gloss gloss--ml" }, `${task.rowLabel.ml} · ${task.colLabel.ml}`)
   );
   return [input];
+}
+
+/** ä ö ü ß, inserted at the caret of whichever field was last focused. */
+const UMLAUTS = ["ä", "ö", "ü", "ß", "Ä", "Ö", "Ü"] as const;
+
+function umlautBar(inputs: HTMLInputElement[]): HTMLElement {
+  const bar = h("div", { class: "umlauts", "aria-label": "Umlaute" });
+  let target: HTMLInputElement = inputs[0]!;
+  for (const input of inputs) {
+    input.addEventListener("focus", () => {
+      target = input;
+    });
+  }
+
+  for (const char of UMLAUTS) {
+    const key = h("button", { class: "umlauts__key", type: "button", tabindex: "-1" }, char);
+    // Without this the field blurs before the click lands and the caret is lost.
+    key.addEventListener("mousedown", (event) => event.preventDefault());
+    key.addEventListener("click", () => {
+      if (target.readOnly) return;
+      const start = target.selectionStart ?? target.value.length;
+      const end = target.selectionEnd ?? start;
+      target.value = target.value.slice(0, start) + char + target.value.slice(end);
+      const caret = start + char.length;
+      target.setSelectionRange(caret, caret);
+      target.focus();
+    });
+    bar.append(key);
+  }
+  return bar;
 }
 
 function buildVocabFields(body: HTMLElement, task: VocabTask): HTMLInputElement[] {
@@ -253,13 +288,17 @@ function buildVocabFields(body: HTMLElement, task: VocabTask): HTMLInputElement[
   const fields = h("div", { class: "fields" });
   const collected: HTMLInputElement[] = [];
 
-  const addField = (label: string, placeholder: string): void => {
+  const addField = (label: string, placeholder: string, last = false): void => {
     const input = h("input", {
       class: "field__input",
       type: "text",
       autocomplete: "off",
       autocapitalize: "off",
+      autocorrect: "off",
       spellcheck: "false",
+      // The soft keyboard's action key: "next" walks the three fields, "done"
+      // on the last one submits the card.
+      enterkeyhint: last ? "done" : "next",
       placeholder,
       "aria-label": label
     });
@@ -269,7 +308,7 @@ function buildVocabFields(body: HTMLElement, task: VocabTask): HTMLInputElement[
 
   addField(isVerb ? s.auxiliary : s.article, isVerb ? "sein / haben" : "der / die / das");
   addField(s.meaning, isVerb ? "to …" : "");
-  addField(isVerb ? s.participle : s.plural, isVerb ? "ge…" : "die …");
+  addField(isVerb ? s.participle : s.plural, isVerb ? "ge…" : "die …", true);
 
   body.append(fields);
   return collected;
@@ -283,7 +322,9 @@ function buildBlankField(body: HTMLElement, task: BlankTask): HTMLInputElement[]
     type: "text",
     autocomplete: "off",
     autocapitalize: "off",
+    autocorrect: "off",
     spellcheck: "false",
+    enterkeyhint: "done",
     "aria-label": "Antwort"
   });
 

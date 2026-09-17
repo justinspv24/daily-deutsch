@@ -2,7 +2,7 @@
 <html lang="de" data-theme="light">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Daily Deutsch</title>
     <meta
       name="description"
@@ -11,6 +11,16 @@
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f3ee" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0b10" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Installed on a phone this runs full screen, with its own name under
+         the icon. iOS reads the apple- prefixed pair; everyone else the
+         manifest. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Deutsch" />
 
     <meta property="og:title" content="Daily Deutsch" />
     <meta property="og:description" content="A daily German drill that remembers your mistakes." />
