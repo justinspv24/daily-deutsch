@@ -2050,3 +2050,120 @@ td.is-meta {
   align-self: center;
   margin-top: var(--sp-2);
 }
+
+/* ------------------------------------------------------- paradigm tables */
+/* The grids a learner memorises: articles, pronouns, endings, verb cases.
+   German on top of each header, the learner's own language beneath it. */
+
+.paradigm__wrap {
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+
+.paradigm {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--step--1);
+}
+
+.paradigm th,
+.paradigm td {
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.paradigm thead th {
+  background: var(--surface-sunk);
+  vertical-align: bottom;
+}
+
+.paradigm tbody tr:last-child th,
+.paradigm tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.paradigm__rowhead {
+  background: var(--surface-sunk);
+  white-space: normal;
+  max-width: 16rem;
+}
+
+.paradigm__head {
+  display: block;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* The mother-tongue gloss sits under the German, quieter and smaller. */
+.paradigm__gloss {
+  display: block;
+  font-size: var(--step--2);
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+.paradigm td {
+  font-family: var(--font-mono);
+  font-size: var(--step-0);
+  color: var(--accent-text);
+}
+
+.gloss--ml {
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------ the personal dictionary */
+
+.misslist {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.misslist__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--no-wash);
+  font-size: var(--step--1);
+}
+
+.misslist__cell {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.misslist__answer {
+  font-family: var(--font-mono);
+  color: var(--accent-text);
+}
+
+.misslist__table {
+  margin-left: auto;
+  color: var(--ink-faint);
+  font-size: var(--step--2);
+}
+
+@media (max-width: 40rem) {
+  .paradigm th,
+  .paradigm td {
+    padding: 0.45rem 0.5rem;
+  }
+
+  .misslist__table {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}

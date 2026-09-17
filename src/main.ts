@@ -15,12 +15,13 @@ import {
 } from "./repositories/local";
 import { SupabaseRepository } from "./repositories/supabase";
 import { emptyProgress, mergeProgress, seedLevel, type Repository } from "./repository";
-import { advanceTopic, todayISO } from "./scheduler";
+import { advanceTable, advanceTopic, todayISO } from "./scheduler";
 import {
   GRAMMAR_PER_SESSION,
   TOPICS_PER_SESSION,
   activeVocab,
   buildSession,
+  dueTables,
   dueTopics,
   firstUnanswered,
   stepStates as computeStepStates
@@ -285,6 +286,9 @@ class App {
     for (const [topicId, hit] of Object.entries(this.session.topicHits)) {
       advanceTopic(this.progress, topicId, hit);
     }
+    for (const [tableId, hit] of Object.entries(this.session.tableHits)) {
+      advanceTable(this.progress, tableId, hit);
+    }
     const record = {
       date: todayISO(),
       right: this.session.results.filter((r) => r.ok).length,
@@ -303,12 +307,14 @@ class App {
 
   /* --------------------------------------------------------------- view */
 
-  private stepperCounts(): readonly [string, string, string, string] {
+  private stepperCounts(): readonly string[] {
     const s = t();
     const words = activeVocab(this.progress).length;
+    const grids = dueTables(this.progress).length;
     const due = dueTopics(this.progress).length;
     return [
       words ? s.wordsUnit(words) : s.allClear,
+      grids ? s.tablesUnit(grids) : s.allClear,
       s.sentencesUnit(GRAMMAR_PER_SESSION),
       due ? s.dueUnit(Math.min(due, TOPICS_PER_SESSION)) : s.nothingDue,
       s.upNext
@@ -316,7 +322,7 @@ class App {
   }
 
   private stepStates(): readonly StepState[] {
-    if (this.route === "summary") return ["done", "done", "done", "active"];
+    if (this.route === "summary") return ["done", "done", "done", "done", "active"];
     if (this.route === "drill" && this.session) return computeStepStates(this.session);
     return ["idle", "idle", "idle", "idle"];
   }

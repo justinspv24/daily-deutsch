@@ -163,7 +163,7 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
  */
 export function paintStepper(
   stepper: HTMLElement,
-  counts: readonly [string, string, string, string],
+  counts: readonly string[],
   states: readonly StepState[],
   onSelect: ((step: number) => void) | null
 ): void {

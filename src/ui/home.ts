@@ -4,6 +4,7 @@ import {
   GRAMMAR_PER_SESSION,
   TOPICS_PER_SESSION,
   activeVocab,
+  dueTables,
   dueTopics,
   suggestedTopic
 } from "../session";
@@ -23,6 +24,7 @@ export function renderHome(ctx: AppContext): HTMLElement {
   const s = t();
   const words = activeVocab(ctx.progress);
   const due = dueTopics(ctx.progress);
+  const grids = dueTables(ctx.progress);
   const overdue = due.filter((topic) => (ctx.progress.topics[topic.id]?.due ?? "") < todayISO()).length;
   const upcoming = suggestedTopic(ctx.progress, ctx.learner?.id ?? "");
   const level = ctx.progress.level;
@@ -36,12 +38,18 @@ export function renderHome(ctx: AppContext): HTMLElement {
     },
     {
       title: s.steps[1],
+      detail: grids.length ? grids.map((table) => table.name.de).join(" · ") : s.stepGridDetailEmpty,
+      count: String(grids.length),
+      empty: grids.length === 0
+    },
+    {
+      title: s.steps[2],
       detail: s.stepTablesDetail,
       count: String(GRAMMAR_PER_SESSION),
       empty: false
     },
     {
-      title: s.steps[2],
+      title: s.steps[3],
       detail: due.length
         ? due
             .slice(0, TOPICS_PER_SESSION)
@@ -52,7 +60,7 @@ export function renderHome(ctx: AppContext): HTMLElement {
       empty: due.length === 0
     },
     {
-      title: s.steps[3],
+      title: s.steps[4],
       detail: `${pick(upcoming.title)} — ${pick(upcoming.blurb)}`,
       count: s.upNext,
       empty: true

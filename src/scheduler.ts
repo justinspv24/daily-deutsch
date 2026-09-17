@@ -1,4 +1,4 @@
-import type { Progress, SessionRecord } from "./types";
+import type { Progress, SessionRecord, TableProgress } from "./types";
 
 /**
  * Expanding review intervals, after Cepeda et al. — the ladder written into
@@ -48,6 +48,52 @@ export function advanceTopic(
     state.stage = Math.max(0, state.stage - 1);
     state.due = addDays(todayISO(), 1);
   }
+}
+
+/** Clean days in a row before a paradigm table stops being asked. */
+export const TABLE_MASTERY_DAYS = 3;
+
+/**
+ * Roll one paradigm table forward after a round.
+ *
+ * The rule is deliberately strict, because these grids are the ones you have
+ * to be able to recite cold: only a day with no wrong cell at all counts, one
+ * day can never count twice, and a skipped day breaks the chain and starts a
+ * fresh one. Anything missed goes into the table's personal dictionary and is
+ * asked first thing the next day.
+ */
+export function advanceTable(
+  progress: Progress,
+  tableId: string,
+  hit: { right: number; wrong: number; missed: readonly string[] }
+): void {
+  const state = progress.tables[tableId];
+  if (!state) return;
+  if (hit.right === 0 && hit.wrong === 0) return;
+
+  const today = todayISO();
+
+  if (hit.wrong === 0) {
+    if (state.lastDate === today) {
+      /* Already credited today — a second clean sweep proves nothing new. */
+    } else if (state.lastDate === null || state.lastDate === addDays(today, -1)) {
+      state.dayStreak += 1;
+    } else {
+      // A day was skipped, so the run is broken; today starts the next one.
+      state.dayStreak = 1;
+    }
+    state.missed = [];
+  } else {
+    state.dayStreak = 0;
+    state.missed = [...new Set([...state.missed, ...hit.missed])];
+  }
+
+  state.lastDate = today;
+  state.due = addDays(today, 1);
+}
+
+export function tableMastered(state: TableProgress | undefined): boolean {
+  return (state?.dayStreak ?? 0) >= TABLE_MASTERY_DAYS;
 }
 
 /** Consecutive days ending today (or yesterday, so an evening gap is forgiving). */

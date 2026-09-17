@@ -1,10 +1,12 @@
 import { DEFAULT_LEVEL, allCurricula, curriculumFor, isLevel } from "./data/curriculum";
+import { TABLES } from "./data/tables";
 import { todayISO } from "./scheduler";
 import type {
   GrammarProgress,
   Level,
   Progress,
   SessionRecord,
+  TableProgress,
   TopicProgress,
   VocabItem,
   VocabProgress
@@ -45,6 +47,7 @@ export function emptyProgress(level: Level | null = null): Progress {
     vocab: {},
     grammar: {},
     topics: {},
+    tables: {},
     sessions: []
   };
   seedLevel(progress, level);
@@ -59,6 +62,15 @@ export function seedLevel(progress: Progress, level: Level | null): void {
   for (const topic of bank.topics) {
     progress.topics[topic.id] ??= { stage: topic.seedStage, due: todayISO(), lastDate: null };
   }
+  // The paradigm tables are not level-specific: articles and pronouns are as
+  // necessary at B2 as at A1, so every learner carries the whole set.
+  for (const table of TABLES) {
+    progress.tables[table.id] ??= freshTable();
+  }
+}
+
+function freshTable(): TableProgress {
+  return { dayStreak: 0, lastDate: null, due: todayISO(), missed: [], studied: false };
 }
 
 /**
@@ -80,8 +92,19 @@ export function normalise(raw: unknown): Progress {
     vocab: {},
     grammar: {},
     topics: {},
+    tables: {},
     sessions: Array.isArray(input.sessions) ? input.sessions.filter(isSessionRecord) : []
   };
+
+  for (const table of TABLES) {
+    const stored = input.tables?.[table.id];
+    merged.tables[table.id] = {
+      ...freshTable(),
+      ...(stored ?? {}),
+      // Stored arrays arrive from JSON and from Postgres, so never trust the shape.
+      missed: Array.isArray(stored?.missed) ? stored.missed.filter((c) => typeof c === "string") : []
+    };
+  }
 
   // Added words are drilled like bank words, so they get the same state.
   for (const item of custom) {
@@ -165,6 +188,10 @@ export function mergeProgress(local: Progress, remote: Progress): Progress {
     const remoteState = merged.topics[id];
     merged.topics[id] = remoteState ? combineTopic(localState, remoteState) : { ...localState };
   }
+  for (const [id, localState] of Object.entries(local.tables)) {
+    const remoteState = merged.tables[id];
+    merged.tables[id] = remoteState ? combineTable(localState, remoteState) : { ...localState };
+  }
 
   const seen = new Set(merged.sessions.map((s) => `${s.date}|${s.right}|${s.total}`));
   for (const record of local.sessions) {
@@ -191,6 +218,22 @@ function combineGrammar(local: GrammarProgress, remote: GrammarProgress): Gramma
   return {
     streak: Math.max(local.streak, remote.streak),
     seen: local.seen + remote.seen
+  };
+}
+
+/**
+ * The longer clean run wins, and the two personal dictionaries are unioned —
+ * a cell either side got wrong is still a cell worth asking again.
+ */
+function combineTable(local: TableProgress, remote: TableProgress): TableProgress {
+  const takeLocal = local.dayStreak > remote.dayStreak;
+  const winner = takeLocal ? local : remote;
+  return {
+    dayStreak: Math.max(local.dayStreak, remote.dayStreak),
+    lastDate: laterDate(local.lastDate, remote.lastDate),
+    due: winner.due,
+    missed: [...new Set([...local.missed, ...remote.missed])],
+    studied: local.studied || remote.studied
   };
 }
 

@@ -1,8 +1,16 @@
+import { cellKey } from "../data/tables";
 import { judgeEnglish, judgeGerman } from "../grading";
 import { getLang, pick, t } from "../i18n";
 import { todayISO } from "../scheduler";
 import { nextUnanswered } from "../session";
-import type { BlankTask, Task, Verdict, VocabTask } from "../types";
+import type {
+  BlankTask,
+  TableCellTask,
+  TableStudyTask,
+  Task,
+  Verdict,
+  VocabTask
+} from "../types";
 import type { AppContext } from "./context";
 import { esc, h, ICON_CHECK, ICON_TILDE, ICON_X, svgIcon } from "./dom";
 
@@ -17,15 +25,16 @@ export function renderDrill(ctx: AppContext): HTMLElement {
   if (!task) return h("div");
 
   const s = t();
+  const isStudy = task.kind === "table-study";
   const body = h("div", { class: "qbody" });
-  const action = h("button", { class: "btn", type: "button" }, s.check);
+  const action = h("button", { class: "btn", type: "button" }, isStudy ? s.next : s.check);
   const card = h(
     "section",
     { class: "card" },
     h(
       "div",
       { class: "qhead" },
-      h("p", { class: "eyebrow" }, task.kind === "vocab" ? s.vocabCheck : pick(task.label)),
+      h("p", { class: "eyebrow" }, eyebrowFor(task)),
       h("span", { class: "qcount" }, `${session.index + 1} / ${session.tasks.length}`)
     ),
     h(
@@ -45,19 +54,32 @@ export function renderDrill(ctx: AppContext): HTMLElement {
     )
   );
 
-  const inputs =
-    task.kind === "vocab" ? buildVocabFields(body, task) : buildBlankField(body, task);
+  const inputs = buildFields(body, task);
 
   let graded = false;
 
+  const advance = (): void => {
+    const next = nextUnanswered(session, session.index);
+    if (next === -1) ctx.go("summary");
+    else {
+      session.index = next;
+      ctx.refresh();
+    }
+  };
+
   action.addEventListener("click", () => {
     if (graded) {
-      const next = nextUnanswered(session, session.index);
-      if (next === -1) ctx.go("summary");
-      else {
-        session.index = next;
-        ctx.refresh();
-      }
+      advance();
+      return;
+    }
+    // A study card has nothing to grade: mark the grid as read and move on.
+    if (task.kind === "table-study") {
+      graded = true;
+      session.answered.push(session.index);
+      const state = ctx.progress.tables[task.table.id];
+      if (state) state.studied = true;
+      ctx.commit();
+      advance();
       return;
     }
     graded = true;
@@ -108,6 +130,111 @@ export function renderDrill(ctx: AppContext): HTMLElement {
 }
 
 /* --------------------------------------------------------------- builders */
+
+function eyebrowFor(task: Task): string {
+  const s = t();
+  if (task.kind === "vocab") return s.vocabCheck;
+  if (task.kind === "table-study") return s.gridStudyEyebrow;
+  if (task.kind === "table-cell") return pick(task.tableName);
+  return pick(task.label);
+}
+
+function buildFields(body: HTMLElement, task: Task): HTMLInputElement[] {
+  switch (task.kind) {
+    case "vocab":
+      return buildVocabFields(body, task);
+    case "table-study":
+      return buildTableStudy(body, task);
+    case "table-cell":
+      return buildTableCellField(body, task);
+    default:
+      return buildBlankField(body, task);
+  }
+}
+
+/**
+ * The whole grid, read once before any of it is asked. German on top, the
+ * learner's own language underneath, and a worked sentence per row so the
+ * table is never just sixteen unexplained words.
+ */
+function buildTableStudy(body: HTMLElement, task: TableStudyTask): HTMLInputElement[] {
+  const s = t();
+  const table = task.table;
+
+  body.append(
+    h("div", { class: "headword" }, h("span", { class: "headword__word" }, pick(table.name))),
+    h("p", { class: "hint" }, pick(table.blurb)),
+    h("p", { class: "gloss gloss--ml" }, table.blurb.ml)
+  );
+
+  const header = h("tr", {}, h("th", { class: "paradigm__corner" }, ""));
+  for (const column of table.columns) {
+    header.append(
+      h(
+        "th",
+        {},
+        h("span", { class: "paradigm__head" }, column.de),
+        h("span", { class: "paradigm__gloss" }, column.ml)
+      )
+    );
+  }
+
+  const rows = h("tbody");
+  for (const row of table.rows) {
+    const tr = h(
+      "tr",
+      {},
+      h(
+        "th",
+        { class: "paradigm__rowhead", scope: "row" },
+        h("span", { class: "paradigm__head" }, row.label.de),
+        h("span", { class: "paradigm__gloss" }, row.label.ml)
+      )
+    );
+    for (const cell of row.cells) tr.append(h("td", {}, cell[0] ?? ""));
+    rows.append(tr);
+  }
+
+  body.append(
+    h(
+      "div",
+      { class: "paradigm__wrap" },
+      h("table", { class: "paradigm" }, h("thead", {}, header), rows)
+    )
+  );
+
+  body.append(
+    h("p", { class: "verdict__line" }, `${s.gridExample}: ${table.example.de}`),
+    h("p", { class: "gloss" }, table.example.en),
+    h("p", { class: "gloss gloss--ml" }, table.example.ml),
+    h("p", { class: "kbdhint" }, s.gridStudyHint)
+  );
+  return [];
+}
+
+function buildTableCellField(body: HTMLElement, task: TableCellTask): HTMLInputElement[] {
+  const s = t();
+  const input = h("input", {
+    class: "blank",
+    type: "text",
+    autocomplete: "off",
+    autocapitalize: "off",
+    spellcheck: "false",
+    "aria-label": "Antwort"
+  });
+
+  body.append(
+    h(
+      "div",
+      { class: "headword" },
+      h("span", { class: "headword__word" }, s.gridCellPrompt(task.rowLabel.de, task.colLabel.de)),
+      h("span", { class: "headword__kind" }, pick(task.tableName))
+    ),
+    h("p", { class: "prompt" }, input),
+    h("p", { class: "gloss gloss--ml" }, `${task.rowLabel.ml} · ${task.colLabel.ml}`)
+  );
+  return [input];
+}
 
 function buildVocabFields(body: HTMLElement, task: VocabTask): HTMLInputElement[] {
   const s = t();
@@ -175,7 +302,58 @@ function buildBlankField(body: HTMLElement, task: BlankTask): HTMLInputElement[]
 
 function grade(ctx: AppContext, task: Task, inputs: HTMLInputElement[], body: HTMLElement): void {
   if (task.kind === "vocab") gradeVocab(ctx, task, inputs, body);
-  else gradeBlank(ctx, task, inputs, body);
+  else if (task.kind === "table-cell") gradeTableCell(ctx, task, inputs, body);
+  else if (task.kind === "table-study") {
+    /* nothing to grade — handled before grading is reached */
+  } else gradeBlank(ctx, task, inputs, body);
+}
+
+/**
+ * A missed cell is recorded against the table so it lands in that table's
+ * personal dictionary and is asked first the next day. The three-day chain
+ * itself is settled once, at the summary.
+ */
+function gradeTableCell(
+  ctx: AppContext,
+  task: TableCellTask,
+  inputs: HTMLInputElement[],
+  body: HTMLElement
+): void {
+  const s = t();
+  const input = inputs[0]!;
+  const verdict = judgeGerman(input.value, task.answers);
+  const correct = verdict === "ok";
+
+  input.dataset["mark"] = correct ? "ok" : "no";
+  input.readOnly = true;
+
+  const hit = ctx.session?.tableHits[task.tableId];
+  if (hit) {
+    if (correct) {
+      hit.right += 1;
+    } else {
+      hit.wrong += 1;
+      hit.missed.push(cellKey(task.tableId, task.row, task.col));
+    }
+  }
+
+  const lines: string[] = [];
+  if (!correct) lines.push(`${s.correctAnswer}: <strong>${esc(task.answers[0] ?? "")}</strong>`);
+  if (task.example) {
+    lines.push(`${s.gridExample}: ${esc(task.example.de)}`);
+    lines.push(`<em>${esc(task.example.en)}</em>`);
+    lines.push(`<em>${esc(task.example.ml)}</em>`);
+  }
+
+  ctx.session?.results.push({
+    prompt: `${task.rowLabel.de} · ${task.colLabel.de}`,
+    ok: correct,
+    given: input.value,
+    expected: task.answers[0] ?? "",
+    why: task.example ? { de: task.example.de, en: task.example.en } : null
+  });
+
+  body.append(buildVerdict(verdict, correct ? s.correct : s.notQuite, lines));
 }
 
 function gradeVocab(

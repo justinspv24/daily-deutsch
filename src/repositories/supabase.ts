@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { allCurricula, isLevel } from "../data/curriculum";
+import { TABLES } from "../data/tables";
 import { isVocabItem, normalise, type Repository } from "../repository";
 import { todayISO } from "../scheduler";
 import type { Progress, SessionRecord, VocabItem } from "../types";
@@ -18,7 +19,7 @@ export class SupabaseRepository implements Repository {
   ) {}
 
   async load(): Promise<Progress> {
-    const [profile, custom, vocab, grammar, topics, sessions] = await Promise.all([
+    const [profile, custom, vocab, grammar, topics, tables, sessions] = await Promise.all([
       this.client.from("profiles").select("level").eq("id", this.userId).maybeSingle(),
       this.client
         .from("custom_vocab")
@@ -27,6 +28,7 @@ export class SupabaseRepository implements Repository {
       this.client.from("vocab_state").select("word_id, streak, seen, last_date"),
       this.client.from("grammar_state").select("item_id, streak, seen"),
       this.client.from("topic_state").select("topic_id, stage, due, last_date"),
+      this.client.from("table_state").select("table_id, day_streak, due, last_date, missed, studied"),
       this.client
         .from("sessions")
         .select("played_on, right_count, total_count")
@@ -64,6 +66,18 @@ export class SupabaseRepository implements Repository {
         stage: Number(row.stage ?? 0),
         due: (row.due as string) ?? todayISO(),
         lastDate: (row.last_date as string | null) ?? null
+      };
+    }
+    const knownTables = new Set(TABLES.map((table) => table.id));
+    for (const row of tables.data ?? []) {
+      const id = row.table_id as string;
+      if (!knownTables.has(id)) continue;
+      progress.tables[id] = {
+        dayStreak: Number(row.day_streak ?? 0),
+        due: (row.due as string) ?? todayISO(),
+        lastDate: (row.last_date as string | null) ?? null,
+        missed: Array.isArray(row.missed) ? (row.missed as string[]) : [],
+        studied: row.studied === true
       };
     }
     progress.sessions = (sessions.data ?? []).map((row) => ({
@@ -108,10 +122,22 @@ export class SupabaseRepository implements Repository {
       updated_at: stamp
     }));
 
+    const tableRows = Object.entries(progress.tables).map(([table_id, state]) => ({
+      user_id: this.userId,
+      table_id,
+      day_streak: state.dayStreak,
+      due: state.due,
+      last_date: state.lastDate,
+      missed: state.missed,
+      studied: state.studied,
+      updated_at: stamp
+    }));
+
     const results = await Promise.all([
       this.client.from("vocab_state").upsert(vocabRows, { onConflict: "user_id,word_id" }),
       this.client.from("grammar_state").upsert(grammarRows, { onConflict: "user_id,item_id" }),
-      this.client.from("topic_state").upsert(topicRows, { onConflict: "user_id,topic_id" })
+      this.client.from("topic_state").upsert(topicRows, { onConflict: "user_id,topic_id" }),
+      this.client.from("table_state").upsert(tableRows, { onConflict: "user_id,table_id" })
     ]);
     const failure = results.find((r) => r.error);
     if (failure?.error) throw new Error(failure.error.message);

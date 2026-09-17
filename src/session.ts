@@ -1,11 +1,14 @@
 import { curriculumFor } from "./data/curriculum";
-import { todayISO } from "./scheduler";
+import { TABLES, cellKey, cellsOf, type CellRef } from "./data/tables";
+import { TABLE_MASTERY_DAYS, todayISO } from "./scheduler";
 import type {
   BlankTask,
   GrammarItem,
+  ParadigmTable,
   Progress,
   SessionState,
   StepState,
+  TableProgress,
   Task,
   TopicItem,
   UpcomingTopic,
@@ -14,6 +17,16 @@ import type {
 
 export const GRAMMAR_PER_SESSION = 8;
 export const TOPICS_PER_SESSION = 3;
+
+/**
+ * How many paradigm tables may be part-way up the three-day chain at once.
+ * A new table is only introduced once there is room, because every table in
+ * flight has to be asked *every* day or its run breaks.
+ */
+export const TABLES_IN_FLIGHT = 2;
+
+/** Cells asked per table per round. Missed cells are always asked on top. */
+export const CELLS_PER_TABLE = 8;
 
 function shuffle<T>(items: readonly T[]): T[] {
   const copy = [...items];
@@ -32,6 +45,36 @@ export function allVocab(progress: Progress): VocabItem[] {
 /** Words still short of two consecutive correct answers. */
 export function activeVocab(progress: Progress): VocabItem[] {
   return allVocab(progress).filter((item) => (progress.vocab[item.id]?.streak ?? 0) < 2);
+}
+
+/**
+ * The tables to drill today: every table already part-way up the chain, plus a
+ * fresh one if there is room. Mastered tables drop out for good.
+ */
+export function dueTables(progress: Progress): ParadigmTable[] {
+  const today = todayISO();
+  const unmastered = TABLES.filter((table) => {
+    const state = progress.tables[table.id];
+    return state !== undefined && state.dayStreak < TABLE_MASTERY_DAYS;
+  });
+
+  const inFlight = unmastered.filter((table) => progress.tables[table.id]?.studied === true);
+  const fresh = unmastered.filter((table) => progress.tables[table.id]?.studied !== true);
+  const room = Math.max(0, TABLES_IN_FLIGHT - inFlight.length);
+
+  return [...inFlight, ...fresh.slice(0, room)].filter(
+    (table) => (progress.tables[table.id]?.due ?? today) <= today
+  );
+}
+
+/** Missed cells first — the personal dictionary is never truncated — then a rotating sample. */
+export function pickCells(table: ParadigmTable, state: TableProgress | undefined): CellRef[] {
+  const all = cellsOf(table);
+  const missedKeys = new Set(state?.missed ?? []);
+  const isMissed = (ref: CellRef): boolean => missedKeys.has(cellKey(ref.tableId, ref.row, ref.col));
+  const missed = all.filter(isMissed);
+  const rest = shuffle(all.filter((ref) => !isMissed(ref)));
+  return [...missed, ...rest].slice(0, Math.max(CELLS_PER_TABLE, missed.length));
 }
 
 export function dueTopics(progress: Progress): TopicItem[] {
@@ -84,9 +127,35 @@ export function buildSession(progress: Progress): SessionState {
   for (const item of shuffle(activeVocab(progress))) {
     tasks.push({ step: 0, kind: "vocab", item });
   }
+  const tableHits: SessionState["tableHits"] = {};
+  for (const table of dueTables(progress)) {
+    const state = progress.tables[table.id];
+    tableHits[table.id] = { right: 0, wrong: 0, missed: [] };
+    // The grid is read once, in full, before it is ever asked.
+    if (!state?.studied) tasks.push({ step: 1, kind: "table-study", table });
+    for (const ref of pickCells(table, state)) {
+      const row = table.rows[ref.row];
+      const answers = row?.cells[ref.col];
+      const colLabel = table.columns[ref.col];
+      if (!row || !answers || !colLabel) continue;
+      tasks.push({
+        step: 1,
+        kind: "table-cell",
+        tableId: table.id,
+        tableName: table.name,
+        row: ref.row,
+        col: ref.col,
+        rowLabel: row.label,
+        colLabel,
+        answers,
+        example: row.example ?? null
+      });
+    }
+  }
+
   for (const item of shuffle(pickGrammar(progress))) {
     tasks.push({
-      step: 1,
+      step: 2,
       kind: "blank",
       sourceId: item.id,
       bank: "grammar",
@@ -101,7 +170,7 @@ export function buildSession(progress: Progress): SessionState {
     topicHits[topic.id] = { right: 0, wrong: 0 };
     for (const question of topic.questions) {
       tasks.push({
-        step: 2,
+        step: 3,
         kind: "blank",
         sourceId: topic.id,
         bank: "topic",
@@ -111,7 +180,7 @@ export function buildSession(progress: Progress): SessionState {
     }
   }
 
-  return { tasks, index: 0, answered: [], results: [], topicHits };
+  return { tasks, index: 0, answered: [], results: [], topicHits, tableHits };
 }
 
 /** First task of a step the learner has not answered yet, or -1 if there is none. */
@@ -132,10 +201,10 @@ export function nextUnanswered(session: SessionState, from: number): number {
   return -1;
 }
 
-/** How each of the four steps is drawn while a round is in progress. */
+/** How each of the five steps is drawn while a round is in progress. */
 export function stepStates(session: SessionState): readonly StepState[] {
   const current = session.tasks[session.index]?.step ?? null;
-  return [0, 1, 2, 3].map((step) => {
+  return [0, 1, 2, 3, 4].map((step) => {
     if (step === current) return "active";
     const indices = session.tasks.reduce<number[]>((found, task, index) => {
       if (task.step === step) found.push(index);

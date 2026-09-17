@@ -10,12 +10,30 @@ export interface Strings {
   readonly tagline: string;
   readonly greeting: (name: string | null) => string;
   readonly lede: string;
-  readonly steps: readonly [string, string, string, string];
+  readonly steps: readonly [string, string, string, string, string];
   readonly stepVocabDetailEmpty: string;
   readonly stepTablesDetail: string;
+  readonly stepGridDetail: string;
+  readonly stepGridDetailEmpty: string;
   readonly stepReviewDetailEmpty: string;
+  readonly gridStudyEyebrow: string;
+  readonly gridStudyHint: string;
+  readonly gridCellPrompt: (row: string, col: string) => string;
+  readonly gridExample: string;
+  readonly gridMalayalam: string;
+  readonly gridMasteredNow: string;
+  readonly gridDaysToGo: (n: number) => string;
+  readonly gridChainBroken: string;
+  readonly gridSectionTitle: string;
+  readonly gridSecure: (done: number, total: number) => string;
+  readonly gridMissedTitle: string;
+  readonly gridMissedEmpty: string;
+  readonly gridStatusMastered: string;
+  readonly gridStatusDay: (n: number) => string;
+  readonly gridStatusNew: string;
   readonly overdueSuffix: (n: number) => string;
   readonly wordsUnit: (n: number) => string;
+  readonly tablesUnit: (n: number) => string;
   readonly sentencesUnit: (n: number) => string;
   readonly dueUnit: (n: number) => string;
   readonly nothingDue: string;
@@ -227,12 +245,30 @@ const de: Strings = {
   greeting: (name) => (name ? `Guten Tag, ${name}.` : "Guten Tag."),
   lede:
     "Eine Runde dauert etwa 25 Minuten. Alles, was du falsch machst, kommt morgen wieder — alles, was zweimal sitzt, verschwindet.",
-  steps: ["Vokabeln", "Tabellen", "Wiederholung", "Neues Thema"],
+  steps: ["Vokabeln", "Tabellen", "Sätze", "Wiederholung", "Neues Thema"],
   stepVocabDetailEmpty: "Nichts offen — gut gemacht.",
   stepTablesDetail: "Lückensätze aus allen sechs Tabellen. Der Fall wird nie verraten.",
+  stepGridDetail: "Artikel, Pronomen, Endungen — Zelle für Zelle, bis sie sitzen.",
+  stepGridDetailEmpty: "Alle Tabellen sitzen. Nichts mehr abzufragen.",
   stepReviewDetailEmpty: "Heute ist kein Thema fällig.",
+  gridStudyEyebrow: "Einprägen",
+  gridStudyHint: "Lies die Tabelle in Ruhe durch. Gleich wird sie Zelle für Zelle abgefragt.",
+  gridCellPrompt: (row, col) => `${row} · ${col}`,
+  gridExample: "Beispiel",
+  gridMalayalam: "മലയാളം",
+  gridMasteredNow: "Drei saubere Tage — diese Tabelle sitzt und fällt aus dem Drill.",
+  gridDaysToGo: (n) => `Sauber. Noch ${n} ${n === 1 ? "Tag" : "Tage"} in Folge, dann ist sie durch.`,
+  gridChainBroken: "Ein Fehler — die Serie beginnt morgen von vorn. Die falschen Zellen kommen zuerst.",
+  gridSectionTitle: "Tabellen auswendig",
+  gridSecure: (done, total) => `${done} von ${total} Tabellen sitzen.`,
+  gridMissedTitle: "Dein persönliches Wörterbuch",
+  gridMissedEmpty: "Keine offenen Zellen — alles richtig beim letzten Mal.",
+  gridStatusMastered: "sitzt",
+  gridStatusDay: (n) => `Tag ${n} von 3`,
+  gridStatusNew: "neu",
   overdueSuffix: (n) => ` — ${n} überfällig`,
   wordsUnit: (n) => (n === 1 ? "1 Wort" : `${n} Wörter`),
+  tablesUnit: (n) => (n === 1 ? "1 Tabelle" : `${n} Tabellen`),
   sentencesUnit: (n) => (n === 1 ? "1 Satz" : `${n} Sätze`),
   dueUnit: (n) => (n === 1 ? "1 fällig" : `${n} fällig`),
   nothingDue: "nichts fällig",
@@ -452,12 +488,30 @@ const en: Strings = {
   greeting: (name) => (name ? `Good day, ${name}.` : "Good day."),
   lede:
     "A round takes about 25 minutes. Anything you get wrong comes back tomorrow; anything you get right twice disappears.",
-  steps: ["Vocabulary", "Tables", "Review", "New topic"],
+  steps: ["Vocabulary", "Tables", "Sentences", "Review", "New topic"],
   stepVocabDetailEmpty: "Nothing outstanding — well done.",
   stepTablesDetail: "Gap sentences from all six tables. The case is never revealed.",
+  stepGridDetail: "Articles, pronouns, endings — one cell at a time until they stick.",
+  stepGridDetailEmpty: "Every table is secure. Nothing left to ask.",
   stepReviewDetailEmpty: "No topic falls due today.",
+  gridStudyEyebrow: "Learn by heart",
+  gridStudyHint: "Read the table through. In a moment you'll be asked it cell by cell.",
+  gridCellPrompt: (row, col) => `${row} · ${col}`,
+  gridExample: "Example",
+  gridMalayalam: "മലയാളം",
+  gridMasteredNow: "Three clean days — this table is secure and leaves the drill.",
+  gridDaysToGo: (n) => `Clean. ${n} more ${n === 1 ? "day" : "days"} in a row and it's done.`,
+  gridChainBroken: "One slip — the run restarts tomorrow, and the cells you missed come first.",
+  gridSectionTitle: "Tables by heart",
+  gridSecure: (done, total) => `${done} of ${total} tables secure.`,
+  gridMissedTitle: "Your personal dictionary",
+  gridMissedEmpty: "No open cells — everything was right last time.",
+  gridStatusMastered: "secure",
+  gridStatusDay: (n) => `day ${n} of 3`,
+  gridStatusNew: "new",
   overdueSuffix: (n) => ` — ${n} overdue`,
   wordsUnit: (n) => (n === 1 ? "1 word" : `${n} words`),
+  tablesUnit: (n) => (n === 1 ? "1 table" : `${n} tables`),
   sentencesUnit: (n) => (n === 1 ? "1 sentence" : `${n} sentences`),
   dueUnit: (n) => (n === 1 ? "1 due" : `${n} due`),
   nothingDue: "nothing due",
