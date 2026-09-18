@@ -33,6 +33,14 @@ Goethe-Institut and telc exam objectives. The level picker links to it too,
 so a learner can see what B1 covers before deciding they are not there yet.
 `docs/syllabus.md` records the sources.
 
+The drill follows that map. Every section has words, table sentences and a
+review topic tagged to it (`section` on each item, enforced by the test), and
+the syllabus shows on each section what the drill holds for it. The banks are
+large now, so a round draws a **working set of twelve words**: a word one
+answer from retiring first, then words already in play, then fresh ones — so
+the set turns over as words are mastered rather than dealing twelve strangers
+every morning. The home screen lists today's twelve and how many are waiting.
+
 Alongside the bundled banks, a learner can **add their own words** from the
 home screen or the progress page. An added word is drilled exactly like a bank
 word and leaves the drill after two consecutive fully-correct answers. Those

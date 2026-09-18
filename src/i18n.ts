@@ -262,6 +262,11 @@ export interface Strings {
   readonly syllabusVideo: string;
   readonly syllabusCourse: string;
   readonly syllabusReading: string;
+  /** What the drill holds for a section: words, table sentences, review topics. */
+  readonly syllabusDrilled: (words: number, sentences: number, topics: number) => string;
+  readonly syllabusNotDrilled: string;
+  /** Words beyond today's working set, still queued. */
+  readonly wordsWaiting: (n: number) => string;
 
   /* account */
   readonly signIn: string;
@@ -543,6 +548,10 @@ const de: Strings = {
   syllabusVideo: "Video",
   syllabusCourse: "Kurs",
   syllabusReading: "Lesen",
+  syllabusDrilled: (words, sentences, topics) =>
+    `im Drill: ${words} Wörter · ${sentences} Sätze · ${topics} ${topics === 1 ? "Wiederholung" : "Wiederholungen"}`,
+  syllabusNotDrilled: "noch nicht im Drill",
+  wordsWaiting: (n) => ` · +${n} warten`,
 
   signIn: "Anmelden",
   signOut: "Abmelden",
@@ -822,6 +831,10 @@ const en: Strings = {
   syllabusVideo: "Video",
   syllabusCourse: "Course",
   syllabusReading: "Read",
+  syllabusDrilled: (words, sentences, topics) =>
+    `in the drill: ${words} words · ${sentences} sentences · ${topics} review ${topics === 1 ? "topic" : "topics"}`,
+  syllabusNotDrilled: "not in the drill yet",
+  wordsWaiting: (n) => ` · +${n} waiting`,
 
   signIn: "Sign in",
   signOut: "Sign out",

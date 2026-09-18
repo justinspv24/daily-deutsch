@@ -1,5 +1,6 @@
 import { curriculumFor } from "./data/curriculum";
 import { TABLES, cellKey, cellsOf, type CellRef } from "./data/tables";
+import { isCustomId } from "./repository";
 import { TABLE_MASTERY_DAYS, todayISO } from "./scheduler";
 import type {
   BlankTask,
@@ -45,6 +46,39 @@ export function allVocab(progress: Progress): VocabItem[] {
 /** Words still short of two consecutive correct answers. */
 export function activeVocab(progress: Progress): VocabItem[] {
   return allVocab(progress).filter((item) => (progress.vocab[item.id]?.streak ?? 0) < 2);
+}
+
+/** How many words one round asks. The banks are far larger; this is the working set. */
+export const VOCAB_PER_SESSION = 12;
+
+/**
+ * Today's words: at most VOCAB_PER_SESSION of the active ones, chosen so that
+ * a word once begun is finished before another is started.
+ *
+ * The order of preference is deliberate. A word one correct answer from
+ * retiring comes first, because finishing it frees a slot. Then words already
+ * in play — the learner has met them and should meet them again tomorrow, not
+ * in a month once the queue has cycled round. Words the learner added
+ * themselves count as in play from the start; nobody adds a word to wait.
+ * Only then do fresh bank words fill the remaining slots, in bank order, so
+ * the set turns over predictably as words are mastered rather than drawing
+ * twelve strangers every morning.
+ *
+ * Deterministic on purpose: the home screen lists today's words, and they
+ * should be the words the round then asks.
+ */
+export function sessionVocab(progress: Progress): VocabItem[] {
+  const rank = (item: VocabItem): number => {
+    const state = progress.vocab[item.id];
+    if (state && state.streak >= 1) return 0;
+    if ((state && state.seen > 0) || isCustomId(item.id)) return 1;
+    return 2;
+  };
+  return activeVocab(progress)
+    .map((item, index) => ({ item, index, rank: rank(item) }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .slice(0, VOCAB_PER_SESSION)
+    .map((entry) => entry.item);
 }
 
 /**
@@ -124,7 +158,7 @@ function hashSeed(seed: string): number {
 export function buildSession(progress: Progress): SessionState {
   const tasks: Task[] = [];
 
-  for (const item of shuffle(activeVocab(progress))) {
+  for (const item of shuffle(sessionVocab(progress))) {
     tasks.push({ step: 0, kind: "vocab", item });
   }
   const tableHits: SessionState["tableHits"] = {};

@@ -32,6 +32,46 @@ async function load(entry) {
 
 const { SYLLABI } = await load("../src/data/syllabus/index.ts");
 const { ILLUSTRATION_IDS } = await load("../src/ui/illustrations.ts");
+const { curriculumFor } = await load("../src/data/curriculum.ts");
+
+/* ------------------------------------------ the drill follows the map */
+
+// Every section of the map has questions behind it: at least this many words,
+// table sentences and one review topic, each tagged with the section id. The
+// map may describe more than the drill asks — it names every grammar point
+// the exams test — but nothing on it is a promise the drill cannot keep.
+const MIN_WORDS = 5;
+const MIN_SENTENCES = 3;
+const MIN_TOPICS = 1;
+
+for (const level of ["A1", "A2", "B1", "B2"]) {
+  const bank = curriculumFor(level);
+  const sectionIds = new Set(SYLLABI[level].sections.map((s) => s.id));
+
+  for (const item of [...bank.vocab, ...bank.grammar, ...bank.topics]) {
+    if (item.section !== undefined) {
+      assert.ok(sectionIds.has(item.section), `${level}: "${item.id}" is tagged "${item.section}", not a section of ${level}`);
+    }
+  }
+
+  // The smoke test looks answers up by headword and by sentence, and a learner
+  // sees them as the question — so within a bank they stay unique.
+  const words = bank.vocab.map((v) => v.word);
+  assert.equal(new Set(words).size, words.length, `${level}: headwords are unique`);
+  const sentences = [...bank.grammar.map((g) => g.sentence), ...bank.topics.flatMap((t) => t.questions.map((q) => q.sentence))];
+  assert.equal(new Set(sentences).size, sentences.length, `${level}: sentences are unique`);
+  const allIds = [...bank.vocab, ...bank.grammar, ...bank.topics].map((i) => i.id);
+  assert.equal(new Set(allIds).size, allIds.length, `${level}: ids are unique`);
+
+  for (const section of SYLLABI[level].sections) {
+    const w = bank.vocab.filter((v) => v.section === section.id).length;
+    const g = bank.grammar.filter((x) => x.section === section.id).length;
+    const t = bank.topics.filter((x) => x.section === section.id).length;
+    assert.ok(w >= MIN_WORDS, `${section.id}: at least ${MIN_WORDS} words in the drill (${w})`);
+    assert.ok(g >= MIN_SENTENCES, `${section.id}: at least ${MIN_SENTENCES} sentences in the drill (${g})`);
+    assert.ok(t >= MIN_TOPICS, `${section.id}: a review topic in the drill (${t})`);
+  }
+}
 
 const known = new Set(ILLUSTRATION_IDS);
 const TRUSTED_HOSTS = ["www.youtube.com", "learngerman.dw.com", "www.goethe.de", "www.telc.net"];

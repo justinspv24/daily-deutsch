@@ -1,11 +1,11 @@
-import type { TopicItem, UpcomingTopic } from "../types";
+import type { Bilingual, BlankQuestion, TopicItem, UpcomingTopic } from "../types";
 
 /**
  * Seeded from mistakes_tracker.md. Every topic there was first studied on
  * 2026-07-15, so all of them start due. `seedStage` carries over the reviews
  * that were already passed on paper.
  */
-export const TOPICS: readonly TopicItem[] = [
+const SEEDED: readonly TopicItem[] = [
   {
     id: "t1",
     name: { de: "Perfekt — sein oder haben", en: "Perfect tense — sein or haben" },
@@ -123,7 +123,7 @@ export const TOPICS: readonly TopicItem[] = [
     seedStage: 0,
     questions: [
       {
-        sentence: "Ich fahre mit ___ Bruder.",
+        sentence: "Ich gehe mit ___ Bruder ins Kino.",
         hint: { de: "our — <code>der Bruder</code>", en: "our — <code>der Bruder</code>" }, answers: ["unserem"],
         why: { de: "mit + Dativ, maskulin → unserem.", en: "mit + dative, masculine → unserem." }
       },
@@ -133,12 +133,12 @@ export const TOPICS: readonly TopicItem[] = [
         why: { de: "ihr → euer. Kein -es im Nominativ Neutrum.", en: "ihr → euer. No -es in the neuter nominative." }
       },
       {
-        sentence: "Wir lieben ___ Hund.",
+        sentence: "Wir füttern ___ Hund.",
         hint: { de: "our — <code>der Hund</code>", en: "our — <code>der Hund</code>" }, answers: ["unseren"],
         why: { de: "Akkusativ maskulin → unseren.", en: "Masculine accusative → unseren." }
       },
       {
-        sentence: "Sie spielt mit ___ Katze.",
+        sentence: "Sie geht mit ___ Katze zum Tierarzt.",
         hint: { de: "her — <code>die Katze</code>", en: "her — <code>die Katze</code>" }, answers: ["ihrer"],
         why: { de: "mit + Dativ, feminin → ihrer.", en: "mit + dative, feminine → ihrer." }
       }
@@ -265,4 +265,121 @@ export const UPCOMING: readonly UpcomingTopic[] = [
     title: { de: "Nebensätze vertiefen", en: "Subordinate clauses, deeper" },
     blurb: { de: "Mehrere Nebensätze verbinden, ohne die Wortstellung zu verlieren.", en: "Chaining clauses without losing the word order." }
   }
+];
+
+/* --------------------------------------------- the rest of the A2 syllabus */
+
+/** Where each seeded topic sits on the A2 map. */
+const SECTION_OF_SEEDED: Readonly<Record<string, string>> = {
+  t1: "a2_s01",
+  t2: "a2_s01",
+  t3: "a2_s01",
+  t4: "a2_s03",
+  t5: "a2_s09",
+  t6: "a2_s02",
+  t7: "a2_s05",
+  t8: "a2_s12",
+  t9: "a2_s12"
+};
+
+const bi = (de: string, en: string): Bilingual => ({ de, en });
+
+const q = (sentence: string, hint: Bilingual, answers: readonly string[], why: Bilingual): BlankQuestion => ({
+  sentence,
+  hint,
+  answers,
+  why
+});
+
+const MORE: readonly TopicItem[] = [
+  {
+    id: "t10",
+    section: "a2_s02",
+    name: bi("Präteritum: war, hatte, konnte", "Simple past: war, hatte, konnte"),
+    seedStage: 0,
+    questions: [
+      q("Als Kind ___ ich oft im Garten. (sein)", bi("Präteritum", "simple past"), ["war"], bi("ich war.", "ich war.")),
+      q("Wir ___ damals kein Auto. (haben)", bi("Präteritum", "simple past"), ["hatten"], bi("wir hatten.", "wir hatten.")),
+      q("Sie ___ gestern arbeiten. (müssen)", bi("Präteritum", "simple past"), ["musste"], bi("sie musste — ohne Umlaut.", "sie musste — no umlaut.")),
+      q("Ich ___ als Kind nicht schwimmen. (können)", bi("Präteritum", "simple past"), ["konnte"], bi("ich konnte — ohne Umlaut.", "ich konnte — no umlaut."))
+    ]
+  },
+  {
+    id: "t11",
+    section: "a2_s04",
+    name: bi("seit, vor, ab, bis", "seit, vor, ab, bis"),
+    seedStage: 0,
+    questions: [
+      q("Ich lerne ___ zwei Jahren Deutsch. (still going)", bi("temporale Präposition", "time preposition"), ["seit"], bi("Läuft noch → seit + Präsens.", "Still going → seit + present.")),
+      q("Ich habe ___ zwei Jahren angefangen. (ago)", bi("temporale Präposition", "time preposition"), ["vor"], bi("Zeitpunkt in der Vergangenheit → vor.", "A point in the past → vor.")),
+      q("___ Montag arbeite ich wieder. (from … on)", bi("temporale Präposition", "time preposition"), ["ab"], bi("Ab Montag = von Montag an.", "Ab Montag = from Monday on.")),
+      q("Wir bleiben ___ Freitag. (until)", bi("temporale Präposition", "time preposition"), ["bis"], bi("bis Freitag — ohne Artikel.", "bis Freitag — no article."))
+    ]
+  },
+  {
+    id: "t12",
+    section: "a2_s06",
+    name: bi("Reflexive Verben", "Reflexive verbs"),
+    seedStage: 0,
+    questions: [
+      q("Er hat ___ erkältet.", bi("Reflexivpronomen (er)", "reflexive pronoun (er)"), ["sich"], bi("er → sich.", "er → sich.")),
+      q("Ich ziehe ___ warm an.", bi("Reflexivpronomen (ich)", "reflexive pronoun (ich)"), ["mich"], bi("ich → mich (Akkusativ).", "ich → mich (accusative).")),
+      q("Wir ___ uns auf den Urlaub. (freuen)", bi("Verb", "verb"), ["freuen"], bi("sich freuen auf: wir freuen uns.", "sich freuen auf: wir freuen uns.")),
+      q("Zieh ___ die Schuhe an! (du)", bi("Reflexivpronomen (du) — mit Akkusativobjekt", "reflexive pronoun (du) — with an accusative object"), ["dir"], bi("Die Schuhe sind Akkusativ → Reflexivpronomen im Dativ: dir.", "Die Schuhe is accusative → reflexive pronoun goes dative: dir."))
+    ]
+  },
+  {
+    id: "t13",
+    section: "a2_s07",
+    name: bi("Komparativ und Superlativ", "Comparative and superlative"),
+    seedStage: 0,
+    questions: [
+      q("gut – ___ – am besten", bi("Komparativ", "comparative"), ["besser"], bi("Unregelmäßig: gut, besser, am besten.", "Irregular: gut, besser, am besten.")),
+      q("Ich bin ___ als mein Bruder. (groß)", bi("Komparativ", "comparative"), ["größer"], bi("Umlaut + -er: größer.", "Umlaut plus -er: größer.")),
+      q("viel – mehr – am ___", bi("Superlativ", "superlative"), ["meisten"], bi("viel, mehr, am meisten.", "viel, mehr, am meisten.")),
+      q("Sie ist so alt ___ ich.", bi("Vergleich: gleich", "comparison: equal"), ["wie"], bi("so … wie bei Gleichheit; als beim Komparativ.", "so … wie for equality; als with a comparative."))
+    ]
+  },
+  {
+    id: "t14",
+    section: "a2_s08",
+    name: bi("wann, wenn oder ob?", "wann, wenn or ob?"),
+    seedStage: 0,
+    questions: [
+      q("Ich weiß nicht, ___ er kommt. (whether)", bi("Konjunktion", "conjunction"), ["ob"], bi("Ja/Nein-Frage indirekt → ob.", "An indirect yes/no question → ob.")),
+      q("___ ich Zeit habe, rufe ich an. (when / if)", bi("Konjunktion", "conjunction"), ["wenn"], bi("Bedingung oder wiederholt → wenn.", "Condition or repeated → wenn.")),
+      q("Sag mir, ___ der Film beginnt. (at what time)", bi("Fragewort", "question word"), ["wann"], bi("Nach der Uhrzeit → wann.", "Asking for the time → wann.")),
+      q("Ich frage, ___ du Lust hast. (whether)", bi("Konjunktion", "conjunction"), ["ob"], bi("Indirekte Frage ohne Fragewort → ob.", "Indirect question with no question word → ob."))
+    ]
+  },
+  {
+    id: "t15",
+    section: "a2_s10",
+    name: bi("Adjektivendungen nach der und ein", "Adjective endings after der and ein"),
+    seedStage: 0,
+    questions: [
+      q("die ___ Kirche (schön)", bi("nach die", "after die"), ["schöne"], bi("Nominativ nach die: -e.", "Nominative after die: -e.")),
+      q("ein ___ Haus (neu)", bi("nach ein — <code>das Haus</code>", "after ein — <code>das Haus</code>"), ["neues"], bi("Nach ein zeigt das Adjektiv das Neutrum: -es.", "After ein the adjective shows the neuter: -es.")),
+      q("der ___ Fluss (lang)", bi("nach der", "after der"), ["lange"], bi("Nominativ nach der: -e.", "Nominative after der: -e.")),
+      q("eine ___ Straße (breit)", bi("nach eine", "after eine"), ["breite"], bi("Nach eine: -e.", "After eine: -e."))
+    ]
+  },
+  {
+    id: "t16",
+    section: "a2_s11",
+    name: bi("Verben mit Präposition", "Verbs with prepositions"),
+    seedStage: 0,
+    questions: [
+      q("Ich freue mich ___ das Wochenende.", bi("Vorfreude", "looking forward"), ["auf"], bi("sich freuen auf + Akkusativ (Zukunft).", "sich freuen auf + accusative (future).")),
+      q("Sie denkt oft ___ ihre Familie.", bi("feste Präposition", "fixed preposition"), ["an"], bi("denken an + Akkusativ.", "denken an + accusative.")),
+      q("Er ärgert sich ___ den Stau.", bi("feste Präposition", "fixed preposition"), ["über"], bi("sich ärgern über + Akkusativ.", "sich ärgern über + accusative.")),
+      q("Wir sprechen ___ das Problem.", bi("feste Präposition", "fixed preposition"), ["über"], bi("sprechen über + Akkusativ.", "sprechen über + accusative."))
+    ]
+  }
+];
+
+/** Every A2 review topic: the seeded nine, tagged, plus the rest of the syllabus. */
+export const TOPICS: readonly TopicItem[] = [
+  ...SEEDED.map((topic) => ({ ...topic, section: SECTION_OF_SEEDED[topic.id] })),
+  ...MORE
 ];

@@ -202,6 +202,19 @@
   line-height: 1.5;
 }
 
+.unit__drilled {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ok);
+}
+
+.unit__drilled[data-drilled="false"] {
+  color: var(--ink-faint);
+}
+
 .unit__chev {
   flex: none;
   color: var(--ink-faint);

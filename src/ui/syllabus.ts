@@ -1,7 +1,34 @@
-import { LEVELS } from "../data/curriculum";
+import { LEVELS, curriculumFor } from "../data/curriculum";
 import { syllabusFor } from "../data/syllabus";
 import { pick, t } from "../i18n";
 import type { Level, SyllabusLink, SyllabusSection } from "../types";
+
+/** What the drill banks hold for one section. */
+interface Coverage {
+  words: number;
+  sentences: number;
+  topics: number;
+}
+
+/**
+ * Count the drill's items per section. The map promises what a level covers;
+ * this is what the drill can actually ask, shown on every section so the two
+ * can be seen side by side — and so a gap is a visible thing, not a surprise.
+ */
+function coverageFor(level: Level): Map<string, Coverage> {
+  const bank = curriculumFor(level);
+  const map = new Map<string, Coverage>();
+  const bump = (section: string | undefined, key: keyof Coverage): void => {
+    if (!section) return;
+    const entry = map.get(section) ?? { words: 0, sentences: 0, topics: 0 };
+    entry[key] += 1;
+    map.set(section, entry);
+  };
+  for (const item of bank.vocab) bump(item.section, "words");
+  for (const item of bank.grammar) bump(item.section, "sentences");
+  for (const topic of bank.topics) bump(topic.section, "topics");
+  return map;
+}
 import type { AppContext } from "./context";
 import { clear, h, ICON_ARROW, svgIcon } from "./dom";
 import { renderIllustration } from "./illustrations";
@@ -78,8 +105,11 @@ export function renderSyllabus(ctx: AppContext): HTMLElement {
       )
     );
 
+    const coverage = coverageFor(shown);
     const list = h("div", { class: "units" });
-    syllabus.sections.forEach((section, index) => list.append(renderSection(section, index)));
+    syllabus.sections.forEach((section, index) =>
+      list.append(renderSection(section, index, coverage.get(section.id) ?? null))
+    );
     body.append(list);
   };
 
@@ -91,9 +121,10 @@ export function renderSyllabus(ctx: AppContext): HTMLElement {
   return h("div", { class: "home syllabus" }, head, body, h("div", { class: "actions actions--center" }, back));
 }
 
-function renderSection(section: SyllabusSection, index: number): HTMLElement {
+function renderSection(section: SyllabusSection, index: number, coverage: Coverage | null): HTMLElement {
   const s = t();
 
+  const drilled = coverage && coverage.words + coverage.sentences + coverage.topics > 0;
   const summary = h(
     "summary",
     { class: "unit__summary" },
@@ -102,7 +133,12 @@ function renderSection(section: SyllabusSection, index: number): HTMLElement {
       "span",
       { class: "unit__head" },
       h("span", { class: "unit__title" }, pick(section.title)),
-      h("span", { class: "unit__blurb" }, pick(section.blurb))
+      h("span", { class: "unit__blurb" }, pick(section.blurb)),
+      h(
+        "span",
+        { class: "unit__drilled", "data-drilled": String(Boolean(drilled)) },
+        drilled ? s.syllabusDrilled(coverage.words, coverage.sentences, coverage.topics) : s.syllabusNotDrilled
+      )
     ),
     h("span", { class: "unit__chev", "aria-hidden": "true" }, svgIcon(ICON_ARROW, "open"))
   );

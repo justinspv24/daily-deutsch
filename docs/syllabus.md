@@ -34,19 +34,38 @@ vocabulary is thematic and abstract by design — that is what the level is,
 talking about the world rather than about yourself — and was chosen to match
 the exams' text types rather than a frequency count.
 
-## What it is not
+## The drill follows the map
 
-It is not the drill. The drill banks in `src/data/a1.ts` and friends are the
-questions the app actually asks; the syllabus is broader on purpose. It names
-every theme and every grammar point of a level whether or not the drill has
-questions for it yet, so a learner can see the whole road, and so the next
-bank to write is never a guess. The two will converge over time, syllabus
-first.
+The drill banks in `src/data/a1.ts` and friends are the questions the app
+actually asks, and every item in them carries the syllabus section it belongs
+to (`section: "a1_s05"`). `test/syllabus.mjs` insists that every section of
+every level has at least five words, three table sentences and one review
+topic behind it, and the syllabus screen shows on each section what the drill
+holds — so a gap between what the map promises and what the drill asks is a
+visible thing, not a surprise.
 
-The vocabulary in each section is *core*, not complete: twelve to fifteen
-words that a learner at that level needs for that theme, with their article
-and plural where a noun and their auxiliary where a verb. The official lists
-run to hundreds of words per level and are linked rather than copied.
+The map is still broader in what it *describes*: it names every grammar point
+the exams test, with a diagram, whether the drill has three sentences on it or
+thirty. That is the right way round. A syllabus that only listed what was
+already drilled would be a table of contents, not a course.
+
+Two consequences for the drill itself:
+
+- **The banks are large now** — roughly a hundred words a level — so a round
+  no longer asks every active word. It draws a working set of twelve
+  (`VOCAB_PER_SESSION` in `session.ts`): a word one correct answer from
+  retiring first, then words already in play, then fresh ones in bank order.
+  A word once begun is finished before another is started, and the set turns
+  over predictably as words are mastered. The selection is deterministic so
+  the home screen can list the very words the round will ask.
+- **Ids are permanent.** Progress is keyed by item id, so an item may be
+  added or retagged but never renamed; the original A2 words seeded from the
+  learner's own mistake list keep their ids exactly.
+
+The vocabulary shown on the syllabus page is the section's *core*, not the
+drill's full list: twelve to fifteen words with article and plural, or
+auxiliary and participle. The official lists run to hundreds of words per
+level and are linked rather than copied.
 
 ## The diagrams
 

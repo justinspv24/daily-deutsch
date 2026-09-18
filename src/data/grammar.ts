@@ -14,7 +14,7 @@ const G = {
  * sentences. The hint gives gender and English only — the case is revealed
  * in the explanation, never in the question.
  */
-export const GRAMMAR: readonly GrammarItem[] = [
+const TABLE_SENTENCES: readonly GrammarItem[] = [
   /* ------------------------------------------------ definite articles */
   {
     id: "g1a", group: G.def, sentence: "___ Mann ist nett.",
@@ -261,8 +261,128 @@ export const GRAMMAR: readonly GrammarItem[] = [
     why: { de: "brauchen verlangt Akkusativ, maskulin: den.", en: "brauchen takes the accusative, masculine: den." }
   },
   {
-    id: "g6e", group: G.verbs, sentence: "Das gefällt ___ .",
+    id: "g6e", group: G.verbs, sentence: "Der Film gefällt ___ .",
     hint: { de: "me", en: "me" }, answers: ["mir"],
     why: { de: "gefallen verlangt Dativ: mir.", en: "gefallen takes the dative: mir." }
   }
+];
+
+/* --------------------------------------------- the rest of the A2 syllabus */
+
+/**
+ * Which section of the A2 map each table group drills. The tables are the
+ * cases in real sentences, which is what the housing, travel and family
+ * sections teach; tagging them there is honest rather than convenient.
+ */
+const SECTION_OF_GROUP: Readonly<Record<string, string>> = {
+  [G.def.de]: "a2_s03",
+  [G.indef.de]: "a2_s03",
+  [G.verbs.de]: "a2_s03",
+  [G.prep.de]: "a2_s04",
+  [G.pers.de]: "a2_s09",
+  [G.poss.de]: "a2_s09"
+};
+
+const bi = (de: string, en: string): Bilingual => ({ de, en });
+
+const g = (
+  id: string,
+  group: Bilingual,
+  sentence: string,
+  hint: Bilingual,
+  answers: readonly string[],
+  why: Bilingual,
+  section: string
+): GrammarItem => ({ id, group, sentence, hint, answers, why, section });
+
+const G2 = {
+  perf: bi("Perfekt", "Perfect tense"),
+  praet: bi("Präteritum", "Simple past"),
+  neben: bi("Nebensätze & Modalverben", "Subordinate clauses & modals"),
+  refl: bi("Reflexive Verben", "Reflexive verbs"),
+  komp: bi("Komparativ & Superlativ", "Comparative & superlative"),
+  frag: bi("ob, wenn, wann, denn", "ob, wenn, wann, denn"),
+  adj: bi("Adjektivendungen & Genitiv", "Adjective endings & genitive"),
+  vprep: bi("Verben mit Präposition", "Verbs with prepositions"),
+  brief: bi("E-Mail schreiben", "Writing an e-mail")
+} satisfies Record<string, Bilingual>;
+
+const MORE: readonly GrammarItem[] = [
+  /* s01 — Perfekt */
+  g("g7a", G2.perf, "Wir ___ am Wochenende nach Berlin gefahren.", bi("Hilfsverb", "auxiliary"), ["sind"],
+    bi("fahren = Bewegung → sein: wir sind gefahren.", "fahren = movement → sein: wir sind gefahren."), "a2_s01"),
+  g("g7b", G2.perf, "Ich habe gestern lange ___. (arbeiten)", bi("Partizip II", "past participle"), ["gearbeitet"],
+    bi("Stamm auf -t → -et: gearbeitet.", "Stem in -t → -et: gearbeitet."), "a2_s01"),
+  g("g7c", G2.perf, "Er hat seine Oma ___. (besuchen)", bi("Partizip II", "past participle"), ["besucht"],
+    bi("be- ist untrennbar → kein ge-: besucht.", "be- is inseparable → no ge-: besucht."), "a2_s01"),
+
+  /* s02 — Präteritum */
+  g("g8a", G2.praet, "Gestern ___ ich krank. (sein)", bi("Präteritum", "simple past"), ["war"],
+    bi("sein im Präteritum: ich war.", "sein in the simple past: ich war."), "a2_s02"),
+  g("g8b", G2.praet, "Wir ___ keine Zeit. (haben — Präteritum)", bi("Präteritum", "simple past"), ["hatten"],
+    bi("haben im Präteritum: wir hatten.", "haben in the simple past: wir hatten."), "a2_s02"),
+  g("g8c", G2.praet, "Ich ___ nicht kommen. (können — Präteritum)", bi("Präteritum", "simple past"), ["konnte"],
+    bi("Modalverb im Präteritum: konnte — ohne Umlaut.", "Modal in the simple past: konnte — no umlaut."), "a2_s02"),
+
+  /* s05 — Nebensätze & Modalverben */
+  g("g9a", G2.neben, "Ich lerne Deutsch, weil ich in Nürnberg ___. (arbeiten)", bi("Verb am Ende", "verb at the end"), ["arbeite"],
+    bi("Nach weil geht das Verb ans Ende: … arbeite.", "After weil the verb goes to the end: … arbeite."), "a2_s05"),
+  g("g9b", G2.neben, "Ich glaube, dass er morgen ___. (kommen)", bi("Verb am Ende", "verb at the end"), ["kommt"],
+    bi("dass-Satz: konjugiertes Verb am Ende.", "dass-clause: conjugated verb at the end."), "a2_s05"),
+  g("g9c", G2.neben, "Hier ___ man nicht parken. (dürfen)", bi("Modalverb", "modal verb"), ["darf"],
+    bi("dürfen = Erlaubnis; man darf nicht = verboten.", "dürfen = permission; man darf nicht = forbidden."), "a2_s05"),
+
+  /* s06 — Reflexive Verben */
+  g("g10a", G2.refl, "Ich fühle ___ heute besser.", bi("Reflexivpronomen", "reflexive pronoun"), ["mich"],
+    bi("sich fühlen → Akkusativ: mich.", "sich fühlen → accusative: mich."), "a2_s06"),
+  g("g10b", G2.refl, "Du solltest ___ ausruhen.", bi("Reflexivpronomen (du)", "reflexive pronoun (du)"), ["dich"],
+    bi("sich ausruhen → Akkusativ: dich.", "sich ausruhen → accusative: dich."), "a2_s06"),
+  g("g10c", G2.refl, "Wasch ___ die Hände! (du)", bi("Reflexivpronomen (du) — mit Akkusativobjekt", "reflexive pronoun (du) — with an accusative object"), ["dir"],
+    bi("Die Hände sind das Akkusativobjekt → das Reflexivpronomen wird Dativ: dir.", "Die Hände is the accusative object → the reflexive pronoun goes dative: dir."), "a2_s06"),
+
+  /* s07 — Komparativ & Superlativ */
+  g("g11a", G2.komp, "Das Handy ist ___ als das andere. (teuer)", bi("Komparativ", "comparative"), ["teurer"],
+    bi("teuer → teurer: das e vor -r fällt weg.", "teuer → teurer: the e before -r drops."), "a2_s07"),
+  g("g11b", G2.komp, "Dieser Laptop ist am ___. (billig — Superlativ)", bi("Superlativ", "superlative"), ["billigsten"],
+    bi("am + -sten: am billigsten.", "am + -sten: am billigsten."), "a2_s07"),
+  g("g11c", G2.komp, "Ich lese ___ als ich fernsehe. (gern — Komparativ)", bi("Komparativ von gern", "comparative of gern"), ["lieber"],
+    bi("gern – lieber – am liebsten.", "gern – lieber – am liebsten."), "a2_s07"),
+
+  /* s08 — ob, wenn, wann, denn */
+  g("g12a", G2.frag, "Weißt du, ___ der Laden heute offen ist? (whether)", bi("Konjunktion", "conjunction"), ["ob"],
+    bi("Indirekte Ja/Nein-Frage → ob.", "Indirect yes/no question → ob."), "a2_s08"),
+  g("g12b", G2.frag, "___ kommst du? — Um acht. (Fragewort)", bi("Fragewort nach der Zeit", "question word for time"), ["wann"],
+    bi("Direkte Frage nach der Zeit → wann.", "Direct question about time → wann."), "a2_s08"),
+  g("g12c", G2.frag, "Ich bleibe zu Hause, ___ ich bin müde. (Position 0)", bi("Konjunktion, Verb bleibt auf 2", "conjunction, verb stays second"), ["denn"],
+    bi("denn: Hauptsatz-Konjunktion, das Verb bleibt auf Position 2.", "denn: main-clause conjunction, the verb stays in second position."), "a2_s08"),
+
+  /* s10 — Adjektivendungen & Genitiv */
+  g("g13a", G2.adj, "der ___ Marktplatz (alt)", bi("Adjektivendung nach der", "adjective ending after der"), ["alte"],
+    bi("Nominativ nach der/die/das: -e.", "Nominative after der/die/das: -e."), "a2_s10"),
+  g("g13b", G2.adj, "ein ___ Park (schön)", bi("Adjektivendung nach ein — <code>der Park</code>", "adjective ending after ein — <code>der Park</code>"), ["schöner"],
+    bi("Nach ein zeigt das Adjektiv das Genus: ein schöner Park.", "After ein the adjective shows the gender: ein schöner Park."), "a2_s10"),
+  g("g13c", G2.adj, "das Zentrum ___ Stadt (Genitiv)", bi("Genitiv — <code>die Stadt</code>", "genitive — <code>die Stadt</code>"), ["der"],
+    bi("Genitiv feminin: der Stadt.", "Feminine genitive: der Stadt."), "a2_s10"),
+
+  /* s11 — Verben mit Präposition, höflich fragen */
+  g("g14a", G2.vprep, "Ich interessiere mich ___ Musik.", bi("feste Präposition", "fixed preposition"), ["für"],
+    bi("sich interessieren für + Akkusativ.", "sich interessieren für + accusative."), "a2_s11"),
+  g("g14b", G2.vprep, "Wir warten ___ den Bus.", bi("feste Präposition", "fixed preposition"), ["auf"],
+    bi("warten auf + Akkusativ.", "warten auf + accusative."), "a2_s11"),
+  g("g14c", G2.vprep, "___ Sie mir bitte helfen? (können — höflich)", bi("Konjunktiv II", "Konjunktiv II"), ["könnten"],
+    bi("Höflich: Könnten Sie …? — Konjunktiv II von können.", "Polite: Könnten Sie …? — Konjunktiv II of können."), "a2_s11"),
+
+  /* s12 — E-Mail schreiben */
+  g("g15a", G2.brief, "Vielen Dank ___ deine Nachricht.", bi("Präposition", "preposition"), ["für"],
+    bi("danken für / Dank für + Akkusativ.", "danken für / Dank für + accusative."), "a2_s12"),
+  g("g15b", G2.brief, "Ich freue mich ___ deinen Besuch.", bi("Präposition — Vorfreude", "preposition — looking forward"), ["auf"],
+    bi("sich freuen auf = Vorfreude (Zukunft); sich freuen über = jetzt.", "sich freuen auf = looking forward; sich freuen über = pleased about."), "a2_s12"),
+  g("g15c", G2.brief, "___ kann ich nicht kommen. (unfortunately)", bi("Adverb", "adverb"), ["leider"],
+    bi("Leider … — das Verb folgt auf Position 2.", "Leider … — the verb follows in second position."), "a2_s12")
+];
+
+/** Every A2 sentence: the six tables, tagged, plus the rest of the syllabus. */
+export const GRAMMAR: readonly GrammarItem[] = [
+  ...TABLE_SENTENCES.map((item) => ({ ...item, section: SECTION_OF_GROUP[item.group.de] })),
+  ...MORE
 ];

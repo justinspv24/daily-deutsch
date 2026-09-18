@@ -21,11 +21,11 @@ import { advanceTable, advanceTopic, todayISO } from "./scheduler";
 import {
   GRAMMAR_PER_SESSION,
   TOPICS_PER_SESSION,
-  activeVocab,
   buildSession,
   dueTables,
   dueTopics,
   firstUnanswered,
+  sessionVocab,
   stepStates as computeStepStates
 } from "./session";
 import { registerDoubleTap } from "./shortcuts";
@@ -362,7 +362,7 @@ class App {
 
   private stepperCounts(): readonly string[] {
     const s = t();
-    const words = activeVocab(this.progress).length;
+    const words = sessionVocab(this.progress).length;
     const grids = dueTables(this.progress).length;
     const due = dueTopics(this.progress).length;
     return [

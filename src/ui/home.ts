@@ -6,6 +6,7 @@ import {
   activeVocab,
   dueTables,
   dueTopics,
+  sessionVocab,
   suggestedTopic
 } from "../session";
 import { canInstall, isIOS, isStandalone, promptInstall } from "../pwa";
@@ -24,7 +25,10 @@ interface Row {
 
 export function renderHome(ctx: AppContext): HTMLElement {
   const s = t();
-  const words = activeVocab(ctx.progress);
+  // Today's working set, not the whole queue: the row lists what the round
+  // will actually ask, and the count beside it says how many are still waiting.
+  const words = sessionVocab(ctx.progress);
+  const waiting = activeVocab(ctx.progress).length - words.length;
   const due = dueTopics(ctx.progress);
   const grids = dueTables(ctx.progress);
   const overdue = due.filter((topic) => (ctx.progress.topics[topic.id]?.due ?? "") < todayISO()).length;
@@ -34,7 +38,9 @@ export function renderHome(ctx: AppContext): HTMLElement {
   const rows: Row[] = [
     {
       title: s.steps[0],
-      detail: words.length ? words.map((w) => w.word).join(" · ") : s.stepVocabDetailEmpty,
+      detail: words.length
+        ? words.map((w) => w.word).join(" · ") + (waiting > 0 ? s.wordsWaiting(waiting) : "")
+        : s.stepVocabDetailEmpty,
       count: String(words.length),
       empty: words.length === 0
     },

@@ -30,6 +30,8 @@ export interface VocabItem {
   /** Partizip II for verbs, plural for nouns. */
   readonly form: readonly string[];
   readonly note: Bilingual;
+  /** The syllabus section this word belongs to, so the map can show what is drilled. */
+  readonly section?: string;
 }
 
 /** A fill-in-the-blank sentence. `___` marks the gap. */
@@ -46,6 +48,8 @@ export interface GrammarItem extends BlankQuestion {
   readonly id: string;
   readonly group: Bilingual;
   readonly priority?: boolean;
+  /** The syllabus section this sentence drills. */
+  readonly section?: string;
 }
 
 export interface TopicItem {
@@ -53,6 +57,8 @@ export interface TopicItem {
   readonly name: Bilingual;
   readonly seedStage: number;
   readonly questions: readonly BlankQuestion[];
+  /** The syllabus section this topic reviews. */
+  readonly section?: string;
 }
 
 /* ------------------------------------------------------- paradigm tables */
