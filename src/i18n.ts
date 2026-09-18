@@ -229,6 +229,19 @@ export interface Strings {
   readonly voiceModes: readonly [string, string, string, string];
   readonly voiceModeHints: readonly [string, string, string, string];
 
+  /* the tutor who reads the round out */
+  readonly tutorStart: string;
+  readonly tutorStartHint: string;
+  readonly tutorUnavailable: string;
+  readonly tutorConnecting: string;
+  readonly tutorAsking: string;
+  readonly tutorListening: string;
+  readonly tutorThinking: string;
+  readonly tutorEnded: string;
+  readonly tutorOff: string;
+  readonly tutorRepeat: string;
+  readonly tutorStop: string;
+
   /* account */
   readonly signIn: string;
   readonly signOut: string;
@@ -476,6 +489,19 @@ const de: Strings = {
     "Gemeinsam etwas planen — Prüfungssimulation"
   ],
 
+  tutorStart: "Mit Lehrer sprechen",
+  tutorStartHint:
+    "Dein Lehrer liest jede Frage vor und hört deine Antwort. Du kannst jederzeit wieder tippen.",
+  tutorUnavailable: "Dafür brauchst du ein Mikrofon und einen eingeschalteten Sprachmodus.",
+  tutorConnecting: "Dein Lehrer kommt an den Apparat …",
+  tutorAsking: "Dein Lehrer spricht — hör zu",
+  tutorListening: "Sag deine Antwort",
+  tutorThinking: "Einen Moment …",
+  tutorEnded: "Der Lehrer hat aufgelegt. Tipp die Antworten weiter.",
+  tutorOff: "Lehrer aus",
+  tutorRepeat: "Frage noch einmal hören",
+  tutorStop: "Ohne Stimme weitermachen",
+
   signIn: "Anmelden",
   signOut: "Abmelden",
   account: "Konto",
@@ -720,6 +746,19 @@ const en: Strings = {
     "Talking about a topic — exam simulation",
     "Planning something together — exam simulation"
   ],
+
+  tutorStart: "Speak with your teacher",
+  tutorStartHint:
+    "Your teacher reads every question out and listens to your answer. You can go back to typing at any point.",
+  tutorUnavailable: "This needs a microphone and the voice mode switched on.",
+  tutorConnecting: "Getting your teacher on the line …",
+  tutorAsking: "Your teacher is speaking — listen",
+  tutorListening: "Say your answer",
+  tutorThinking: "One moment …",
+  tutorEnded: "Your teacher has hung up. Carry on typing.",
+  tutorOff: "Teacher off",
+  tutorRepeat: "Hear the question again",
+  tutorStop: "Carry on without the voice",
 
   signIn: "Sign in",
   signOut: "Sign out",

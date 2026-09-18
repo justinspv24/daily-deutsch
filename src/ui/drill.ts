@@ -3,6 +3,8 @@ import { judgeEnglish, judgeGerman } from "../grading";
 import { getLang, pick, t } from "../i18n";
 import { todayISO } from "../scheduler";
 import { nextUnanswered } from "../session";
+import type { DrillTutor } from "../tutor";
+import { asksFor, introFor } from "../tutorscript";
 import type {
   BlankTask,
   TableCellTask,
@@ -12,7 +14,23 @@ import type {
   VocabTask
 } from "../types";
 import type { AppContext } from "./context";
-import { esc, h, ICON_CHECK, ICON_TILDE, ICON_X, svgIcon } from "./dom";
+import { describeVoiceError } from "./voice";
+import { esc, h, ICON_CHECK, ICON_MIC, ICON_TILDE, ICON_X, svgIcon } from "./dom";
+
+/**
+ * What grading worked out, in the form the tutor needs to talk about it.
+ *
+ * The screen and the voice have to agree — a learner told "richtig" while
+ * looking at a red cross has been given two teachers, not one — so the tutor
+ * is handed the very verdict and explanation that were just drawn, rather than
+ * forming its own opinion of what it heard.
+ */
+interface Marked {
+  readonly verdict: Verdict;
+  /** Only the parts they got wrong, so a correction is about what went wrong. */
+  readonly expected: string;
+  readonly why: string;
+}
 
 /**
  * One question per screen. Enter checks; Enter again moves on — so a whole
@@ -70,28 +88,78 @@ export function renderDrill(ctx: AppContext): HTMLElement {
     }
   };
 
-  action.addEventListener("click", () => {
-    if (graded) {
-      advance();
-      return;
-    }
-    // A study card has nothing to grade: mark the grid as read and move on.
+  /**
+   * Grade what is in the fields, however it got there. Typing and speaking end
+   * up in the same place on purpose: there is one drill, and a spoken answer
+   * is an answer to the same question, marked by the same grader.
+   */
+  const submit = (): Marked | null => {
+    if (graded) return null;
+    graded = true;
+    session.answered.push(session.index);
+
+    // A study card has nothing to grade: mark the grid as read.
     if (task.kind === "table-study") {
-      graded = true;
-      session.answered.push(session.index);
       const state = ctx.progress.tables[task.table.id];
       if (state) state.studied = true;
       ctx.commit();
+      return null;
+    }
+
+    const marked = grade(ctx, task, inputs, body);
+    ctx.commit();
+    action.textContent = nextUnanswered(session, session.index) === -1 ? s.finish : s.next;
+    return marked;
+  };
+
+  /**
+   * Mark the answer and, when the round is being spoken, let the tutor say its
+   * piece before moving on. Typed or spoken, an answer ends here — so a
+   * learner who gives up on saying a word and types it instead still gets the
+   * correction out loud.
+   */
+  const completeAnswer = (): void => {
+    const tutor = ctx.tutor;
+    const marked = submit();
+
+    if (!tutor?.running) {
+      // Unspoken rounds stay as they were: Enter checks, Enter again moves on.
+      action.focus();
+      return;
+    }
+    if (!marked) return advance();
+
+    tutor.react(
+      marked.verdict,
+      {
+        given: inputs.map((input) => input.value.trim()).filter(Boolean).join(", "),
+        expected: marked.expected,
+        why: marked.why
+      },
+      advance
+    );
+  };
+
+  action.addEventListener("click", () => {
+    if (graded) return advance();
+    if (task.kind === "table-study") {
+      submit();
       advance();
       return;
     }
-    graded = true;
-    session.answered.push(session.index);
-    grade(ctx, task, inputs, body);
-    ctx.commit();
-    action.textContent = nextUnanswered(session, session.index) === -1 ? s.finish : s.next;
-    action.focus();
+    completeAnswer();
   });
+
+  if (ctx.tutor?.running === true) {
+    card.prepend(buildTutorStrip(ctx.tutor, inputs));
+    driveTutor(ctx.tutor, task, inputs, {
+      key: String(session.index),
+      complete: completeAnswer,
+      isGraded: () => graded
+    });
+  } else {
+    forgetStrip();
+  }
 
   /**
    * Keyboard model, so a whole round can be typed without reaching for the
@@ -128,8 +196,197 @@ export function renderDrill(ctx: AppContext): HTMLElement {
     action.click();
   });
 
-  queueMicrotask(() => inputs[0]?.focus());
+  // Speaking the answer means the caret is in the way rather than helping: a
+  // soft keyboard sliding up over the question is the last thing a learner
+  // listening to it needs.
+  if (ctx.tutor?.running !== true) queueMicrotask(() => inputs[0]?.focus());
   return card;
+}
+
+/* ------------------------------------------------------------ the tutor */
+
+/**
+ * The strip above the question, and the one part of the drill that redraws on
+ * its own.
+ *
+ * Everything else here is rebuilt question by question. The strip cannot be:
+ * it changes several times a second while the tutor is speaking and the
+ * learner is answering, and rebuilding the card that often would throw away
+ * the very answer being given. So it is painted in place, through a reference
+ * the module keeps, and `paintTutorStrip` is what the tutor calls.
+ */
+let stripBody: HTMLElement | null = null;
+let stripPaint: (() => void) | null = null;
+
+/** Repaint the strip. Called by the tutor on every change of state. */
+export function paintTutorStrip(tutor: DrillTutor | null): void {
+  if (!tutor || !stripBody) return;
+  stripPaint?.();
+}
+
+/** Drop the reference when the drill is drawn without a tutor. */
+function forgetStrip(): void {
+  stripBody = null;
+  stripPaint = null;
+}
+
+function buildTutorStrip(tutor: DrillTutor, inputs: HTMLInputElement[]): HTMLElement {
+  const s = t();
+  const orb = h(
+    "span",
+    { class: "tutor__orb", "data-state": "idle", "aria-hidden": "true" },
+    h("span", { class: "tutor__ring" }),
+    h("span", { class: "tutor__core" }, svgIcon(ICON_MIC, "microphone"))
+  );
+  const status = h("p", { class: "tutor__status", role: "status" }, s.tutorConnecting);
+  const line = h("p", { class: "tutor__line" });
+
+  const again = h(
+    "button",
+    { class: "tutor__tool", type: "button", title: s.tutorRepeat, "aria-label": s.tutorRepeat },
+    "↻"
+  );
+  again.addEventListener("click", () => tutor.repeat());
+
+  const off = h(
+    "button",
+    { class: "tutor__tool", type: "button", title: s.tutorStop, "aria-label": s.tutorStop },
+    "✕"
+  );
+
+  const strip = h(
+    "div",
+    { class: "tutor", "data-phase": "connecting" },
+    orb,
+    h("div", { class: "tutor__body" }, status, line),
+    h("div", { class: "tutor__tools" }, again, off)
+  );
+
+  off.addEventListener("click", () => {
+    tutor.stop();
+    // Taken out by hand rather than by redrawing the card: a redraw would
+    // rebuild the question from scratch and take a verdict already on screen
+    // down with it, which is a strange thing to do to someone who only asked
+    // for quiet.
+    strip.remove();
+    forgetStrip();
+    inputs.find((input) => !input.readOnly)?.focus();
+  });
+
+  stripBody = strip;
+  // Handed back exactly once, when the voice gives out. A learner whose tutor
+  // could not connect should find the caret already in the first field rather
+  // than a dead card and an apology — the round still works, it is just quiet.
+  let handedBack = false;
+
+  stripPaint = (): void => {
+    const now = tutor.status();
+    strip.dataset["phase"] = now.phase;
+
+    if (!handedBack && (now.phase === "error" || now.phase === "ended")) {
+      handedBack = true;
+      queueMicrotask(() => inputs.find((input) => !input.readOnly)?.focus());
+    }
+    // The orb's animations are the voice panel's; "connecting" waits the same
+    // way "thinking" does, so it borrows that shape.
+    orb.dataset["state"] =
+      now.phase === "listening"
+        ? "listening"
+        : now.phase === "asking"
+          ? "speaking"
+          : now.phase === "connecting" || now.phase === "thinking"
+            ? "thinking"
+            : "idle";
+
+    status.textContent = statusLine(now.phase, now.error);
+    // What the learner is saying takes the line while they say it; otherwise
+    // it shows what the tutor just said, so a question half-heard can be read.
+    line.textContent = now.phase === "listening" && now.heard ? now.heard : now.said;
+    // Only while the question is actually standing. Asking for it again as the
+    // answer is being marked would put a second copy behind the correction.
+    again.disabled = now.phase !== "listening";
+  };
+  stripPaint();
+  return strip;
+}
+
+function statusLine(phase: ReturnType<DrillTutor["status"]>["phase"], error: unknown): string {
+  const s = t();
+  switch (phase) {
+    case "connecting":
+      return s.tutorConnecting;
+    case "asking":
+      return s.tutorAsking;
+    case "listening":
+      return s.tutorListening;
+    case "thinking":
+      return s.tutorThinking;
+    case "ended":
+      return s.tutorEnded;
+    case "error":
+      return describeVoiceError(error);
+    default:
+      return s.tutorOff;
+  }
+}
+
+interface DriveHooks {
+  /** Identifies the question, so a redraw does not ask it twice. */
+  readonly key: string;
+  /** Grade what is in the fields and let the tutor react. */
+  complete(): void;
+  isGraded(): boolean;
+}
+
+/**
+ * Hand the current question to the tutor, one spoken ask at a time.
+ *
+ * A vocabulary card is three questions out loud where it is one card on
+ * screen, so each answer fills its own field and only the last one submits.
+ * The learner can still take over at any point — typing an answer grades the
+ * card immediately, and `isGraded` is what stops a late transcript from
+ * writing into fields that have already been marked.
+ */
+function driveTutor(
+  tutor: DrillTutor,
+  task: Task,
+  inputs: HTMLInputElement[],
+  hooks: DriveHooks
+): void {
+  if (task.kind === "table-study") {
+    tutor.announce(introFor(task));
+    return;
+  }
+
+  const asks = asksFor(task);
+  if (asks.length === 0) return;
+
+  let at = 0;
+  const run = (): void => {
+    const ask = asks[at];
+    if (!ask || hooks.isGraded()) return;
+
+    tutor.ask({
+      key: `${hooks.key}:${at}`,
+      prompt: ask.prompt,
+      expects: ask.expects,
+      accepted: ask.accepted,
+      onAnswer: (answer) => {
+        // They typed it while the tutor was still listening. Their answer is
+        // already marked; what came in late is not a second attempt.
+        if (hooks.isGraded()) return;
+
+        const field = inputs[ask.field];
+        if (field && !field.readOnly) field.value = answer;
+
+        at += 1;
+        if (at < asks.length) run();
+        else hooks.complete();
+      }
+    });
+  };
+
+  run();
 }
 
 /* --------------------------------------------------------------- builders */
@@ -341,12 +598,17 @@ function buildBlankField(body: HTMLElement, task: BlankTask): HTMLInputElement[]
 
 /* ---------------------------------------------------------------- grading */
 
-function grade(ctx: AppContext, task: Task, inputs: HTMLInputElement[], body: HTMLElement): void {
-  if (task.kind === "vocab") gradeVocab(ctx, task, inputs, body);
-  else if (task.kind === "table-cell") gradeTableCell(ctx, task, inputs, body);
-  else if (task.kind === "table-study") {
-    /* nothing to grade — handled before grading is reached */
-  } else gradeBlank(ctx, task, inputs, body);
+function grade(
+  ctx: AppContext,
+  task: Task,
+  inputs: HTMLInputElement[],
+  body: HTMLElement
+): Marked | null {
+  if (task.kind === "vocab") return gradeVocab(ctx, task, inputs, body);
+  if (task.kind === "table-cell") return gradeTableCell(ctx, task, inputs, body);
+  // Nothing to grade — handled before grading is reached.
+  if (task.kind === "table-study") return null;
+  return gradeBlank(ctx, task, inputs, body);
 }
 
 /**
@@ -359,7 +621,7 @@ function gradeTableCell(
   task: TableCellTask,
   inputs: HTMLInputElement[],
   body: HTMLElement
-): void {
+): Marked {
   const s = t();
   const input = inputs[0]!;
   const verdict = judgeGerman(input.value, task.answers);
@@ -395,6 +657,11 @@ function gradeTableCell(
   });
 
   body.append(buildVerdict(verdict, correct ? s.correct : s.notQuite, lines));
+  return {
+    verdict,
+    expected: task.answers[0] ?? "",
+    why: task.example ? `${s.gridExample}: ${task.example.de}` : ""
+  };
 }
 
 function gradeVocab(
@@ -402,7 +669,7 @@ function gradeVocab(
   task: VocabTask,
   inputs: HTMLInputElement[],
   body: HTMLElement
-): void {
+): Marked {
   const s = t();
   const item = task.item;
   const isVerb = item.kind === "verb";
@@ -437,10 +704,20 @@ function gradeVocab(
   }
 
   const lines: string[] = [];
-  if (keyVerdict !== "ok") lines.push(`${isVerb ? s.auxiliary : s.article}: <strong>${esc(item.key)}</strong>`);
-  if (enVerdict !== "ok") lines.push(`${s.meaning}: <strong>${esc(item.en[0] ?? "")}</strong>`);
+  // The same three, kept as plain text for the tutor: only what went wrong, so
+  // a learner who missed the plural alone is not read the whole card back.
+  const missed: string[] = [];
+  if (keyVerdict !== "ok") {
+    lines.push(`${isVerb ? s.auxiliary : s.article}: <strong>${esc(item.key)}</strong>`);
+    missed.push(`${isVerb ? s.auxiliary : s.article}: ${item.key}`);
+  }
+  if (enVerdict !== "ok") {
+    lines.push(`${s.meaning}: <strong>${esc(item.en[0] ?? "")}</strong>`);
+    missed.push(`${s.meaning}: ${item.en[0] ?? ""}`);
+  }
   if (formVerdict !== "ok") {
     lines.push(`${isVerb ? s.participle : s.plural}: <strong>${esc(item.form[0] ?? "")}</strong>`);
+    missed.push(`${isVerb ? s.participle : s.plural}: ${item.form[0] ?? ""}`);
   }
   if (!allCorrect) lines.push(`<em>${esc(pick(item.note))}</em>`);
 
@@ -460,6 +737,7 @@ function gradeVocab(
   });
 
   body.append(buildVerdict(verdict, title, lines));
+  return { verdict, expected: missed.join(" · "), why: item.note.de };
 }
 
 function gradeBlank(
@@ -467,7 +745,7 @@ function gradeBlank(
   task: BlankTask,
   inputs: HTMLInputElement[],
   body: HTMLElement
-): void {
+): Marked {
   const s = t();
   const input = inputs[0]!;
   const question = task.question;
@@ -506,6 +784,7 @@ function gradeBlank(
 
   const title = verdict === "ok" ? s.correct : verdict === "near" ? s.nearly : s.notQuite;
   body.append(buildVerdict(verdict, title, lines));
+  return { verdict, expected: question.answers[0] ?? "", why: question.why.de };
 }
 
 function buildVerdict(verdict: Verdict, title: string, lines: readonly string[]): HTMLElement {

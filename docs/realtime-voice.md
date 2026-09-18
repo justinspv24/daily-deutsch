@@ -77,6 +77,124 @@ written for), with B2 structures allowed in gradually. The prompts are composed
 in `api/realtime-token.ts`, not in the bundle, so they are built from the
 learner's actual level and are not sitting in a JavaScript file to be read.
 
+## The tutor who runs the round
+
+`vv` is a room you go into. The **spoken drill** is the opposite: the tutor
+sits with the learner for the whole daily round, reads every question out,
+hears the answer, and says something about it before the next one. It starts
+from the home screen — *Mit Lehrer sprechen* beside the ordinary *Drill
+starten* — and it is the same round either way. Same questions, same order,
+same grading, same effect on the schedule. It has simply acquired a voice.
+
+Offered as its own door rather than a setting on purpose: doing the round out
+loud is a different way to spend half an hour — headphones and a quiet room, or
+a keyboard on the train — and that is a choice made fresh each morning, not once
+in a preferences panel.
+
+### The app judges, the tutor speaks
+
+This is the load-bearing decision. Every answer is graded by `grading.ts`,
+exactly as a typed one is, and that verdict is what reaches the streaks and the
+review ladder. The tutor is told the verdict *afterwards* and reacts to it.
+
+Letting the model mark the answers would have been less code and a worse app.
+The schedule is only worth trusting if the same answer is always marked the
+same way, and two judges eventually disagree in front of the learner — one
+saying "richtig" over a screen showing a red cross. There is no good way to
+ask someone to work out which of the two to believe.
+
+So the division is absolute. The model never evaluates, never invents a
+question, and never moves on by itself. What is left is the part it is
+genuinely good at: asking warmly, hearing a mumbled answer, and explaining a
+mistake in one sentence.
+
+### The protocol
+
+The app talks to the tutor in square brackets, which the prompt defines as
+stage directions — never read aloud, never mentioned.
+
+| Sent | What the tutor does |
+|---|---|
+| `[FRAGE] …` | Asks that question in its own warm words, then stops and waits. Never says the answer. |
+| `[BEWERTUNG] richtig \| fast \| falsch …` | Reacts in at most two sentences, using the very explanation on screen. |
+| `[TAFEL] …` | Two sentences about a grid that is up to be read, not answered. |
+| `[PAUSE]` | One encouraging line when an answer has not come for 12 seconds. |
+| `[WEITER]` | Asks the same question again, slower. |
+| `[ENDE] …` | One closing line, then the call hangs up. |
+
+Between a question and its verdict the learner speaks, and the model takes a
+turn of its own whether we want it to or not. It is instructed to answer that
+turn with a single word — "mhm", "okay" — and never with a judgement, because
+the verdict is not its to give and is already on its way.
+
+Two invariants hold the rest together:
+
+- **Nothing is ever said over the tutor.** The Live API will happily accept a
+  turn mid-sentence; the result is two voices at once and a question the
+  learner half-heard. Instructions therefore queue and go out on `onTurnEnd`,
+  when the floor is genuinely free.
+- **The microphone is shut between turns.** It opens when a question has
+  finished being read and closes the moment an answer lands. The cost is that
+  the learner cannot cut in while the question is being read — the orb and the
+  status line say whose turn it is. The alternative is worse: a tutor that
+  hears itself would transcribe its own question as the answer and mark it,
+  silently, against the schedule.
+
+### Three questions where the screen shows one
+
+The vocabulary card has three boxes — article, meaning, plural — and a learner
+fills them in whatever order they like. Nobody asks all three at once out loud,
+so spoken it becomes three questions, which is how a teacher has always done
+it: *der, die oder das?* … *und was heißt das auf Englisch?* … *und der
+Plural?* Each answer lands in its own box as it is given, so what the tutor
+heard is visible while the next question is asked.
+
+Phrasing lives in `src/tutorscript.ts` and is written to be *heard*: "Partizip
+II" is spelled "Partizip zwei" there, because a model reading the first version
+aloud says "Partizip zwei Strich Strich" often enough to matter.
+
+### Hearing an answer
+
+`src/speech.ts` stands between the transcript and the grader, and the grader
+itself is untouched. A typed field contains "der" because that is what was
+typed; speech arrives as "ähm, ich glaube der" or "das ist der Lehrer", and all
+of those are the same answer. The leniency belongs to speech alone — typing
+"das ist der Lehrer" into the article box really is the wrong answer.
+
+The rules are narrow on purpose:
+
+- Hesitation and lead-ins come off, in both languages.
+- For a closed question — article, auxiliary — the one word from the set is
+  picked out of whatever was said around it.
+- For an open one, an accepted answer said inside a whole sentence counts, but
+  **only if exactly one** appears. "Dem oder den" is hedging, not answering,
+  and goes through unchanged for the grader to reject.
+- Nothing is ever invented. A learner who says nothing useful still gets it
+  wrong, which is the entire point of asking.
+
+One trap found while testing and worth not re-introducing: several obvious
+fillers are also real answers. "Er" and "um" read as hesitation in English and
+are hesitation in German too — and they are also a personal pronoun and an
+accusative preposition, both of them cells in tables this app drills. Stripping
+them would have deleted the right answer and marked it wrong, on exactly the
+questions where saying one short word is the whole point. They are out of the
+filler list, and a backstop refuses to strip anything that would leave the
+answer empty. `test/speech.mjs` pins all of it down.
+
+### Reconnecting mid-round
+
+A round takes about 25 minutes and a session lasts `VOICE_SESSION_MINUTES`, so
+the token expires part-way through — every time, not occasionally. A clean
+close mid-round is treated as exactly that: the tutor reconnects, puts the
+current question back, and the learner notices a pause. Up to three times, then
+it gives up and says so, because each reconnection spends one of the day's
+sessions. A spoken round therefore costs two or three of the default twelve.
+
+If the voice gives out at any point — no key, no microphone, no network — the
+round does not. The strip says what happened, the caret is handed back to the
+first field, and it carries on as a typed round from wherever it had got to.
+The ✕ in the strip does the same thing on purpose.
+
 ## How it fits together
 
 ```
@@ -209,6 +327,10 @@ free-tier audio is not used for training.
 | `supabase/migrations/0005_voice_keys.sql` | The `voice_keys` table — RLS on, no policies, service role only. |
 | `src/realtime.ts` | The socket, the microphone, the playback queue, the codecs. No DOM. |
 | `src/ui/voice.ts` | The panel: mode picker, orb, voice picker, countdown, transcript. No protocol. |
+| `src/tutor.ts` | The spoken round: session lifecycle, the bracketed protocol, the turn queue, reconnection. No DOM. |
+| `src/tutorscript.ts` | How each question sounds when it is asked rather than read. Pure. |
+| `src/speech.ts` | Transcript in, answer out. Pure, and tested by `test/speech.mjs`. |
+| `src/ui/drill.ts` | The strip above the question, and the wiring that puts a spoken answer through the same grader as a typed one. |
 | `supabase/migrations/0004_voice_sessions.sql` | Adds `'voice'` to the `ai_usage` kinds. |
 
 ### Audio, concretely

@@ -2286,3 +2286,181 @@ td.is-meta {
     }
   }
 }
+
+/* --------------------------------------------------- the tutor who speaks */
+
+/*
+ * The strip above the question while the round is being read out. It sits
+ * inside the card rather than floating over it: what the tutor is doing is
+ * part of the question, not a notification about it.
+ */
+.tutor {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  /* Pulled out to the card's edges, so the strip is a header rather than a
+     box floating inside one. Matches .card's padding at every breakpoint. */
+  margin: calc(var(--sp-6) * -1) calc(var(--sp-6) * -1) var(--sp-5);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface-sunk);
+  transition: background var(--dur) var(--ease);
+}
+
+.tutor[data-phase="listening"] {
+  background: var(--accent-wash);
+}
+
+.tutor[data-phase="error"],
+.tutor[data-phase="ended"] {
+  background: var(--no-wash);
+}
+
+.tutor__orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+}
+
+.tutor__core {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: var(--accent-ink);
+  background: linear-gradient(145deg, var(--hero-a), var(--hero-b));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.tutor__core svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+.tutor__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  transform: scale(0.7);
+}
+
+/* The same vocabulary as the voice panel's orb, a third of the size. */
+.tutor__orb[data-state="listening"] .tutor__ring {
+  animation: orb-pulse 1.6s var(--ease) infinite;
+}
+
+.tutor__orb[data-state="speaking"] .tutor__ring {
+  border-color: var(--info);
+  animation: orb-pulse 1s var(--ease) infinite;
+}
+
+.tutor__orb[data-state="speaking"] .tutor__core {
+  color: #ffffff;
+  background: linear-gradient(145deg, var(--hero-c), var(--info));
+}
+
+.tutor__orb[data-state="thinking"] .tutor__core {
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line-strong);
+  animation: orb-think 1.2s ease-in-out infinite;
+}
+
+.tutor__orb[data-state="idle"] .tutor__core {
+  color: var(--ink-faint);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+
+.tutor__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tutor__status {
+  margin: 0;
+  font-size: var(--step--2);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/*
+ * Two lines and then it stops growing. The transcript is there to be glanced
+ * at while answering; a strip that reflows the question down the screen every
+ * time the tutor says another word is worse than no transcript at all.
+ */
+.tutor__line {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  margin: 2px 0 0;
+  min-height: 1.2em;
+  font-size: var(--step--1);
+  color: var(--ink);
+}
+
+.tutor__tools {
+  display: flex;
+  flex: none;
+  gap: var(--sp-1);
+}
+
+.tutor__tool {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+  line-height: 1;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.tutor__tool:hover:not([disabled]) {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.tutor__tool[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The second way into a round, from the home screen. */
+.btn--speak {
+  background: linear-gradient(180deg, var(--hero-c), var(--info));
+  color: #ffffff;
+}
+
+.btn--speak:hover {
+  box-shadow: 0 14px 28px -10px rgb(76 94 214 / 45%), inset 0 1px 0 rgb(255 255 255 / 25%);
+}
+
+.hero__speakhint {
+  margin-top: var(--sp-2);
+}
+
+@media (max-width: 720px) {
+  .tutor {
+    margin: calc(var(--sp-5) * -1) calc(var(--sp-5) * -1) var(--sp-4);
+    padding: var(--sp-2) var(--sp-3);
+  }
+}

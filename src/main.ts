@@ -29,12 +29,14 @@ import {
 } from "./session";
 import { registerDoubleTap } from "./shortcuts";
 import { initTheme } from "./theme";
+import { DrillTutor } from "./tutor";
+import { closingLine } from "./tutorscript";
 import type { Learner, Progress, SessionState, StepState } from "./types";
 import { openAccount } from "./ui/account";
 import { openChat } from "./ui/chat";
 import type { AppContext, Route } from "./ui/context";
 import { clear } from "./ui/dom";
-import { renderDrill } from "./ui/drill";
+import { paintTutorStrip, renderDrill } from "./ui/drill";
 import { renderHome } from "./ui/home";
 import { renderLevel } from "./ui/level";
 import { renderLoading, renderLogin, renderRecovery } from "./ui/login";
@@ -42,7 +44,7 @@ import { renderProgress } from "./ui/progress";
 import { buildShell, paintStepper, type Shell } from "./ui/shell";
 import { renderSummary } from "./ui/summary";
 import { openTranslator } from "./ui/translate";
-import { openVoice } from "./ui/voice";
+import { openVoice, storedVoice } from "./ui/voice";
 
 /** How long the boot screen waits for Supabase before falling back to sign-in. */
 const AUTH_TIMEOUT_MS = 8000;
@@ -62,6 +64,14 @@ class App {
   private summaryScored = false;
   /** Coalesces the writes that a fast round would otherwise fire off. */
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
+  /**
+   * The tutor for the round in progress, or null when it is being typed.
+   *
+   * It lives here rather than in the view because the drill view is thrown
+   * away and rebuilt on every question, and a call that were rebuilt with it
+   * would reconnect twenty times a round.
+   */
+  private tutor: DrillTutor | null = null;
 
   constructor(root: HTMLElement) {
     setLang(getLang());
@@ -89,8 +99,12 @@ class App {
     });
     this.shell.setLearner(null);
     // The browser decides when the install prompt becomes available; redraw
-    // so the offer can appear without a navigation.
-    onInstallChange(() => this.paint());
+    // so the offer can appear without a navigation. Never mid-question,
+    // though: the offer lives on the home screen, and repainting the drill to
+    // show it would wipe a half-typed answer and make the tutor ask again.
+    onInstallChange(() => {
+      if (this.route !== "drill") this.paint();
+    });
     this.paint();
 
     // Always live, so a double-tap explains itself ("not switched on yet")
@@ -102,6 +116,27 @@ class App {
     });
 
     void this.restoreSession();
+  }
+
+  /* -------------------------------------------------------------- tutor */
+
+  /** Open the call that will read this round out. */
+  private beginTutor(): void {
+    this.tutor = new DrillTutor({
+      level: this.progress.level,
+      voice: storedVoice(),
+      onNeedKey: () => this.openAccountPanel()
+    });
+    // Only the strip redraws; rebuilding the card would wipe the answer being
+    // typed into it and steal the caret back on every streamed syllable.
+    this.tutor.subscribe(() => paintTutorStrip(this.tutor));
+    void this.tutor.start();
+  }
+
+  /** Hang up, whether the round finished or the learner walked away from it. */
+  private endTutor(): void {
+    this.tutor?.stop();
+    this.tutor = null;
   }
 
   /** The account panel — also where voice mode sends a learner who has no key yet. */
@@ -158,6 +193,7 @@ class App {
     const previous = this.learner;
     this.learner = learner;
     this.shell.setLearner(learner);
+    this.endTutor();
     this.session = null;
 
     const client = supabase();
@@ -234,16 +270,23 @@ class App {
       progress: this.progress,
       session: this.session,
       learner: this.learner,
+      tutor: this.tutor,
       refresh: () => this.paint(),
       go: (route) => {
         this.route = route;
         if (route !== "summary") this.summaryScored = false;
+        // The summary keeps the tutor for one last line; anywhere else means
+        // the round has been left, and a voice reading questions into an empty
+        // screen is nobody's idea of help.
+        if (route !== "drill" && route !== "summary") this.endTutor();
         this.paint();
       },
-      startSession: () => {
+      startSession: (spoken = false) => {
+        this.endTutor();
         this.session = buildSession(this.progress);
         this.summaryScored = false;
         this.route = this.session.tasks.length > 0 ? "drill" : "home";
+        if (spoken && this.route === "drill") this.beginTutor();
         this.paint();
       },
       setLevel: (level) => {
@@ -307,6 +350,10 @@ class App {
     void this.repository.recordSession(record).catch(() => {
       /* the round is safe locally; the next sync will carry it */
     });
+
+    // One closing line, then the call hangs up on its own. The reference is
+    // kept so that starting another round can cut it short.
+    this.tutor?.finish(closingLine(record.right, record.total));
   }
 
   /* --------------------------------------------------------------- view */

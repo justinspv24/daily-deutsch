@@ -54,7 +54,8 @@ const DEFAULT_VOICE = "Kore";
 /** Kept for display only — each call starts the model with a clean memory. */
 const transcript: Array<{ role: "user" | "assistant"; text: string }> = [];
 
-function storedVoice(): string {
+/** The voice the learner picked, shared with the tutor that runs the drill. */
+export function storedVoice(): string {
   try {
     const saved = localStorage.getItem(VOICE_KEY);
     if (saved && VOICES.some(([name]) => name === saved)) return saved;

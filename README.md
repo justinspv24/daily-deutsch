@@ -18,6 +18,14 @@ A round has four steps, and they are not a queue: the stepper across the top
 is clickable, so vocabulary, tables and review can be done in any order and
 left half-finished. Each question is graded once however often you pass it.
 
+The round can also be **done out loud**. *Mit Lehrer sprechen* on the home
+screen opens the same round with a teacher who reads every question, hears the
+answer and says something about it before the next one — the vocabulary card
+becomes three spoken questions, the way a teacher has always asked them. The
+app still does the marking: the voice reacts to the verdict it is given, so
+what you hear and what is on screen can never disagree. If the voice gives out,
+the round carries on as a typed one from wherever it had got to.
+
 Alongside the bundled banks, a learner can **add their own words** from the
 home screen or the progress page. An added word is drilled exactly like a bank
 word and leaves the drill after two consecutive fully-correct answers. Those
@@ -103,9 +111,10 @@ Google sign-in needs a one-time setup — see "Google sign-in" below.
 
 ## Turning the assistant on, later
 
-Three things sit behind one switch: the `cc` chat with a German teacher, the
-`tt` translator that detects direction automatically, and the `vv` voice mode —
-a live spoken conversation.
+Four things sit behind one switch: the `cc` chat with a German teacher, the
+`tt` translator that detects direction automatically, the `vv` voice mode —
+a live spoken conversation — and the spoken round, where the same teacher reads
+the daily drill out and listens to the answers.
 
 All three run on Google's Gemini — text through `api/ai.ts`, voice through the
 Live API in `api/realtime-token.ts` — and all three run on **each learner's
@@ -173,6 +182,9 @@ src/
   repositories/        local (this browser) and supabase (this learner)
   ai.ts                client half of /api/ai
   realtime.ts          the voice socket: mic capture, playback, codecs
+  tutor.ts             the spoken round: turn protocol, queue, reconnection
+  tutorscript.ts       how each question sounds asked rather than read
+  speech.ts            transcript in, answer out — speech-only leniency
   voicekey.ts          client half of /api/voice-key
   grading.ts           answer judging (exact, umlaut-near, lenient English)
   scheduler.ts         the 1·3·7·21·35 review ladder and streak counting
@@ -188,6 +200,7 @@ supabase/migrations/   the schema, including row-level security
 test/
   drill.mjs            plays two full rounds in jsdom: all wrong, then all right
   repository.mjs       normalisation, the sign-in merge, and its idempotence
+  speech.mjs           what somebody said becoming the answer that gets graded
 ```
 
 ### The merge on sign-in

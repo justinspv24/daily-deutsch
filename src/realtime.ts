@@ -53,6 +53,23 @@ export interface VoiceHandlers {
   onLearner(text: string, final: boolean): void;
   /** Growing transcript of what the teacher is saying. */
   onTeacher(text: string, final: boolean): void;
+  /**
+   * The teacher has stopped speaking and everything queued has been heard.
+   *
+   * `onState("listening")` says almost the same thing, but not quite: it also
+   * fires when the learner interrupts. A caller driving the conversation needs
+   * the narrower signal — the floor is now free — to know when its next
+   * instruction can be sent without talking over the tutor.
+   */
+  onTurnEnd?(): void;
+  /**
+   * Setup has been acknowledged and the socket will now accept turns.
+   *
+   * `startVoice` resolves earlier than this — as soon as the setup frame has
+   * been *sent* — so a caller that queues its own turns has to wait for this
+   * before sending any, or the first one races the handshake it depends on.
+   */
+  onReady?(): void;
   /** Session ended — by the learner, by the clock, or by an error. */
   onEnd(error: VoiceError | null): void;
 }
@@ -63,12 +80,37 @@ export interface VoiceOptions extends VoiceHandlers {
   target: string | null;
   voice: string;
   scenario: string;
+  /**
+   * Replaces the opening turn the server composed. The drill sends its first
+   * question instead of a greeting, so the tutor opens by teaching rather than
+   * by making conversation. `null` opens the call silently.
+   */
+  opener?: string | null;
+  /**
+   * Whether the microphone starts closed. The drill opens muted and unmutes
+   * only once its first question has been read out; setting it here rather
+   * than on the returned session closes the window between the tap starting
+   * and the caller getting a chance to shut it.
+   */
+  muted?: boolean;
 }
 
 export interface VoiceSession {
   stop(): void;
   /** Seconds left before the token expires; the panel counts down with it. */
   secondsLeft(): number;
+  /**
+   * Send one user turn and let the tutor answer it. This is how the drill asks
+   * its questions: the text is an instruction the tutor reads and acts on, not
+   * something the learner said.
+   */
+  say(text: string): void;
+  /**
+   * Stop or resume sending microphone audio. While a question is being read
+   * out the learner's side is closed, so a cough or a passing lorry cannot be
+   * taken for an answer.
+   */
+  setMuted(muted: boolean): void;
 }
 
 interface TokenResponse {
@@ -272,6 +314,19 @@ async function connect(
   let finished = false;
   let learnerLine = "";
   let teacherLine = "";
+  // Closed while the tutor is talking, so its own voice and the room's noise
+  // never arrive as an answer. The drill opens it once the question has landed.
+  let muted = options.muted === true;
+
+  const send = (payload: unknown): void => {
+    if (finished || socket.readyState !== WebSocket.OPEN) return;
+    socket.send(JSON.stringify(payload));
+  };
+
+  const sendTurn = (text: string): void => {
+    if (!text) return;
+    send({ clientContent: { turns: [{ role: "user", parts: [{ text }] }], turnComplete: true } });
+  };
 
   const expiry = window.setTimeout(() => end(null), credentials.sessionSeconds * 1000);
 
@@ -311,20 +366,13 @@ async function connect(
       if (message.setupComplete) {
         // Kick the conversation off before the microphone opens. The model only
         // ever responds to a turn, and the learner should hear the teacher
-        // first, not sit in silence wondering whether it worked.
-        if (credentials.opener) {
-          socket.send(
-            JSON.stringify({
-              clientContent: {
-                turns: [{ role: "user", parts: [{ text: credentials.opener }] }],
-                turnComplete: true
-              }
-            })
-          );
-        }
+        // first, not sit in silence wondering whether it worked. A caller that
+        // drives the conversation itself passes its own opening turn, or null
+        // for none at all.
+        sendTurn(options.opener === undefined ? credentials.opener : (options.opener ?? ""));
         options.onState("listening");
         void microphone.pipe((frame) => {
-          if (socket.readyState !== WebSocket.OPEN) return;
+          if (muted || socket.readyState !== WebSocket.OPEN) return;
           socket.send(
             JSON.stringify({
               realtimeInput: {
@@ -333,6 +381,7 @@ async function connect(
             })
           );
         });
+        options.onReady?.();
         return;
       }
 
@@ -380,7 +429,9 @@ async function connect(
           teacherLine = "";
         }
         void player.drained().then(() => {
-          if (!finished) options.onState("listening");
+          if (finished) return;
+          options.onState("listening");
+          options.onTurnEnd?.();
         });
       }
     })();
@@ -394,7 +445,11 @@ async function connect(
 
   return {
     stop: () => end(null),
-    secondsLeft: () => Math.max(0, Math.round((deadline - Date.now()) / 1000))
+    secondsLeft: () => Math.max(0, Math.round((deadline - Date.now()) / 1000)),
+    say: (text) => sendTurn(text),
+    setMuted: (next) => {
+      muted = next;
+    }
   };
 }
 

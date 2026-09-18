@@ -9,8 +9,9 @@ import {
   suggestedTopic
 } from "../session";
 import { canInstall, isIOS, isStandalone, promptInstall } from "../pwa";
+import { DrillTutor } from "../tutor";
 import { openAddWord } from "./addword";
-import { h, ICON_ARROW, svgIcon } from "./dom";
+import { h, ICON_ARROW, ICON_MIC, svgIcon } from "./dom";
 import type { AppContext } from "./context";
 import { statsRow } from "./widgets";
 
@@ -95,6 +96,15 @@ export function renderHome(ctx: AppContext): HTMLElement {
   const start = h("button", { class: "btn btn--lg", type: "button" }, s.start, svgIcon(ICON_ARROW, "start"));
   start.addEventListener("click", () => ctx.startSession());
 
+  // The same round, read out loud. Offered as its own door rather than a
+  // setting, because it is a different way to spend the next half hour —
+  // headphones and a quiet room, or a keyboard on the train — and that is a
+  // choice made fresh each morning, not once in a preferences panel.
+  const speak = DrillTutor.offerable()
+    ? h("button", { class: "btn btn--lg btn--speak", type: "button" }, svgIcon(ICON_MIC, "voice"), s.tutorStart)
+    : null;
+  speak?.addEventListener("click", () => ctx.startSession(true));
+
   const progressButton = h("button", { class: "btn btn--ghost", type: "button" }, s.viewProgress);
   progressButton.addEventListener("click", () => ctx.go("progress"));
 
@@ -111,8 +121,9 @@ export function renderHome(ctx: AppContext): HTMLElement {
     h("p", { class: "eyebrow" }, level ? `${level} · ${formatToday()}` : formatToday()),
     h("h2", { class: "display" }, s.greeting(ctx.learner?.displayName ?? null)),
     lede,
-    h("div", { class: "actions" }, start, progressButton, addButton)
+    h("div", { class: "actions" }, start, speak, progressButton, addButton)
   );
+  if (speak) hero.append(h("p", { class: "kbdhint hero__speakhint" }, s.tutorStartHint));
   if (install) hero.append(install);
 
   const plan = h("section", { class: "plan" }, h("h3", { class: "sectiontitle" }, s.todayPlan), agenda);

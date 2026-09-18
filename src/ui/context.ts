@@ -1,3 +1,4 @@
+import type { DrillTutor } from "../tutor";
 import type { Learner, Level, Progress, SessionState, VocabItem } from "../types";
 
 export type Route = "loading" | "login" | "recovery" | "level" | "home" | "drill" | "summary" | "progress";
@@ -7,10 +8,17 @@ export interface AppContext {
   readonly progress: Progress;
   readonly session: SessionState | null;
   readonly learner: Learner | null;
+  /**
+   * The spoken tutor, when the round is being done out loud. It outlives every
+   * redraw of the question, which is the point: a conversation cannot be
+   * rebuilt from scratch each time a field is filled in.
+   */
+  readonly tutor: DrillTutor | null;
   /** Re-render the current route in place. */
   refresh(): void;
   go(route: Route): void;
-  startSession(): void;
+  /** Begin a round. `spoken` opens it with the tutor reading the questions out. */
+  startSession(spoken?: boolean): void;
   /** Pick (or change) the level; the content bank switches with it. */
   setLevel(level: Level): void;
   /** Add a word of the learner's own to the vocabulary drill. */
