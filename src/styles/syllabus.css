@@ -1,0 +1,582 @@
+/*
+ * The syllabus screen and the grammar diagrams it carries. Kept in its own
+ * sheet because it is a screen of its own: nothing here is reused by the
+ * drill, and components.css is long enough already.
+ */
+
+/* ------------------------------------------------------------ syllabus */
+
+.syllabus__tabs {
+  margin-top: var(--sp-5);
+}
+
+.syllabus__tabs button {
+  position: relative;
+}
+
+.syllabus__own {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 0.5rem;
+  color: var(--accent);
+}
+
+.syllabus__level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.syllabus__level .levelcard__code {
+  align-self: flex-start;
+}
+
+.syllabus__level[data-level="B1"] .levelcard__code,
+.syllabus__level[data-level="B2"] .levelcard__code {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--hero-c), var(--hero-b));
+}
+
+.syllabus__leveltitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-2);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.syllabus__level .lede {
+  margin-top: 0;
+}
+
+.syllabus__meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-3);
+  margin: var(--sp-2) 0 0;
+}
+
+.syllabus__meta > div {
+  padding: var(--sp-3);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+}
+
+.syllabus__meta dt {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.syllabus__meta dd {
+  margin: 4px 0 0;
+  font-size: var(--step--1);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.syllabus__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* An outbound resource: its kind on the left, the label, a chip when it is a search. */
+.reslink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  max-width: 100%;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-size: var(--step--1);
+  text-decoration: none;
+  transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease-spring);
+}
+
+.reslink:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.reslink__kind {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--accent-ink);
+  background: linear-gradient(135deg, var(--hero-a), var(--hero-b));
+}
+
+.reslink[data-kind="course"] .reslink__kind {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--hero-c), var(--info));
+}
+
+.reslink[data-kind="reading"] .reslink__kind {
+  color: var(--ink);
+  background: var(--surface-sunk);
+}
+
+.reslink__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------- the sections (units) */
+
+.units {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.unit {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--dur) var(--ease);
+}
+
+.unit[open] {
+  border-color: var(--accent);
+}
+
+.unit__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  cursor: pointer;
+  list-style: none;
+}
+
+.unit__summary::-webkit-details-marker {
+  display: none;
+}
+
+.unit__n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent-text);
+  background: var(--accent-wash);
+}
+
+.unit__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.unit__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-1);
+  letter-spacing: -0.015em;
+}
+
+.unit__blurb {
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.unit__chev {
+  flex: none;
+  color: var(--ink-faint);
+  transition: transform var(--dur) var(--ease-spring);
+}
+
+.unit__chev svg {
+  width: 18px;
+  height: 18px;
+  transform: rotate(90deg);
+}
+
+.unit[open] .unit__chev {
+  transform: rotate(180deg);
+}
+
+.unit__body {
+  padding: 0 var(--sp-5) var(--sp-5);
+  border-top: 1px solid var(--line);
+}
+
+.unit__body .sectiontitle {
+  margin-top: var(--sp-5);
+  margin-bottom: var(--sp-3);
+}
+
+.unit__cando {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.unit__cando li {
+  position: relative;
+  padding-left: 26px;
+  line-height: 1.5;
+}
+
+.unit__cando li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ok);
+  background: var(--ok-wash);
+}
+
+.unit__grammar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.gpoint {
+  padding: var(--sp-4);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+}
+
+.gpoint__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-0);
+}
+
+.gpoint__example {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--step-0);
+  line-height: 1.55;
+}
+
+.gpoint .gloss {
+  margin-top: 4px;
+}
+
+.unit__vocab {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0;
+}
+
+.unit__word {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-2) 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.unit__word dt {
+  font-weight: 600;
+}
+
+.unit__word dd {
+  margin: 0;
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+}
+
+.levels__peek {
+  font-size: var(--step--1);
+}
+
+/* --------------------------------------------------------- illustrations */
+
+.illus {
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+}
+
+.illus__note {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--step--1);
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+/* A sentence as a row of slots; the ones that carry the point are lit. */
+.illus__frame {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.illus__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.illus__slot {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface-sunk);
+  font-size: var(--step-0);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.illus__slot[data-mark="true"] {
+  color: var(--accent-ink);
+  background: linear-gradient(180deg, var(--hero-a), var(--accent));
+  font-weight: 700;
+  box-shadow: 0 6px 16px -8px var(--accent-glow);
+}
+
+.illus__tag {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* A paradigm grid; the cells that change are the ones to look at. */
+.illus__wrap {
+  overflow-x: auto;
+}
+
+.illus__grid {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--step--1);
+}
+
+.illus__grid th,
+.illus__grid td {
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.illus__grid thead th {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.illus__grid tbody th {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.illus__grid td[data-mark="true"] {
+  color: var(--accent-text);
+  background: var(--accent-wash);
+  font-weight: 700;
+}
+
+/* Two or three columns set against each other. */
+.illus__cols {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+}
+
+.illus__cols[data-count="3"] {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.illus__col {
+  padding: var(--sp-3);
+  border-radius: 10px;
+  background: var(--surface-sunk);
+  border-top: 3px solid var(--accent);
+}
+
+.illus__col[data-tone="b"] {
+  border-top-color: var(--info);
+}
+
+.illus__col[data-tone="c"] {
+  border-top-color: var(--ok);
+}
+
+.illus__head {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step--1);
+}
+
+.illus__line {
+  margin: 4px 0 0;
+  font-size: var(--step--1);
+  line-height: 1.5;
+}
+
+.illus__line--muted {
+  color: var(--ink-faint);
+}
+
+/* SVG pieces: timeline and clock. */
+.illus__svg svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tl__axis {
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+
+.tl__arrow {
+  fill: var(--line-strong);
+}
+
+.tl__dot {
+  fill: var(--surface-raised);
+  stroke: var(--info);
+  stroke-width: 2.5;
+}
+
+.tl__dot--now {
+  fill: var(--accent);
+  stroke: var(--accent-strong);
+}
+
+.tl__label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+
+.tl__example {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ink-muted);
+}
+
+.tl__now {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  fill: var(--accent-text);
+}
+
+.illus__clock {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: var(--sp-4);
+  align-items: center;
+}
+
+.illus__svg--clock {
+  width: 160px;
+}
+
+.clk__face {
+  fill: var(--surface-sunk);
+  stroke: var(--line-strong);
+  stroke-width: 3;
+}
+
+.clk__tick {
+  stroke: var(--ink-faint);
+  stroke-width: 2;
+}
+
+.clk__num {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+
+.clk__hand {
+  stroke: var(--ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.clk__hand--hour {
+  stroke: var(--accent-strong);
+  stroke-width: 6;
+}
+
+.clk__pin {
+  fill: var(--accent);
+}
+
+@media (max-width: 720px) {
+  .syllabus__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .unit__summary {
+    padding: var(--sp-3) var(--sp-4);
+    gap: var(--sp-3);
+  }
+
+  .unit__body {
+    padding: 0 var(--sp-4) var(--sp-4);
+  }
+
+  .unit__vocab {
+    grid-template-columns: 1fr;
+  }
+
+  .illus__cols,
+  .illus__cols[data-count="3"] {
+    grid-template-columns: 1fr;
+  }
+
+  .illus__clock {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+}

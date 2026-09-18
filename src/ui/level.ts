@@ -44,7 +44,13 @@ export function renderLevel(ctx: AppContext): HTMLElement {
     h("p", { class: "lede" }, s.levelLede)
   );
 
-  const wrap = h("div", { class: "home" }, head, grid);
+  // The road ahead, before choosing which stretch of it to start on. It is a
+  // link and not a setting: seeing what B1 covers is how a learner decides
+  // they are not there yet.
+  const peek = h("button", { class: "linkbtn levels__peek", type: "button" }, s.syllabusOpenFromLevel);
+  peek.addEventListener("click", () => ctx.go("syllabus"));
+
+  const wrap = h("div", { class: "home" }, head, grid, h("div", { class: "actions actions--center" }, peek));
   if (current) {
     const back = h("button", { class: "btn btn--ghost", type: "button" }, s.back);
     back.addEventListener("click", () => ctx.go("home"));

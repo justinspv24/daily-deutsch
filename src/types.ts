@@ -86,6 +86,57 @@ export interface UpcomingTopic {
   readonly blurb: Bilingual;
 }
 
+/* ---------------------------------------------------------------- syllabus */
+
+/** One entry of a section's core vocabulary: the German with its article, and the English. */
+export interface SyllabusWord {
+  readonly de: string;
+  readonly en: string;
+}
+
+/** A grammar point a section teaches, with one sentence that shows it working. */
+export interface SyllabusGrammar {
+  readonly title: Bilingual;
+  readonly example: string;
+  readonly gloss: string;
+  /** Key into the illustration library, when a diagram helps it stick. */
+  readonly illustration?: string;
+}
+
+/**
+ * Somewhere to learn more. Only official or long-established sources; where a
+ * deep link could not be verified, the link is a search rather than a guess.
+ */
+export interface SyllabusLink {
+  readonly kind: "video" | "course" | "reading";
+  readonly label: Bilingual;
+  readonly url: string;
+}
+
+/** One topic of a level: what you can do afterwards, the grammar, the words. */
+export interface SyllabusSection {
+  readonly id: string;
+  readonly title: Bilingual;
+  readonly blurb: Bilingual;
+  readonly canDo: readonly Bilingual[];
+  readonly grammar: readonly SyllabusGrammar[];
+  readonly vocab: readonly SyllabusWord[];
+  readonly links: readonly SyllabusLink[];
+}
+
+export interface LevelSyllabus {
+  readonly level: Level;
+  readonly title: Bilingual;
+  readonly intro: Bilingual;
+  /** The exams this level maps onto. */
+  readonly exam: Bilingual;
+  /** Guideline teaching hours to reach the level, as the institutes quote them. */
+  readonly hours: Bilingual;
+  /** The official documents the syllabus was built against. */
+  readonly sources: readonly SyllabusLink[];
+  readonly sections: readonly SyllabusSection[];
+}
+
 /* ---------------------------------------------------------------- progress */
 
 export interface VocabProgress {

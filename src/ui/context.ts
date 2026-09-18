@@ -1,7 +1,16 @@
 import type { DrillTutor } from "../tutor";
 import type { Learner, Level, Progress, SessionState, VocabItem } from "../types";
 
-export type Route = "loading" | "login" | "recovery" | "level" | "home" | "drill" | "summary" | "progress";
+export type Route =
+  | "loading"
+  | "login"
+  | "recovery"
+  | "level"
+  | "home"
+  | "drill"
+  | "summary"
+  | "progress"
+  | "syllabus";
 
 /** Everything a view needs from the app shell, and nothing more. */
 export interface AppContext {

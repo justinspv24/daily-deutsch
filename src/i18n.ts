@@ -242,6 +242,27 @@ export interface Strings {
   readonly tutorRepeat: string;
   readonly tutorStop: string;
 
+  /* the syllabus */
+  readonly syllabusButton: string;
+  readonly syllabusEyebrow: string;
+  readonly syllabusTitle: string;
+  readonly syllabusLede: string;
+  readonly syllabusOpenFromLevel: string;
+  readonly syllabusExam: string;
+  readonly syllabusHours: string;
+  readonly syllabusSectionsLabel: string;
+  readonly syllabusSectionsCount: (n: number) => string;
+  readonly syllabusSources: string;
+  readonly syllabusCanDo: string;
+  readonly syllabusGrammar: string;
+  readonly syllabusVocab: string;
+  readonly syllabusLinks: string;
+  readonly syllabusYourLevel: string;
+  readonly syllabusSearch: string;
+  readonly syllabusVideo: string;
+  readonly syllabusCourse: string;
+  readonly syllabusReading: string;
+
   /* account */
   readonly signIn: string;
   readonly signOut: string;
@@ -502,6 +523,27 @@ const de: Strings = {
   tutorRepeat: "Frage noch einmal hören",
   tutorStop: "Ohne Stimme weitermachen",
 
+  syllabusButton: "Lehrplan",
+  syllabusEyebrow: "Lehrplan A1 – B2",
+  syllabusTitle: "Was du lernst",
+  syllabusLede:
+    "Jedes Niveau in zwölf Themen: was du danach kannst, welche Grammatik dazugehört, die wichtigsten Wörter — und wo du es erklärt hörst. Nach den Prüfungszielen von Goethe-Institut und telc.",
+  syllabusOpenFromLevel: "Was lernt man auf jedem Niveau? Zum Lehrplan",
+  syllabusExam: "Prüfungen",
+  syllabusHours: "Unterrichtsstunden",
+  syllabusSectionsLabel: "Themen",
+  syllabusSectionsCount: (n) => `${n} Themen`,
+  syllabusSources: "Quellen & Kurse",
+  syllabusCanDo: "Das kannst du danach",
+  syllabusGrammar: "Grammatik",
+  syllabusVocab: "Wichtige Wörter",
+  syllabusLinks: "Videos & mehr",
+  syllabusYourLevel: "dein Niveau",
+  syllabusSearch: "Suche",
+  syllabusVideo: "Video",
+  syllabusCourse: "Kurs",
+  syllabusReading: "Lesen",
+
   signIn: "Anmelden",
   signOut: "Abmelden",
   account: "Konto",
@@ -759,6 +801,27 @@ const en: Strings = {
   tutorOff: "Teacher off",
   tutorRepeat: "Hear the question again",
   tutorStop: "Carry on without the voice",
+
+  syllabusButton: "Syllabus",
+  syllabusEyebrow: "Syllabus A1 – B2",
+  syllabusTitle: "What you'll learn",
+  syllabusLede:
+    "Each level in twelve topics: what you can do afterwards, the grammar that goes with it, the words that matter — and where to hear it taught. Built on the Goethe-Institut and telc exam objectives.",
+  syllabusOpenFromLevel: "What does each level cover? See the syllabus",
+  syllabusExam: "Exams",
+  syllabusHours: "Teaching hours",
+  syllabusSectionsLabel: "Topics",
+  syllabusSectionsCount: (n) => `${n} topics`,
+  syllabusSources: "Sources & courses",
+  syllabusCanDo: "What you can do afterwards",
+  syllabusGrammar: "Grammar",
+  syllabusVocab: "Key words",
+  syllabusLinks: "Videos & more",
+  syllabusYourLevel: "your level",
+  syllabusSearch: "Search",
+  syllabusVideo: "Video",
+  syllabusCourse: "Course",
+  syllabusReading: "Read",
 
   signIn: "Sign in",
   signOut: "Sign out",

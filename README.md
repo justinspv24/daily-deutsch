@@ -26,6 +26,13 @@ app still does the marking: the voice reacts to the verdict it is given, so
 what you hear and what is on screen can never disagree. If the voice gives out,
 the round carries on as a typed one from wherever it had got to.
 
+*Lehrplan* on the home screen opens the **syllabus**: all four levels, twelve
+sections each, with what you can do after each one, its grammar (with
+diagrams), the core vocabulary and links to where it is taught — built on the
+Goethe-Institut and telc exam objectives. The level picker links to it too,
+so a learner can see what B1 covers before deciding they are not there yet.
+`docs/syllabus.md` records the sources.
+
 Alongside the bundled banks, a learner can **add their own words** from the
 home screen or the progress page. An added word is drilled exactly like a bank
 word and leaves the drill after two consecutive fully-correct answers. Those
@@ -193,14 +200,17 @@ src/
   theme.ts             light/dark, stored, applied before first paint
   shortcuts.ts         cc / tt / vv double-tap detection
   data/                the question banks, one per level
+  data/syllabus/       the map of every level: sections, grammar, words, links
   ui/                  shell, login, level, home, drill, summary, progress,
-                       addword, account, chat, translate, voice
-  styles/              tokens → base → components → overlay
+                       syllabus, addword, account, chat, translate, voice
+  ui/illustrations.ts  the grammar diagrams: frames, grids, contrasts, timelines
+  styles/              tokens → base → components → overlay → syllabus
 supabase/migrations/   the schema, including row-level security
 test/
   drill.mjs            plays two full rounds in jsdom: all wrong, then all right
   repository.mjs       normalisation, the sign-in merge, and its idempotence
   speech.mjs           what somebody said becoming the answer that gets graded
+  syllabus.mjs         the syllabus holds together: ids, diagrams, trusted links
 ```
 
 ### The merge on sign-in
