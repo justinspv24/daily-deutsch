@@ -8,7 +8,6 @@ import {
   g,
   reading,
   section,
-  w,
   yt
 } from "./helpers";
 
@@ -50,22 +49,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("Partizip II: regelmäßig & unregelmäßig", "Participles: regular & irregular", "gemacht · gearbeitet · gegessen · getrunken · geschrieben", "made · worked · eaten · drunk · written"),
           g("Trennbar & untrennbar", "Separable & inseparable", "aufgestanden · eingekauft — aber: besucht, erzählt, verstanden", "got up · shopped — but: visited, told, understood", "separable")
         ],
-        vocab: [
-          w("gestern / vorgestern", "yesterday / the day before yesterday"),
-          w("letzte Woche / letztes Jahr", "last week / last year"),
-          w("die Vergangenheit", "the past"),
-          w("passieren (ist passiert)", "to happen"),
-          w("erzählen", "to tell, narrate"),
-          w("erleben (hat erlebt)", "to experience"),
-          w("das Erlebnis, die Erlebnisse", "experience"),
-          w("die Reise, die Reisen", "trip"),
-          w("besuchen (hat besucht)", "to visit"),
-          w("bleiben (ist geblieben)", "to stay"),
-          w("einschlafen (ist eingeschlafen)", "to fall asleep"),
-          w("aufwachen (ist aufgewacht)", "to wake up"),
-          w("verstehen (hat verstanden)", "to understand"),
-          w("schon / noch nicht", "already / not yet")
-        ],
         links: [
           yt("Nicos Weg A2 Perfekt", "Nicos Weg A2: Perfekt", "Nicos Weg A2: perfect tense"),
           yt("Perfekt haben oder sein erklärt", "haben oder sein im Perfekt?", "haben or sein in the perfect?")
@@ -88,20 +71,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("Modalverben im Präteritum", "Modal verbs in the simple past", "Ich konnte nicht kommen. Er musste arbeiten. Sie wollte schlafen.", "I couldn't come. He had to work. She wanted to sleep."),
           g("Präteritum oder Perfekt?", "Simple past or perfect?", "Gesprochen: Perfekt. sein, haben, Modalverben: Präteritum. Geschrieben: oft Präteritum.", "Spoken: perfect. sein, haben, modals: simple past. Written: often simple past."),
           g("Erzählen: dann, danach, plötzlich", "Narrating: dann, danach, plötzlich", "Zuerst war es ruhig, dann kam plötzlich der Regen.", "First it was quiet, then suddenly the rain came.")
-        ],
-        vocab: [
-          w("früher", "in the past, formerly"),
-          w("damals", "back then"),
-          w("als Kind", "as a child"),
-          w("plötzlich", "suddenly"),
-          w("zuerst / danach / zum Schluss", "first / afterwards / finally"),
-          w("die Kindheit", "childhood"),
-          w("die Schule / die Schulzeit", "school / school days"),
-          w("der Urlaub, die Urlaube", "holiday"),
-          w("das Wetter war …", "the weather was …"),
-          w("Es gab …", "There was / were …"),
-          w("sich erinnern an", "to remember"),
-          w("vergessen (hat vergessen)", "to forget")
         ],
         links: [
           yt("Präteritum sein haben Modalverben A2", "Präteritum: war, hatte, konnte", "Simple past: war, hatte, konnte"),
@@ -126,23 +95,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("stellen/stehen, legen/liegen, setzen/sitzen", "stellen/stehen, legen/liegen, setzen/sitzen", "Ich stelle die Lampe in die Ecke. Die Lampe steht in der Ecke.", "I put the lamp in the corner. The lamp stands in the corner."),
           g("Dativ-Verben", "Dative verbs", "Ich helfe dem Nachbarn. Das gehört mir. Die Wohnung gefällt uns.", "I help the neighbour. That belongs to me. We like the flat.", "verben-fall")
         ],
-        vocab: [
-          w("die Wohnungssuche", "flat hunting"),
-          w("die Anzeige, die Anzeigen", "advertisement"),
-          w("die Besichtigung", "viewing"),
-          w("der Vermieter, die Vermieterin", "landlord, landlady"),
-          w("der Mieter, die Mieterin", "tenant"),
-          w("die Nebenkosten (Pl.)", "utility costs"),
-          w("die Kaution", "deposit"),
-          w("der Nachbar, die Nachbarin", "neighbour"),
-          w("das Erdgeschoss, der Stock", "ground floor, floor/storey"),
-          w("der Flur, der Keller", "hallway, cellar"),
-          w("das Regal, der Teppich, die Lampe", "shelf, carpet, lamp"),
-          w("stellen / stehen", "to put upright / to stand"),
-          w("legen / liegen", "to lay / to lie"),
-          w("hängen", "to hang"),
-          w("umziehen (ist umgezogen)", "to move house")
-        ],
         links: [
           yt("Wechselpräpositionen erklärt Wo Wohin", "Wechselpräpositionen: Wo? Wohin?", "Two-way prepositions: Wo? Wohin?"),
           yt("Nicos Weg A2 Wohnungssuche", "Nicos Weg A2: Wohnungssuche", "Nicos Weg A2: flat hunting")
@@ -165,22 +117,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("nach, zu, in — Wohin?", "nach, zu, in — Wohin?", "nach Berlin · zum Bahnhof · in die Schweiz · ins Hotel", "to Berlin · to the station · to Switzerland · into the hotel"),
           g("Dativ-Präpositionen", "Dative prepositions", "aus · bei · mit · nach · seit · von · zu · gegenüber", "from · at · with · to/after · since · from/of · to · opposite", "dativ-preps"),
           g("Höflich fragen", "Asking politely", "Könnten Sie mir sagen, wann der Zug fährt? Ich hätte gern ein Einzelzimmer.", "Could you tell me when the train leaves? I'd like a single room.", "konjunktiv2")
-        ],
-        vocab: [
-          w("die Reise / verreisen", "trip / to go away"),
-          w("der Flughafen, der Flug", "airport, flight"),
-          w("die Verbindung, die Verbindungen", "connection"),
-          w("der Fahrplan, die Fahrpläne", "timetable"),
-          w("die Verspätung", "delay"),
-          w("das Gleis, die Gleise", "platform"),
-          w("hin und zurück", "return (there and back)"),
-          w("das Hotel, das Einzelzimmer, das Doppelzimmer", "hotel, single room, double room"),
-          w("die Rezeption", "reception"),
-          w("buchen / reservieren", "to book / to reserve"),
-          w("das Gepäck, der Koffer", "luggage, suitcase"),
-          w("der Reisepass, der Ausweis", "passport, ID card"),
-          w("die Sehenswürdigkeit, -en", "sight, attraction"),
-          w("der Ausflug, die Ausflüge", "excursion")
         ],
         links: [
           yt("Nicos Weg A2 Reisen Bahnhof", "Nicos Weg A2: Reisen", "Nicos Weg A2: travelling"),
@@ -205,22 +141,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("Alle Modalverben im Präsens", "All modal verbs in the present", "können · müssen · wollen · sollen · dürfen · möchten/mögen", "can · must · want · should · may · would like"),
           g("Termine: Uhrzeit & Datum", "Appointments: time & date", "am 3. März um halb zehn · Passt es Ihnen am Dienstag?", "on 3 March at half past nine · Does Tuesday suit you?", "temporal-uai")
         ],
-        vocab: [
-          w("die Ausbildung", "vocational training"),
-          w("das Studium / studieren", "degree course / to study"),
-          w("die Bewerbung / sich bewerben", "application / to apply"),
-          w("der Lebenslauf", "CV"),
-          w("die Stelle, die Stellen", "job, position"),
-          w("der Arbeitgeber, der Arbeitnehmer", "employer, employee"),
-          w("die Erfahrung, die Erfahrungen", "experience"),
-          w("die Besprechung / das Meeting", "meeting"),
-          w("die Überstunden (Pl.)", "overtime"),
-          w("der Vertrag, die Verträge", "contract"),
-          w("kündigen", "to give notice, resign"),
-          w("einen Termin vereinbaren / verschieben / absagen", "to arrange / postpone / cancel an appointment"),
-          w("die Teilzeit / die Vollzeit", "part-time / full-time"),
-          w("das Gehalt, die Gehälter", "salary")
-        ],
         links: [
           yt("Nebensätze weil dass Wortstellung erklärt", "weil & dass: Verb ans Ende", "weil & dass: verb to the end"),
           yt("Nicos Weg A2 Arbeit Beruf", "Nicos Weg A2: Arbeit", "Nicos Weg A2: work")
@@ -243,22 +163,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("Ratschläge mit sollte", "Advice with sollte", "Du solltest mehr schlafen. Sie sollten zum Arzt gehen.", "You should sleep more. You should see a doctor.", "konjunktiv2"),
           g("Imperativ mit Reflexivpronomen", "Imperative with reflexive pronoun", "Zieh dich warm an! Ruhen Sie sich aus!", "Dress warmly! Have a rest!", "imperativ"),
           g("Wenn-Sätze (Bedingung)", "wenn-clauses (condition)", "Wenn du Fieber hast, bleib zu Hause.", "If you have a fever, stay at home.", "nebensatz")
-        ],
-        vocab: [
-          w("sich fühlen", "to feel"),
-          w("sich erkälten", "to catch a cold"),
-          w("sich ausruhen", "to rest"),
-          w("sich anziehen / sich ausziehen", "to get dressed / undressed"),
-          w("die Grippe", "flu"),
-          w("die Verletzung / sich verletzen", "injury / to injure oneself"),
-          w("das Rezept, die Rezepte", "prescription; recipe"),
-          w("die Krankenversicherung", "health insurance"),
-          w("die Krankschreibung", "sick note"),
-          w("die Ernährung / sich ernähren", "nutrition / to eat (a diet)"),
-          w("gesund / ungesund", "healthy / unhealthy"),
-          w("abnehmen / zunehmen", "to lose / gain weight"),
-          w("der Sport / Sport treiben", "sport / to do sport"),
-          w("die Bewegung", "exercise, movement")
         ],
         links: [
           yt("reflexive Verben Deutsch A2 erklärt", "Reflexive Verben erklärt", "Reflexive verbs explained"),
@@ -283,22 +187,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("Adjektive vor dem Nomen — erste Endungen", "Adjectives before the noun — first endings", "der neue Laptop · ein neuer Laptop · die neue Jacke", "the new laptop · a new laptop · the new jacket", "adjective-endings"),
           g("Reklamation", "Complaining", "Das Gerät funktioniert nicht. Ich möchte es umtauschen.", "The device doesn't work. I'd like to exchange it.")
         ],
-        vocab: [
-          w("das Angebot, die Angebote", "offer"),
-          w("der Preis / preiswert", "price / good value"),
-          w("die Qualität", "quality"),
-          w("die Garantie", "guarantee"),
-          w("die Quittung / der Kassenbon", "receipt"),
-          w("umtauschen", "to exchange"),
-          w("zurückgeben / zurückbekommen", "to return / get back"),
-          w("kaputt / funktionieren", "broken / to work (function)"),
-          w("die Reklamation / reklamieren", "complaint / to complain"),
-          w("das Geschäft, die Geschäfte", "shop"),
-          w("die Kasse, die Kassen", "till, checkout"),
-          w("online bestellen / liefern", "to order online / to deliver"),
-          w("die Größe / passen", "size / to fit"),
-          w("die Werbung", "advertising")
-        ],
         links: [
           yt("Komparativ Superlativ Deutsch A2", "Komparativ & Superlativ", "Comparative & superlative"),
           yt("Easy German shopping in Germany", "Easy German: Einkaufen", "Easy German: shopping")
@@ -321,22 +209,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("wenn oder wann?", "wenn or wann?", "Wann kommst du? — Wenn ich Zeit habe.", "When are you coming? — When I have time."),
           g("Konjunktionen: und, aber, oder, denn", "Conjunctions: und, aber, oder, denn", "Ich bleibe zu Hause, denn ich bin müde. (Verb bleibt auf Position 2)", "I'm staying home, for I'm tired. (verb stays in second place)", "konnektoren"),
           g("Am Telefon", "On the phone", "Weber, guten Tag. — Könnte ich bitte Frau Meier sprechen?", "Weber speaking. — Could I speak to Ms Meier, please?")
-        ],
-        vocab: [
-          w("das Handy / das Smartphone", "mobile phone"),
-          w("anrufen (ruft an) / zurückrufen", "to call / to call back"),
-          w("die Nachricht hinterlassen", "to leave a message"),
-          w("verbinden / Bleiben Sie dran.", "to put through / Please hold."),
-          w("die Mailbox / die App", "voicemail / app"),
-          w("das Internet / online", "internet / online"),
-          w("die Nachrichten (Pl.)", "the news"),
-          w("die Sendung, die Sendungen", "programme, broadcast"),
-          w("die Zeitung, die Zeitschrift", "newspaper, magazine"),
-          w("das Passwort", "password"),
-          w("herunterladen / hochladen", "to download / upload"),
-          w("sich informieren über", "to find out about"),
-          w("die Verbindung ist schlecht", "the connection is bad"),
-          w("Auf Wiederhören!", "Goodbye! (on the phone)")
         ],
         links: [
           yt("indirekte Fragen ob Deutsch A2", "Indirekte Fragen mit ob", "Indirect questions with ob"),
@@ -361,22 +233,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("Verben mit Dativ und Akkusativ", "Verbs with dative and accusative", "Er gibt seiner Schwester das Geschenk. — Person: Dativ, Sache: Akkusativ", "He gives his sister the present. — person: dative, thing: accusative", "verben-fall"),
           g("Glückwünsche & Dank", "Congratulations & thanks", "Herzlichen Glückwunsch! Vielen Dank für die Einladung.", "Congratulations! Many thanks for the invitation.")
         ],
-        vocab: [
-          w("das Fest, die Feste / feiern", "celebration / to celebrate"),
-          w("der Geburtstag", "birthday"),
-          w("die Hochzeit / heiraten", "wedding / to marry"),
-          w("Weihnachten, Ostern, Silvester", "Christmas, Easter, New Year's Eve"),
-          w("das Geschenk / schenken", "present / to give (as a gift)"),
-          w("gratulieren (+ Dativ)", "to congratulate"),
-          w("sich bedanken bei", "to thank"),
-          w("die Einladung / einladen", "invitation / to invite"),
-          w("der Gast, die Gäste", "guest"),
-          w("die Tradition, die Traditionen", "tradition"),
-          w("die Beziehung", "relationship"),
-          w("sich verlieben in / sich trennen von", "to fall in love with / to split up with"),
-          w("der Partner, die Partnerin", "partner"),
-          w("die Verwandten (Pl.)", "relatives")
-        ],
         links: [
           yt("Dativ Personalpronomen mir dir ihm erklärt", "Personalpronomen im Dativ", "Personal pronouns in the dative"),
           yt("Easy German German traditions holidays", "Easy German: Feste in Deutschland", "Easy German: German festivals")
@@ -399,22 +255,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("Adjektivendungen nach ein/kein/mein", "Adjective endings after ein/kein/mein", "ein alter Markt · eine schöne Kirche · ein neues Rathaus", "an old market · a beautiful church · a new town hall"),
           g("Genitiv: erste Schritte", "Genitive: first steps", "das Zentrum der Stadt · der Name des Parks", "the centre of the city · the name of the park", "genitiv"),
           g("Empfehlen", "Recommending", "Du solltest unbedingt die Burg besuchen. Ich empfehle dir das Café am Fluss.", "You really should visit the castle. I recommend the café by the river.")
-        ],
-        vocab: [
-          w("das Zentrum / die Innenstadt", "centre / town centre"),
-          w("der Marktplatz, das Rathaus", "market square, town hall"),
-          w("die Kirche, die Burg, das Museum", "church, castle, museum"),
-          w("der Park, der Fluss, die Brücke", "park, river, bridge"),
-          w("die Umwelt", "environment"),
-          w("der Müll / Müll trennen", "rubbish / to separate waste"),
-          w("recyceln / das Recycling", "to recycle / recycling"),
-          w("der Verkehr / der Stau", "traffic / traffic jam"),
-          w("die Luft / die Luftverschmutzung", "air / air pollution"),
-          w("das Klima", "climate"),
-          w("die Wettervorhersage", "weather forecast"),
-          w("bewölkt / sonnig / neblig", "cloudy / sunny / foggy"),
-          w("der Grad (25 Grad)", "degree (25 degrees)"),
-          w("empfehlen (empfiehlt)", "to recommend")
         ],
         links: [
           yt("Adjektivendungen Deutsch erklärt einfach", "Adjektivendungen einfach erklärt", "Adjective endings made simple"),
@@ -439,22 +279,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("Vorschläge", "Suggestions", "Wollen wir ins Konzert gehen? Wie wäre es mit Samstag? — Gute Idee! / Lieber nicht.", "Shall we go to the concert? How about Saturday? — Good idea! / Rather not."),
           g("Wo? Wohin? Woher?", "Wo? Wohin? Woher?", "Wo bist du? Wohin gehst du? Woher kommst du?", "Where are you? Where are you going? Where do you come from?", "wechsel")
         ],
-        vocab: [
-          w("sich interessieren für", "to be interested in"),
-          w("sich freuen auf / über", "to look forward to / be pleased about"),
-          w("warten auf", "to wait for"),
-          w("die Veranstaltung, -en", "event"),
-          w("das Konzert, das Theater, die Ausstellung", "concert, theatre, exhibition"),
-          w("die Eintrittskarte / der Eintritt", "ticket / admission"),
-          w("die Öffnungszeiten (Pl.)", "opening hours"),
-          w("die Mannschaft / das Spiel", "team / match"),
-          w("gewinnen / verlieren", "to win / to lose"),
-          w("trainieren / das Training", "to train / training"),
-          w("der Verein, die Vereine", "club"),
-          w("die Mitgliedschaft", "membership"),
-          w("vorschlagen (schlägt vor)", "to suggest"),
-          w("Wie wäre es mit …?", "How about …?")
-        ],
         links: [
           yt("Verben mit Präpositionen A2 Liste erklärt", "Verben mit Präpositionen", "Verbs with prepositions"),
           yt("Nicos Weg A2 Freizeit Kultur", "Nicos Weg A2: Freizeit & Kultur", "Nicos Weg A2: leisure & culture")
@@ -477,19 +301,6 @@ export const A2_SYLLABUS: LevelSyllabus = {
           g("Formell: Sie und Konjunktiv", "Formal: Sie and Konjunktiv", "Sehr geehrte Frau Müller, könnten Sie mir bitte mitteilen, ob …", "Dear Ms Müller, could you please let me know whether …", "konjunktiv2"),
           g("Sprechen: gemeinsam planen", "Speaking: planning together", "Was meinst du? Sollen wir …? Ich schlage vor, dass …", "What do you think? Shall we …? I suggest that …"),
           g("Die Prüfung", "The exam", "Hören 30 · Lesen 30 · Schreiben 30 · Sprechen 15 Minuten", "Listening 30 · Reading 30 · Writing 30 · Speaking 15 minutes")
-        ],
-        vocab: [
-          w("Vielen Dank für …", "Many thanks for …"),
-          w("Leider …", "Unfortunately …"),
-          w("Ich freue mich auf …", "I'm looking forward to …"),
-          w("Könnten Sie mir bitte mitteilen, ob …", "Could you please let me know whether …"),
-          w("Ich schlage vor, dass …", "I suggest that …"),
-          w("Einverstanden. / Das passt mir nicht.", "Agreed. / That doesn't suit me."),
-          w("Was meinst du?", "What do you think?"),
-          w("Bis dann! / Liebe Grüße", "See you then! / Love"),
-          w("die Leitpunkte (Pl.)", "the given points (in the writing task)"),
-          w("die Anzeige / das Schild", "advert / sign"),
-          w("der Prospekt, die Prospekte", "leaflet")
         ],
         links: [
           reading(GOETHE_A2_GOALS, "Goethe A2: so sieht die Prüfung aus", "Goethe A2: what the exam looks like"),

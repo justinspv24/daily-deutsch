@@ -1,5 +1,5 @@
 import type { Expects } from "./speech";
-import type { Task, TableStudyTask, VocabTask } from "./types";
+import { NO_PLURAL, type Task, type TableStudyTask, type VocabTask } from "./types";
 
 /**
  * How each question sounds when it is asked rather than read.
@@ -112,7 +112,7 @@ function vocabAsks(task: VocabTask): readonly SpokenAsk[] {
     ];
   }
 
-  return [
+  const asks: SpokenAsk[] = [
     {
       field: 0,
       prompt: `Frage nach dem Artikel von ${word}: der, die oder das?`,
@@ -124,14 +124,18 @@ function vocabAsks(task: VocabTask): readonly SpokenAsk[] {
       prompt: `Frage, was ${word} auf Englisch heißt.`,
       expects: "english",
       accepted: item.en
-    },
-    {
+    }
+  ];
+  // A noun without a plural is two questions, the same as its card.
+  if (item.form[0] !== NO_PLURAL) {
+    asks.push({
       field: 2,
       prompt: `Frage nach dem Plural von ${word}.`,
       expects: "german",
       accepted: item.form
-    }
-  ];
+    });
+  }
+  return asks;
 }
 
 /** What the tutor says when a grid goes up to be read rather than answered. */

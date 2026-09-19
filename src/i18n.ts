@@ -267,6 +267,9 @@ export interface Strings {
   readonly syllabusNotDrilled: string;
   /** Words beyond today's working set, still queued. */
   readonly wordsWaiting: (n: number) => string;
+  /** Shown after a noun the card will not ask a plural for. */
+  readonly syllabusNoPlural: string;
+  readonly noPlural: string;
 
   /* account */
   readonly signIn: string;
@@ -552,6 +555,8 @@ const de: Strings = {
     `im Drill: ${words} Wörter · ${sentences} Sätze · ${topics} ${topics === 1 ? "Wiederholung" : "Wiederholungen"}`,
   syllabusNotDrilled: "noch nicht im Drill",
   wordsWaiting: (n) => ` · +${n} warten`,
+  syllabusNoPlural: "kein Plural",
+  noPlural: "kein Plural",
 
   signIn: "Anmelden",
   signOut: "Abmelden",
@@ -835,6 +840,8 @@ const en: Strings = {
     `in the drill: ${words} words · ${sentences} sentences · ${topics} review ${topics === 1 ? "topic" : "topics"}`,
   syllabusNotDrilled: "not in the drill yet",
   wordsWaiting: (n) => ` · +${n} waiting`,
+  syllabusNoPlural: "no plural",
+  noPlural: "no plural",
 
   signIn: "Sign in",
   signOut: "Sign out",

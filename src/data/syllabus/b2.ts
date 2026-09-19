@@ -1,5 +1,5 @@
 import type { LevelSyllabus } from "../../types";
-import { GOETHE_EXAMS, SHARED_LINKS, TELC_DOWNLOADS, bi, g, reading, section, w, yt } from "./helpers";
+import { GOETHE_EXAMS, SHARED_LINKS, TELC_DOWNLOADS, bi, g, reading, section, yt } from "./helpers";
 
 /**
  * B2 — Vantage. Built against the Goethe-Zertifikat B2 and telc Deutsch B2
@@ -40,23 +40,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Ersatzformen: Konjunktiv II & würde", "Fallbacks: Konjunktiv II & würde", "Sie sagen, sie hätten (nicht: haben) keine Zeit. — wenn K I wie Indikativ aussieht", "They say they have no time. — used when K I looks like the indicative"),
           g("Vergangenheit in der indirekten Rede", "Past in reported speech", "Er sagte, er habe das Projekt abgeschlossen. Sie meinte, sie sei früher gegangen.", "He said he had finished the project. She said she had left earlier.", "konjunktiv1")
         ],
-        vocab: [
-          w("die Karriere / der Aufstieg", "career / promotion"),
-          w("die Führungskraft", "manager, executive"),
-          w("die Verhandlung / verhandeln", "negotiation / to negotiate"),
-          w("das Protokoll / protokollieren", "minutes / to take minutes"),
-          w("die Anfrage / das Angebot / die Absage", "enquiry / offer / refusal"),
-          w("die Zusammenarbeit / zusammenarbeiten", "cooperation / to cooperate"),
-          w("die Zuständigkeit / zuständig für", "responsibility / responsible for"),
-          w("die Herausforderung", "challenge"),
-          w("die Work-Life-Balance", "work-life balance"),
-          w("das Homeoffice / mobiles Arbeiten", "working from home / remote work"),
-          w("die Fachkraft / der Fachkräftemangel", "skilled worker / skills shortage"),
-          w("der Tarifvertrag / die Gewerkschaft", "collective agreement / trade union"),
-          w("die Selbstständigkeit / selbstständig", "self-employment / self-employed"),
-          w("laut (+ Genitiv/Dativ)", "according to"),
-          w("angeblich / offenbar", "allegedly / apparently")
-        ],
         links: [
           yt("Konjunktiv I indirekte Rede B2 erklärt", "Konjunktiv I & indirekte Rede", "Konjunktiv I & reported speech"),
           yt("Easy German work culture Germany", "Easy German: Arbeitskultur in Deutschland", "Easy German: German work culture")
@@ -79,23 +62,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Zustandspassiv: sein + Partizip II", "Stative passive: sein + past participle", "Das Gerät ist repariert. (Ergebnis) — Das Gerät wird repariert. (Vorgang)", "The device is repaired. (result) — The device is being repaired. (process)"),
           g("Passiversatz", "Alternatives to the passive", "lässt sich lösen · ist lösbar · ist zu lösen · man löst", "can be solved · is solvable · is to be solved · one solves", "passiversatz"),
           g("Unpersönliches Passiv", "Impersonal passive", "Es wird viel geforscht. Daran wird noch gearbeitet.", "A lot of research is being done. That's still being worked on.")
-        ],
-        vocab: [
-          w("die Forschung / forschen", "research / to research"),
-          w("die Entwicklung / entwickeln", "development / to develop"),
-          w("die Erfindung / erfinden", "invention / to invent"),
-          w("die Digitalisierung", "digitalisation"),
-          w("die künstliche Intelligenz (KI)", "artificial intelligence"),
-          w("der Algorithmus / die Daten", "algorithm / data"),
-          w("die Automatisierung", "automation"),
-          w("der Fortschritt", "progress"),
-          w("das Verfahren / der Vorgang", "procedure / process"),
-          w("die Auswirkung auf", "effect on"),
-          w("ermöglichen / verhindern", "to enable / to prevent"),
-          w("das Risiko / die Chance", "risk / opportunity"),
-          w("die Abhängigkeit", "dependence"),
-          w("vernetzt / digital / analog", "networked / digital / analogue"),
-          w("die Sicherheit / die Datensicherheit", "security / data security")
         ],
         links: [
           yt("Passiv alle Zeiten Zustandspassiv Passiversatz B2", "Passiv: alle Zeiten & Ersatzformen", "Passive: all tenses & alternatives"),
@@ -120,23 +86,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Verbalisierung", "Verbalisation", "bei Regen → wenn es regnet · zur Verbesserung → um … zu verbessern", "in case of rain → if it rains · for the improvement → in order to improve"),
           g("Nomen-Verb-Verbindungen", "Noun-verb combinations", "eine Entscheidung treffen · Kritik üben · zur Verfügung stehen · in Kraft treten", "to make a decision · to criticise · to be available · to come into force", "fvg")
         ],
-        vocab: [
-          w("die Demokratie / demokratisch", "democracy / democratic"),
-          w("die Wahl / wählen / der Wähler", "election / to vote / voter"),
-          w("die Partei / die Regierung / die Opposition", "party / government / opposition"),
-          w("der Bundestag / das Parlament", "Bundestag / parliament"),
-          w("das Grundgesetz / die Verfassung", "Basic Law / constitution"),
-          w("die Meinungsfreiheit / die Pressefreiheit", "freedom of speech / of the press"),
-          w("die Debatte / debattieren", "debate / to debate"),
-          w("die Entscheidung treffen", "to make a decision"),
-          w("der Kommentar / kommentieren", "commentary / to comment"),
-          w("die Berichterstattung", "reporting, coverage"),
-          w("die Öffentlichkeit / öffentlich", "the public / public"),
-          w("die Maßnahme ergreifen", "to take a measure"),
-          w("in Kraft treten", "to come into force"),
-          w("die Ursache / die Folge / die Auswirkung", "cause / consequence / effect"),
-          w("angesichts / aufgrund / infolge", "in view of / on the basis of / as a result of")
-        ],
         links: [
           yt("Nominalisierung Verbalisierung B2 erklärt", "Nominalisierung & Verbalisierung", "Nominalisation & verbalisation"),
           yt("langsam gesprochene Nachrichten DW", "DW: Langsam gesprochene Nachrichten", "DW: slowly spoken news")
@@ -159,23 +108,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Erweitertes Partizipialattribut", "Extended participle phrase", "die seit Jahren steigenden Temperaturen = die Temperaturen, die seit Jahren steigen", "the temperatures rising for years = the temperatures that have been rising for years", "partizip-attribut"),
           g("Relativsätze: dessen, deren", "Relative clauses: dessen, deren", "der Bericht, dessen Ergebnisse überraschen · die Länder, deren Küsten bedroht sind", "the report whose findings surprise · the countries whose coasts are threatened", "relativ"),
           g("Grafikbeschreibung", "Describing a chart", "Die Grafik zeigt … · Auffällig ist, dass … · Der Anteil ist um 5 % gestiegen / gesunken.", "The chart shows … · What is striking is that … · The share has risen / fallen by 5 %.")
-        ],
-        vocab: [
-          w("die Nachhaltigkeit / nachhaltig", "sustainability / sustainable"),
-          w("der CO₂-Ausstoß / die Emission", "CO₂ emissions"),
-          w("der Treibhauseffekt", "greenhouse effect"),
-          w("der Meeresspiegel", "sea level"),
-          w("die Dürre / die Überschwemmung", "drought / flood"),
-          w("die Artenvielfalt", "biodiversity"),
-          w("die Energiewende", "energy transition"),
-          w("der ökologische Fußabdruck", "ecological footprint"),
-          w("die Kreislaufwirtschaft", "circular economy"),
-          w("der Anteil / der Anstieg / der Rückgang", "share / rise / decline"),
-          w("zunehmen / abnehmen / sich verdoppeln", "to increase / decrease / double"),
-          w("die Grafik / die Statistik / die Tabelle", "chart / statistics / table"),
-          w("die Prognose / prognostizieren", "forecast / to forecast"),
-          w("das Ziel erreichen / verfehlen", "to reach / miss the target"),
-          w("die Verantwortung übernehmen", "to take responsibility")
         ],
         links: [
           yt("Partizipialattribute erweitert B2 erklärt", "Erweiterte Partizipialattribute", "Extended participle phrases"),
@@ -200,23 +132,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Kausal, konzessiv, konsekutiv — drei Ebenen", "Causal, concessive, consecutive — three levels", "weil / deshalb / wegen · obwohl / trotzdem / trotz · sodass / folglich / infolge", "subordinate / main-clause / prepositional", "konnektoren"),
           g("Vergleichssätze", "Comparative clauses", "so … wie · als · je … desto · im Vergleich zu · verglichen mit", "as … as · than · the … the · compared with · compared to")
         ],
-        vocab: [
-          w("die Wirtschaft / wirtschaftlich", "economy / economic"),
-          w("das Angebot / die Nachfrage", "supply / demand"),
-          w("der Markt / der Wettbewerb", "market / competition"),
-          w("die Globalisierung / global", "globalisation / global"),
-          w("der Handel / handeln mit", "trade / to trade in"),
-          w("der Export / der Import", "export / import"),
-          w("das Unternehmen / der Konzern", "company / corporation"),
-          w("der Gewinn / der Verlust / der Umsatz", "profit / loss / turnover"),
-          w("die Inflation / die Krise", "inflation / crisis"),
-          w("der Konsum / der Verbraucher", "consumption / consumer"),
-          w("die Lieferkette", "supply chain"),
-          w("fair / fairer Handel", "fair / fair trade"),
-          w("die Arbeitslosigkeit / der Wohlstand", "unemployment / prosperity"),
-          w("die Ungleichheit", "inequality"),
-          w("sich leisten können", "to be able to afford")
-        ],
         links: [
           yt("je desto Konnektoren B2 Deutsch", "je … desto & zweiteilige Konnektoren", "je … desto & two-part connectors"),
           yt("Easy German consumerism shopping habits Germans", "Easy German: Konsum", "Easy German: consumption")
@@ -238,24 +153,8 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Modalpartikeln", "Modal particles", "doch · ja · mal · eben · halt · wohl · denn · eigentlich · schon", "each colours the tone rather than adding meaning", "modalpartikeln"),
           g("Konjunktiv II der Vergangenheit", "Past Konjunktiv II", "Ich hätte den Film gern gesehen. Wenn ich Zeit gehabt hätte, wäre ich gekommen.", "I'd have liked to see the film. If I'd had time, I'd have come.", "konjunktiv2-past"),
           g("Konjunktiv II + Modalverb (Vergangenheit)", "Past Konjunktiv II with a modal", "Ich hätte früher kommen sollen. Du hättest das lesen müssen.", "I should have come earlier. You should have read that."),
-          g("Redewendungen", "Idioms", "Das ist nicht mein Bier. · Ich verstehe nur Bahnhof. · Daumen drücken.", "Not my business. · It's all Greek to me. · Fingers crossed.")
-        ],
-        vocab: [
-          w("die Kunst / der Künstler, die Künstlerin", "art / artist"),
-          w("die Ausstellung / das Werk", "exhibition / work"),
-          w("die Literatur / der Roman / das Gedicht", "literature / novel / poem"),
-          w("die Handlung / die Figur", "plot / character"),
-          w("die Kritik / die Rezension", "review"),
-          w("die Inszenierung / die Aufführung", "staging / performance"),
-          w("die Bühne / das Publikum", "stage / audience"),
-          w("beeindruckend / enttäuschend / langweilig", "impressive / disappointing / boring"),
-          w("bedauern / Es tut mir leid, dass …", "to regret / I'm sorry that …"),
-          w("die Redewendung", "idiom"),
-          w("das kulturelle Erbe", "cultural heritage"),
-          w("die Vielfalt", "diversity"),
-          w("interpretieren / die Interpretation", "to interpret / interpretation"),
-          w("die Stimmung / die Atmosphäre", "mood / atmosphere"),
-          w("sich auseinandersetzen mit", "to engage with, grapple with")
+          g("Redewendungen", "Idioms", "Das ist nicht mein Bier. · Ich verstehe nur Bahnhof. · Daumen drücken.", "Not my business. · It's all Greek to me. · Fingers crossed."),
+          g("Kritik schreiben: Adjektive", "Writing a review: adjectives", "beeindruckend · gelungen · spannend · berührend — enttäuschend · langweilig · vorhersehbar · überladen", "impressive · accomplished · gripping · moving — disappointing · boring · predictable · overloaded")
         ],
         links: [
           yt("Modalpartikeln doch ja mal eben erklärt", "Modalpartikeln: doch, ja, mal, eben", "Modal particles: doch, ja, mal, eben"),
@@ -280,23 +179,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Futur II", "Futur II", "Bis morgen werde ich den Bericht geschrieben haben. Er wird den Zug verpasst haben.", "By tomorrow I'll have written the report. He'll have missed the train.", "futur"),
           g("Vermutung in der Vergangenheit", "Assumption about the past", "Er muss krank gewesen sein. Sie dürfte das vergessen haben.", "He must have been ill. She's probably forgotten that.")
         ],
-        vocab: [
-          w("die Psyche / psychisch", "psyche / psychological"),
-          w("der Burnout / die Erschöpfung", "burnout / exhaustion"),
-          w("die Achtsamkeit", "mindfulness"),
-          w("die Therapie / der Therapeut", "therapy / therapist"),
-          w("die Gewohnheit / sich angewöhnen", "habit / to get into the habit"),
-          w("der Lebensstil", "lifestyle"),
-          w("die Belastung / belastbar", "strain / resilient"),
-          w("die Erholung / sich erholen", "recovery / to recover"),
-          w("das Wohlbefinden", "well-being"),
-          w("die Ursache / auslösen", "cause / to trigger"),
-          w("vermutlich / offensichtlich / angeblich", "presumably / obviously / allegedly"),
-          w("die Wahrscheinlichkeit", "probability"),
-          w("das Immunsystem", "immune system"),
-          w("vorbeugen / die Vorbeugung", "to prevent / prevention"),
-          w("den Alltag bewältigen", "to cope with everyday life")
-        ],
         links: [
           yt("subjektive Modalverben Vermutung B2 erklärt", "Subjektive Modalverben", "Modal verbs used subjectively"),
           yt("Futur II Deutsch erklärt", "Futur II erklärt", "Futur II explained")
@@ -319,23 +201,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Präfixe: ver-, be-, ent-, zer-, er-", "Prefixes: ver-, be-, ent-, zer-, er-", "verstehen · bestehen · entstehen · zerbrechen · erkennen — untrennbar, kein ge-", "understand · exist/pass · arise · shatter · recognise — inseparable, no ge-", "wortbildung"),
           g("Wortfamilien", "Word families", "lehren → der Lehrer, die Lehre, lehrreich, belehren", "teach → teacher, apprenticeship, instructive, lecture (someone)"),
           g("Fachsprache & Definitionen", "Technical language & definitions", "Unter … versteht man … · … bezeichnet … · … wird definiert als …", "By … one understands … · … denotes … · … is defined as …")
-        ],
-        vocab: [
-          w("die Wissenschaft / wissenschaftlich", "science, scholarship / academic"),
-          w("die Studie / die Untersuchung", "study / investigation"),
-          w("die These / die Hypothese", "thesis / hypothesis"),
-          w("die Erkenntnis, die Erkenntnisse", "insight, finding"),
-          w("belegen / nachweisen / widerlegen", "to substantiate / prove / refute"),
-          w("die Quelle / zitieren", "source / to cite"),
-          w("der Vortrag / die Vorlesung / das Seminar", "talk / lecture / seminar"),
-          w("die Bildungspolitik / die Chancengleichheit", "education policy / equal opportunities"),
-          w("die Mehrsprachigkeit", "multilingualism"),
-          w("die Muttersprache / die Fremdsprache", "mother tongue / foreign language"),
-          w("der Wortschatz / die Wortfamilie", "vocabulary / word family"),
-          w("das Fachgebiet / der Fachbegriff", "field / technical term"),
-          w("in Anspruch nehmen", "to make use of"),
-          w("zum Ausdruck bringen", "to express"),
-          w("in Frage kommen", "to be an option")
         ],
         links: [
           yt("Funktionsverbgefüge B2 Liste erklärt", "Funktionsverbgefüge", "Light-verb constructions"),
@@ -360,23 +225,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Temporale Konnektoren", "Temporal connectors", "zunächst · anschließend · daraufhin · schließlich · inzwischen · seither · kurz darauf", "at first · afterwards · thereupon · finally · meanwhile · since then · shortly after", "temporal-clauses"),
           g("Bericht vs. Erzählung", "Report vs. narrative", "Bericht: sachlich, Präteritum, W-Fragen · Erzählung: Spannung, wörtliche Rede, Adjektive", "report: factual, simple past, W-questions · narrative: tension, direct speech, adjectives")
         ],
-        vocab: [
-          w("die Geschichte / historisch", "history / historical"),
-          w("das Ereignis / sich ereignen", "event / to occur"),
-          w("das Jahrhundert / das Jahrzehnt", "century / decade"),
-          w("die Mauer / der Mauerfall / die Wende", "the Wall / fall of the Wall / the turnaround (1989)"),
-          w("die Wiedervereinigung", "reunification"),
-          w("der Krieg / der Frieden", "war / peace"),
-          w("die Nachkriegszeit", "post-war period"),
-          w("die Teilung / geteilt", "division / divided"),
-          w("die Grenze / die Flucht / fliehen", "border / flight / to flee"),
-          w("die Erinnerung / gedenken", "memory / to commemorate"),
-          w("die Ursache / der Auslöser", "cause / trigger"),
-          w("die Entwicklung / sich entwickeln", "development / to develop"),
-          w("das Zeitgeschehen / aktuell", "current affairs / current"),
-          w("berichten / der Bericht", "to report / report"),
-          w("die Zeitzeugin, der Zeitzeuge", "contemporary witness")
-        ],
         links: [
           yt("Präteritum starke Verben Liste B2", "Präteritum: starke Verben", "Simple past: strong verbs"),
           yt("DW Deutsch lernen deutsche Geschichte Mauerfall", "DW: deutsche Geschichte", "DW: German history")
@@ -399,23 +247,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Wunschsätze", "Wish clauses", "Wenn ich doch mehr Zeit hätte! Hätte ich das nur gewusst!", "If only I had more time! If only I'd known!", "konjunktiv2"),
           g("Argumentieren: Redemittel", "Arguing: phrases", "Dafür spricht, dass … · Dagegen lässt sich einwenden, dass … · Es steht außer Frage, dass … · Letztlich …", "In favour is the fact that … · Against this one could object that … · It's beyond question that … · Ultimately …"),
           g("Erörterung: Aufbau", "Essay: structure", "Einleitung (Thema, Relevanz) → These/Antithese → Abwägung → Fazit mit eigener Position", "introduction (topic, relevance) → thesis/antithesis → weighing up → conclusion with own position")
-        ],
-        vocab: [
-          w("die Ethik / ethisch / moralisch", "ethics / ethical / moral"),
-          w("der Wert, die Werte", "value"),
-          w("die Gerechtigkeit / gerecht", "justice / fair"),
-          w("das Dilemma", "dilemma"),
-          w("die Verantwortung tragen", "to bear responsibility"),
-          w("die These / die Antithese / das Fazit", "thesis / antithesis / conclusion"),
-          w("das Argument / das Gegenargument", "argument / counter-argument"),
-          w("überzeugen / überzeugend", "to convince / convincing"),
-          w("einwenden / der Einwand", "to object / objection"),
-          w("abwägen", "to weigh up"),
-          w("befürworten / ablehnen", "to support / reject"),
-          w("die Haltung / der Standpunkt", "attitude / point of view"),
-          w("dafür spricht, dass … / dagegen spricht, dass …", "in favour is that … / against is that …"),
-          w("letztlich / im Grunde", "ultimately / basically"),
-          w("die Konsequenz ziehen", "to draw the consequence")
         ],
         links: [
           yt("als ob irreale Vergleichssätze B2", "als ob: irreale Vergleiche", "als ob: unreal comparisons"),
@@ -440,23 +271,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Satzverbindungen variieren", "Varying sentence links", "Nebensatz ↔ Hauptsatz + Konnektor ↔ Nominalisierung: weil … / deshalb … / wegen …", "clause ↔ main clause + connector ↔ nominalisation", "nominalisierung"),
           g("Register", "Register", "umgangssprachlich: Das ist echt super. — neutral: Das ist sehr gut. — formell: Dies ist ausgesprochen gelungen.", "colloquial — neutral — formal")
         ],
-        vocab: [
-          w("die Textsorte, die Textsorten", "text type"),
-          w("der Kommentar / der Leserbrief", "commentary / letter to the editor"),
-          w("die Zusammenfassung / zusammenfassen", "summary / to summarise"),
-          w("die Einleitung / der Hauptteil / der Schluss", "introduction / main part / conclusion"),
-          w("der Absatz / gliedern", "paragraph / to structure"),
-          w("der Stil / stilistisch", "style / stylistic"),
-          w("das Register / umgangssprachlich / formell", "register / colloquial / formal"),
-          w("die Kohärenz / zusammenhängend", "coherence / coherent"),
-          w("die Wiederholung vermeiden", "to avoid repetition"),
-          w("im Folgenden / wie bereits erwähnt", "in what follows / as already mentioned"),
-          w("zunächst / des Weiteren / abschließend", "first / furthermore / in conclusion"),
-          w("hervorheben / betonen", "to emphasise / stress"),
-          w("die Aussage / aussagen", "statement / to state"),
-          w("der Verfasser, die Verfasserin", "author"),
-          w("Bezug nehmen auf", "to refer to")
-        ],
         links: [
           yt("TeKaMoLo Satzstellung Mittelfeld erklärt", "TeKaMoLo: die Satzstellung", "TeKaMoLo: word order"),
           yt("Leserbrief Kommentar schreiben B2 Deutsch", "Leserbrief & Kommentar schreiben", "Writing a letter to the editor & commentary")
@@ -479,20 +293,6 @@ export const B2_SYLLABUS: LevelSyllabus = {
           g("Sprechen Teil 1: Vortrag", "Speaking part 1: talk", "Thema wählen → Optionen vorstellen → Vor- und Nachteile → eigene Meinung → Nachfragen", "choose a topic → present options → pros and cons → own view → questions"),
           g("Sprechen Teil 2: Diskussion", "Speaking part 2: discussion", "Ich sehe das ähnlich, allerdings … · Darf ich kurz einhaken? · Könnten wir uns darauf einigen, dass …", "I see it similarly, however … · May I just come in there? · Could we agree that …"),
           g("Schreiben: Bewertung", "Writing: assessment", "Aufgabenerfüllung · Kohärenz · Wortschatz · Strukturen — alle vier zählen gleich", "task fulfilment · coherence · vocabulary · structures — all four count equally")
-        ],
-        vocab: [
-          w("der Vortrag / vortragen", "talk / to present"),
-          w("die Nachfrage / nachfragen", "follow-up question / to ask"),
-          w("die Gliederung", "outline, structure"),
-          w("Zunächst möchte ich …", "First I'd like to …"),
-          w("Ein weiterer Aspekt ist …", "A further aspect is …"),
-          w("Ich sehe das ähnlich, allerdings …", "I see it similarly, however …"),
-          w("Darf ich kurz einhaken?", "May I just come in there?"),
-          w("Das überzeugt mich nicht ganz.", "That doesn't quite convince me."),
-          w("Könnten wir uns darauf einigen, dass …", "Could we agree that …"),
-          w("Abschließend lässt sich sagen, …", "In conclusion it can be said …"),
-          w("die Aufgabenerfüllung", "task fulfilment"),
-          w("die Struktur / die Strukturen", "structure(s)")
         ],
         links: [
           reading(GOETHE_EXAMS, "Goethe-Institut: Zertifikat B2 — Modellsätze", "Goethe-Institut: Zertifikat B2 — sample papers"),

@@ -62,10 +62,17 @@ Two consequences for the drill itself:
   added or retagged but never renamed; the original A2 words seeded from the
   learner's own mistake list keep their ids exactly.
 
-The vocabulary shown on the syllabus page is the section's *core*, not the
-drill's full list: twelve to fifteen words with article and plural, or
-auxiliary and participle. The official lists run to hundreds of words per
-level and are linked rather than copied.
+**The words a section shows are the words the drill asks — the same list,
+read from the same place.** The syllabus files carry no vocabulary of their
+own; `renderSection` reads the bank's items tagged with the section and shows
+them the way the card will ask them (*der Tisch, die Tische* · *aufstehen (ist
+aufgestanden)* · *die Butter (kein Plural)*). Mass nouns and plural-only nouns
+carry `NO_PLURAL` as their form, and the card asks two fields for them
+instead of three; the tutor asks two questions. Phrases, adjectives and
+adverbs — *links / rechts / geradeaus*, *Viele Grüße* — are not vocabulary
+items and live in the section's grammar points instead, where a sentence can
+carry them. The official lists run to hundreds of words per level and are
+linked rather than copied.
 
 ## The diagrams
 

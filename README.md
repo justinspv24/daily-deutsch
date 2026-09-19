@@ -35,7 +35,9 @@ so a learner can see what B1 covers before deciding they are not there yet.
 
 The drill follows that map. Every section has words, table sentences and a
 review topic tagged to it (`section` on each item, enforced by the test), and
-the syllabus shows on each section what the drill holds for it. The banks are
+the words a section lists *are* the drill's words for it — read from the same
+bank, shown with the article and plural the card will ask for. A noun with no
+plural (*die Butter*, *die Eltern*) gets a two-field card. The banks are
 large now, so a round draws a **working set of twelve words**: a word one
 answer from retiring first, then words already in play, then fresh ones — so
 the set turns over as words are mastered rather than dealing twelve strangers

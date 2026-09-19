@@ -92,13 +92,14 @@ export interface UpcomingTopic {
   readonly blurb: Bilingual;
 }
 
-/* ---------------------------------------------------------------- syllabus */
+/**
+ * A noun's `form` when it has no plural to ask for — mass nouns (die Butter)
+ * and plural-only nouns (die Eltern). The vocabulary card then has two
+ * fields instead of three, and the tutor asks two questions instead of three.
+ */
+export const NO_PLURAL = "—";
 
-/** One entry of a section's core vocabulary: the German with its article, and the English. */
-export interface SyllabusWord {
-  readonly de: string;
-  readonly en: string;
-}
+/* ---------------------------------------------------------------- syllabus */
 
 /** A grammar point a section teaches, with one sentence that shows it working. */
 export interface SyllabusGrammar {
@@ -119,14 +120,18 @@ export interface SyllabusLink {
   readonly url: string;
 }
 
-/** One topic of a level: what you can do afterwards, the grammar, the words. */
+/**
+ * One topic of a level: what you can do afterwards, the grammar, the links.
+ * Its vocabulary is not listed here — it is the drill bank's words tagged
+ * with this section, so what the syllabus shows and what the drill asks can
+ * never be two different lists.
+ */
 export interface SyllabusSection {
   readonly id: string;
   readonly title: Bilingual;
   readonly blurb: Bilingual;
   readonly canDo: readonly Bilingual[];
   readonly grammar: readonly SyllabusGrammar[];
-  readonly vocab: readonly SyllabusWord[];
   readonly links: readonly SyllabusLink[];
 }
 

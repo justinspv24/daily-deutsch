@@ -1,19 +1,13 @@
-import type {
-  Bilingual,
-  SyllabusGrammar,
-  SyllabusLink,
-  SyllabusSection,
-  SyllabusWord
-} from "../../types";
+import type { Bilingual, SyllabusGrammar, SyllabusLink, SyllabusSection } from "../../types";
 
 /**
  * The little vocabulary the four syllabus files are written in, so each
- * section reads as content rather than as object literals.
+ * section reads as content rather than as object literals. The words of a
+ * section are not written here at all: they are the drill bank's items
+ * tagged with the section id, so the two can never drift apart.
  */
 
 export const bi = (de: string, en: string): Bilingual => ({ de, en });
-
-export const w = (de: string, en: string): SyllabusWord => ({ de, en });
 
 export const g = (
   de: string,

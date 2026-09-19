@@ -5,13 +5,14 @@ import { todayISO } from "../scheduler";
 import { nextUnanswered } from "../session";
 import type { DrillTutor } from "../tutor";
 import { asksFor, introFor } from "../tutorscript";
-import type {
-  BlankTask,
-  TableCellTask,
-  TableStudyTask,
-  Task,
-  Verdict,
-  VocabTask
+import {
+  NO_PLURAL,
+  type BlankTask,
+  type TableCellTask,
+  type TableStudyTask,
+  type Task,
+  type Verdict,
+  type VocabTask
 } from "../types";
 import type { AppContext } from "./context";
 import { describeVoiceError } from "./voice";
@@ -563,9 +564,14 @@ function buildVocabFields(body: HTMLElement, task: VocabTask): HTMLInputElement[
     collected.push(input);
   };
 
+  // A mass noun or a plural-only noun has no plural to ask for; the card is
+  // two fields, and says so, rather than a third field with no right answer.
+  const askForm = isVerb || item.form[0] !== NO_PLURAL;
+
   addField(isVerb ? s.auxiliary : s.article, isVerb ? "sein / haben" : "der / die / das");
-  addField(s.meaning, isVerb ? "to …" : "");
-  addField(isVerb ? s.participle : s.plural, isVerb ? "ge…" : "die …", true);
+  addField(s.meaning, isVerb ? "to …" : "", !askForm);
+  if (askForm) addField(isVerb ? s.participle : s.plural, isVerb ? "ge…" : "die …", true);
+  else fields.append(h("p", { class: "field__note" }, `${s.plural}: ${s.noPlural}`));
 
   body.append(fields);
   return collected;
@@ -673,17 +679,18 @@ function gradeVocab(
   const s = t();
   const item = task.item;
   const isVerb = item.kind === "verb";
-  const [keyInput, enInput, formInput] = inputs as [HTMLInputElement, HTMLInputElement, HTMLInputElement];
+  const [keyInput, enInput, formInput] = inputs as [HTMLInputElement, HTMLInputElement, HTMLInputElement?];
 
   const keyVerdict = judgeGerman(keyInput.value, [item.key]);
   const enVerdict = judgeEnglish(enInput.value, item.en);
-  const formVerdict = judgeGerman(formInput.value, item.form);
+  // No third field for a noun without a plural: nothing to get wrong there.
+  const formVerdict: Verdict = formInput ? judgeGerman(formInput.value, item.form) : "ok";
 
   const marks: Array<[HTMLInputElement, Verdict]> = [
     [keyInput, keyVerdict],
-    [enInput, enVerdict],
-    [formInput, formVerdict]
+    [enInput, enVerdict]
   ];
+  if (formInput) marks.push([formInput, formVerdict]);
   for (const [input, verdict] of marks) {
     input.dataset["mark"] = verdict === "ok" ? "ok" : "no";
     input.readOnly = true;
@@ -715,7 +722,7 @@ function gradeVocab(
     lines.push(`${s.meaning}: <strong>${esc(item.en[0] ?? "")}</strong>`);
     missed.push(`${s.meaning}: ${item.en[0] ?? ""}`);
   }
-  if (formVerdict !== "ok") {
+  if (formInput && formVerdict !== "ok") {
     lines.push(`${isVerb ? s.participle : s.plural}: <strong>${esc(item.form[0] ?? "")}</strong>`);
     missed.push(`${isVerb ? s.participle : s.plural}: ${item.form[0] ?? ""}`);
   }
@@ -731,8 +738,8 @@ function gradeVocab(
   ctx.session?.results.push({
     prompt: item.word,
     ok: allCorrect,
-    given: [keyInput.value, enInput.value, formInput.value].filter(Boolean).join(" · "),
-    expected: `${item.key} · ${item.en[0] ?? ""} · ${item.form[0] ?? ""}`,
+    given: [keyInput.value, enInput.value, formInput?.value ?? ""].filter(Boolean).join(" · "),
+    expected: [item.key, item.en[0] ?? "", formInput ? (item.form[0] ?? "") : ""].filter(Boolean).join(" · "),
     why: item.note
   });
 

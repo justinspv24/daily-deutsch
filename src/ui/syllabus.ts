@@ -1,7 +1,7 @@
 import { LEVELS, curriculumFor } from "../data/curriculum";
 import { syllabusFor } from "../data/syllabus";
 import { pick, t } from "../i18n";
-import type { Level, SyllabusLink, SyllabusSection } from "../types";
+import { NO_PLURAL, type Level, type SyllabusLink, type SyllabusSection, type VocabItem } from "../types";
 
 /** What the drill banks hold for one section. */
 interface Coverage {
@@ -106,9 +106,17 @@ export function renderSyllabus(ctx: AppContext): HTMLElement {
     );
 
     const coverage = coverageFor(shown);
+    const bank = curriculumFor(shown);
     const list = h("div", { class: "units" });
     syllabus.sections.forEach((section, index) =>
-      list.append(renderSection(section, index, coverage.get(section.id) ?? null))
+      list.append(
+        renderSection(
+          section,
+          index,
+          coverage.get(section.id) ?? null,
+          bank.vocab.filter((item) => item.section === section.id)
+        )
+      )
     );
     body.append(list);
   };
@@ -121,7 +129,12 @@ export function renderSyllabus(ctx: AppContext): HTMLElement {
   return h("div", { class: "home syllabus" }, head, body, h("div", { class: "actions actions--center" }, back));
 }
 
-function renderSection(section: SyllabusSection, index: number, coverage: Coverage | null): HTMLElement {
+function renderSection(
+  section: SyllabusSection,
+  index: number,
+  coverage: Coverage | null,
+  words: readonly VocabItem[]
+): HTMLElement {
   const s = t();
 
   const drilled = coverage && coverage.words + coverage.sentences + coverage.topics > 0;
@@ -162,9 +175,19 @@ function renderSection(section: SyllabusSection, index: number, coverage: Covera
     grammar.append(block);
   }
 
+  // The very words the drill asks for this section, shown the way the card
+  // will ask them: article and plural for a noun, auxiliary and participle
+  // for a verb. A learner reading the map is reading tomorrow's questions.
   const vocab = h("dl", { class: "unit__vocab" });
-  for (const word of section.vocab) {
-    vocab.append(h("div", { class: "unit__word" }, h("dt", {}, word.de), h("dd", {}, word.en)));
+  for (const item of words) {
+    vocab.append(
+      h(
+        "div",
+        { class: "unit__word" },
+        h("dt", {}, ...headword(item)),
+        h("dd", {}, item.en.slice(0, 2).join(", "))
+      )
+    );
   }
 
   const links = h("div", { class: "syllabus__links" });
@@ -188,6 +211,18 @@ function renderSection(section: SyllabusSection, index: number, coverage: Covera
     )
   );
   return details;
+}
+
+/** "der Tisch, die Tische" · "die Butter (kein Plural)" · "aufstehen (ist aufgestanden)". */
+function headword(item: VocabItem): (string | HTMLElement)[] {
+  const s = t();
+  if (item.kind === "verb") {
+    const aux = item.key === "sein" ? "ist" : "hat";
+    return [item.word, " ", h("span", { class: "unit__form" }, `(${aux} ${item.form[0] ?? ""})`)];
+  }
+  const plural = item.form[0];
+  const tail = plural === NO_PLURAL || !plural ? ` (${s.syllabusNoPlural})` : `, ${plural}`;
+  return [`${item.key} ${item.word}`, h("span", { class: "unit__form" }, tail)];
 }
 
 /**

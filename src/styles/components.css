@@ -2458,6 +2458,16 @@ td.is-meta {
   margin-top: var(--sp-2);
 }
 
+/* "Plural: kein Plural" under a two-field vocabulary card. */
+.field__note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
 @media (max-width: 720px) {
   .tutor {
     margin: calc(var(--sp-5) * -1) calc(var(--sp-5) * -1) var(--sp-4);

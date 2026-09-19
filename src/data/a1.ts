@@ -1,4 +1,4 @@
-import type { Bilingual, BlankQuestion, GrammarItem, TopicItem, UpcomingTopic, VocabItem } from "../types";
+import { NO_PLURAL, type Bilingual, type BlankQuestion, type GrammarItem, type TopicItem, type UpcomingTopic, type VocabItem } from "../types";
 
 /**
  * The A1 bank: first sentences. sein and haben, the present tense, articles in
@@ -297,7 +297,204 @@ export const A1_VOCAB: readonly VocabItem[] = [
   v("a1_v_email", "noun", "E-Mail", "die", ["e-mail", "email"], ["die E-Mails", "E-Mails"],
     bi("Feminin (die Mail), Plural -s.", "Feminine (die Mail), plural -s."), S.schreiben),
   v("a1_v_schreiben", "verb", "schreiben", "haben", ["to write", "write"], ["geschrieben"],
-    bi("ei → ie im Partizip: geschrieben.", "ei → ie in the participle: geschrieben."), S.schreiben)
+    bi("ei → ie im Partizip: geschrieben.", "ei → ie in the participle: geschrieben."), S.schreiben),
+
+  /* ================================================================
+   * The rest of the syllabus's words, so that what the map lists for a
+   * section is exactly what the drill asks. Appended, never interleaved:
+   * the first twelve words of the bank are a learner's first round, and
+   * the smoke test opens on them.
+   * ================================================================ */
+
+  /* s01 */
+  v("a1_v_entschuldigung", "noun", "Entschuldigung", "die", ["apology", "excuse", "excuse me"], ["die Entschuldigungen", "Entschuldigungen"],
+    bi("-ung → feminin. Als Ausruf: Entschuldigung!", "-ung → feminine. As an exclamation: Entschuldigung!"), S.kennen),
+
+  /* s02 */
+  v("a1_v_stunde", "noun", "Stunde", "die", ["hour", "lesson"], ["die Stunden", "Stunden"],
+    bi("-e → feminin, Plural -n.", "-e → feminine, plural -n."), S.zahlen),
+  v("a1_v_minute", "noun", "Minute", "die", ["minute"], ["die Minuten", "Minuten"],
+    bi("-e → feminin, Plural -n.", "-e → feminine, plural -n."), S.zahlen),
+  v("a1_v_wochenende", "noun", "Wochenende", "das", ["weekend"], ["die Wochenenden", "Wochenenden"],
+    bi("das Ende → die Enden. Am Wochenende.", "das Ende → die Enden. Am Wochenende."), S.zahlen),
+  v("a1_v_morgen", "noun", "Morgen", "der", ["morning"], ["die Morgen", "Morgen"],
+    bi("-en → maskulin, Plural unverändert. Am Morgen; morgen = tomorrow.", "-en → masculine, plural unchanged. Am Morgen; morgen = tomorrow."), S.zahlen),
+  v("a1_v_abend", "noun", "Abend", "der", ["evening"], ["die Abende", "Abende"],
+    bi("Maskulin, Plural -e. Am Abend.", "Masculine, plural -e. Am Abend."), S.zahlen),
+  v("a1_v_nacht", "noun", "Nacht", "die", ["night"], ["die Nächte", "Nächte"],
+    bi("Umlaut + -e: die Nächte.", "Umlaut plus -e: die Nächte."), S.zahlen),
+  v("a1_v_euro", "noun", "Euro", "der", ["euro"], ["die Euro", "Euro", "die Euros", "Euros"],
+    bi("Nach Zahlen ohne Endung: zehn Euro.", "No ending after a number: zehn Euro."), S.zahlen),
+  v("a1_v_telefonnummer", "noun", "Telefonnummer", "die", ["phone number", "telephone number"], ["die Telefonnummern", "Telefonnummern"],
+    bi("die Nummer → die Nummern.", "die Nummer → die Nummern."), S.zahlen),
+
+  /* s03 */
+  v("a1_v_eltern", "noun", "Eltern", "die", ["parents"], [NO_PLURAL],
+    bi("Nur Plural — es gibt keinen Singular.", "Plural only — there is no singular."), S.familie),
+  v("a1_v_grossmutter", "noun", "Großmutter", "die", ["grandmother", "grandma"], ["die Großmütter", "Großmütter"],
+    bi("Wie die Mutter: Umlaut, keine Endung. Kurz: die Oma.", "Like die Mutter: umlaut, no ending. Short: die Oma."), S.familie),
+  v("a1_v_grossvater", "noun", "Großvater", "der", ["grandfather", "grandpa"], ["die Großväter", "Großväter"],
+    bi("Wie der Vater: Umlaut, keine Endung. Kurz: der Opa.", "Like der Vater: umlaut, no ending. Short: der Opa."), S.familie),
+  v("a1_v_mann", "noun", "Mann", "der", ["man", "husband"], ["die Männer", "Männer"],
+    bi("Umlaut + -er: die Männer.", "Umlaut plus -er: die Männer."), S.familie),
+  v("a1_v_frau", "noun", "Frau", "die", ["woman", "wife", "Mrs"], ["die Frauen", "Frauen"],
+    bi("Feminin, Plural -en.", "Feminine, plural -en."), S.familie),
+  v("a1_v_freund", "noun", "Freund", "der", ["friend", "boyfriend"], ["die Freunde", "Freunde"],
+    bi("Plural -e, kein Umlaut.", "Plural -e, no umlaut."), S.familie),
+  v("a1_v_freundin", "noun", "Freundin", "die", ["friend", "girlfriend"], ["die Freundinnen", "Freundinnen"],
+    bi("-in → feminin, Plural -nen.", "-in → feminine, plural -nen."), S.familie),
+
+  /* s04 */
+  v("a1_v_schlafzimmer", "noun", "Schlafzimmer", "das", ["bedroom"], ["die Schlafzimmer", "Schlafzimmer"],
+    bi("das Zimmer → die Zimmer: unverändert.", "das Zimmer → die Zimmer: unchanged."), S.wohnen),
+  v("a1_v_wohnzimmer", "noun", "Wohnzimmer", "das", ["living room"], ["die Wohnzimmer", "Wohnzimmer"],
+    bi("das Zimmer → die Zimmer: unverändert.", "das Zimmer → die Zimmer: unchanged."), S.wohnen),
+  v("a1_v_balkon", "noun", "Balkon", "der", ["balcony"], ["die Balkone", "Balkone", "die Balkons", "Balkons"],
+    bi("Fremdwort: die Balkone oder die Balkons.", "Loanword: die Balkone or die Balkons."), S.wohnen),
+  v("a1_v_garten", "noun", "Garten", "der", ["garden"], ["die Gärten", "Gärten"],
+    bi("Umlaut, keine Endung: die Gärten.", "Umlaut, no ending: die Gärten."), S.wohnen),
+  v("a1_v_miete", "noun", "Miete", "die", ["rent"], ["die Mieten", "Mieten"],
+    bi("-e → feminin, Plural -n.", "-e → feminine, plural -n."), S.wohnen),
+
+  /* s05 */
+  v("a1_v_butter", "noun", "Butter", "die", ["butter"], [NO_PLURAL],
+    bi("Feminin — kein Plural.", "Feminine — no plural."), S.essen),
+  v("a1_v_kaese", "noun", "Käse", "der", ["cheese"], [NO_PLURAL],
+    bi("Maskulin auf -e — selten! Kein Plural.", "Masculine in -e — rare! No plural."), S.essen),
+  v("a1_v_fleisch", "noun", "Fleisch", "das", ["meat"], [NO_PLURAL],
+    bi("Neutrum, kein Plural.", "Neuter, no plural."), S.essen),
+  v("a1_v_gemuese", "noun", "Gemüse", "das", ["vegetables"], [NO_PLURAL],
+    bi("Neutrum, Singular — auf Englisch Plural!", "Neuter, singular — plural in English!"), S.essen),
+  v("a1_v_obst", "noun", "Obst", "das", ["fruit"], [NO_PLURAL],
+    bi("Neutrum, kein Plural.", "Neuter, no plural."), S.essen),
+  v("a1_v_kaffee", "noun", "Kaffee", "der", ["coffee"], [NO_PLURAL],
+    bi("Maskulin. Zwei e, Betonung vorne.", "Masculine. Two e's, stress at the front."), S.essen),
+  v("a1_v_tee", "noun", "Tee", "der", ["tea"], [NO_PLURAL],
+    bi("Maskulin. Ein Tee, bitte.", "Masculine. Ein Tee, bitte."), S.essen),
+  v("a1_v_wasser", "noun", "Wasser", "das", ["water"], [NO_PLURAL],
+    bi("Neutrum, kein Plural.", "Neuter, no plural."), S.essen),
+  v("a1_v_milch", "noun", "Milch", "die", ["milk"], [NO_PLURAL],
+    bi("Feminin, kein Plural.", "Feminine, no plural."), S.essen),
+  v("a1_v_fruehstueck", "noun", "Frühstück", "das", ["breakfast"], ["die Frühstücke", "Frühstücke"],
+    bi("Neutrum, Plural -e (selten).", "Neuter, plural -e (rare)."), S.essen),
+  v("a1_v_mittagessen", "noun", "Mittagessen", "das", ["lunch"], ["die Mittagessen", "Mittagessen"],
+    bi("das Essen → die Essen: unverändert.", "das Essen → die Essen: unchanged."), S.essen),
+  v("a1_v_abendessen", "noun", "Abendessen", "das", ["dinner", "supper"], ["die Abendessen", "Abendessen"],
+    bi("das Essen → die Essen: unverändert.", "das Essen → die Essen: unchanged."), S.essen),
+
+  /* s06 */
+  v("a1_v_aufwachen", "verb", "aufwachen", "sein", ["to wake up", "wake up"], ["aufgewacht"],
+    bi("Zustandswechsel → sein. Nicht aufstehen (aus dem Bett).", "Change of state → sein. Not aufstehen (getting out of bed)."), S.tag),
+  v("a1_v_fruehstuecken", "verb", "frühstücken", "haben", ["to have breakfast", "have breakfast"], ["gefrühstückt"],
+    bi("Nicht trennbar: gefrühstückt.", "Not separable: gefrühstückt."), S.tag),
+  v("a1_v_duschen", "verb", "duschen", "haben", ["to shower", "to take a shower", "shower"], ["geduscht"],
+    bi("Regelmäßig: geduscht.", "Regular: geduscht."), S.tag),
+  v("a1_v_pause", "noun", "Pause", "die", ["break", "pause"], ["die Pausen", "Pausen"],
+    bi("-e → feminin, Plural -n.", "-e → feminine, plural -n."), S.tag),
+
+  /* s07 */
+  v("a1_v_freizeit", "noun", "Freizeit", "die", ["free time", "leisure"], [NO_PLURAL],
+    bi("Feminin, kein Plural.", "Feminine, no plural."), S.freizeit),
+  v("a1_v_fussball", "noun", "Fußball", "der", ["football", "soccer"], [NO_PLURAL],
+    bi("Der Sport: kein Plural. Der Ball: die Fußbälle.", "The sport: no plural. The ball: die Fußbälle."), S.freizeit),
+  v("a1_v_musik", "noun", "Musik", "die", ["music"], [NO_PLURAL],
+    bi("Feminin, kein Plural. Musik hören.", "Feminine, no plural. Musik hören."), S.freizeit),
+  v("a1_v_kino", "noun", "Kino", "das", ["cinema", "movie theater"], ["die Kinos", "Kinos"],
+    bi("Fremdwort auf -o → -s. Ins Kino gehen.", "Loanword in -o → -s. Ins Kino gehen."), S.freizeit),
+  v("a1_v_wandern", "verb", "wandern", "sein", ["to hike", "hike"], ["gewandert"],
+    bi("Bewegung → sein: Wir sind gewandert.", "Movement → sein: Wir sind gewandert."), S.freizeit),
+  v("a1_v_reisen", "verb", "reisen", "sein", ["to travel", "travel"], ["gereist"],
+    bi("Bewegung → sein: Ich bin gereist.", "Movement → sein: Ich bin gereist."), S.freizeit),
+
+  /* s08 */
+  v("a1_v_arzt", "noun", "Arzt", "der", ["doctor", "physician"], ["die Ärzte", "Ärzte"],
+    bi("Umlaut + -e: die Ärzte.", "Umlaut plus -e: die Ärzte."), S.beruf),
+  v("a1_v_aerztin", "noun", "Ärztin", "die", ["doctor", "female doctor"], ["die Ärztinnen", "Ärztinnen"],
+    bi("-in → feminin, Plural -nen.", "-in → feminine, plural -nen."), S.beruf),
+  v("a1_v_verkaeufer", "noun", "Verkäufer", "der", ["shop assistant", "salesman", "seller"], ["die Verkäufer", "Verkäufer"],
+    bi("-er → maskulin, Plural unverändert.", "-er → masculine, plural unchanged."), S.beruf),
+  v("a1_v_verkaeuferin", "noun", "Verkäuferin", "die", ["shop assistant", "saleswoman"], ["die Verkäuferinnen", "Verkäuferinnen"],
+    bi("-in → feminin, Plural -nen.", "-in → feminine, plural -nen."), S.beruf),
+  v("a1_v_ingenieur", "noun", "Ingenieur", "der", ["engineer"], ["die Ingenieure", "Ingenieure"],
+    bi("Maskulin, Plural -e. Die Ingenieurin.", "Masculine, plural -e. Die Ingenieurin."), S.beruf),
+  v("a1_v_koch", "noun", "Koch", "der", ["cook", "chef"], ["die Köche", "Köche"],
+    bi("Umlaut + -e: die Köche.", "Umlaut plus -e: die Köche."), S.beruf),
+  v("a1_v_koechin", "noun", "Köchin", "die", ["cook", "chef (f)"], ["die Köchinnen", "Köchinnen"],
+    bi("Umlaut + -in, Plural -nen.", "Umlaut plus -in, plural -nen."), S.beruf),
+  v("a1_v_chef", "noun", "Chef", "der", ["boss"], ["die Chefs", "Chefs"],
+    bi("Fremdwort, Plural -s. Die Chefin.", "Loanword, plural -s. Die Chefin."), S.beruf),
+  v("a1_v_chefin", "noun", "Chefin", "die", ["boss (f)", "female boss"], ["die Chefinnen", "Chefinnen"],
+    bi("-in → feminin, Plural -nen.", "-in → feminine, plural -nen."), S.beruf),
+  v("a1_v_feierabend", "noun", "Feierabend", "der", ["end of the working day", "finishing time"], ["die Feierabende", "Feierabende"],
+    bi("Maskulin, Plural -e. Schönen Feierabend!", "Masculine, plural -e. Schönen Feierabend!"), S.beruf),
+
+  /* s09 */
+  v("a1_v_ubahn", "noun", "U-Bahn", "die", ["underground", "subway", "metro"], ["die U-Bahnen", "U-Bahnen"],
+    bi("die Bahn → die Bahnen.", "die Bahn → die Bahnen."), S.unterwegs),
+  v("a1_v_sbahn", "noun", "S-Bahn", "die", ["suburban train", "city train"], ["die S-Bahnen", "S-Bahnen"],
+    bi("die Bahn → die Bahnen.", "die Bahn → die Bahnen."), S.unterwegs),
+  v("a1_v_strassenbahn", "noun", "Straßenbahn", "die", ["tram", "streetcar"], ["die Straßenbahnen", "Straßenbahnen"],
+    bi("die Bahn → die Bahnen.", "die Bahn → die Bahnen."), S.unterwegs),
+  v("a1_v_fahrkarte", "noun", "Fahrkarte", "die", ["ticket"], ["die Fahrkarten", "Fahrkarten"],
+    bi("die Karte → die Karten.", "die Karte → die Karten."), S.unterwegs),
+  v("a1_v_strasse", "noun", "Straße", "die", ["street", "road"], ["die Straßen", "Straßen"],
+    bi("-e → feminin, Plural -n.", "-e → feminine, plural -n."), S.unterwegs),
+  v("a1_v_kreuzung", "noun", "Kreuzung", "die", ["crossroads", "junction"], ["die Kreuzungen", "Kreuzungen"],
+    bi("-ung → feminin, Plural -en.", "-ung → feminine, plural -en."), S.unterwegs),
+  v("a1_v_ampel", "noun", "Ampel", "die", ["traffic lights"], ["die Ampeln", "Ampeln"],
+    bi("Feminin auf -el, Plural -n.", "Feminine in -el, plural -n."), S.unterwegs),
+  v("a1_v_umsteigen", "verb", "umsteigen", "sein", ["to change (trains)", "to transfer", "change trains"], ["umgestiegen"],
+    bi("Bewegung → sein. Trennbar: um-ge-stiegen.", "Movement → sein. Separable: um-ge-stiegen."), S.unterwegs),
+  v("a1_v_richtung", "noun", "Richtung", "die", ["direction"], ["die Richtungen", "Richtungen"],
+    bi("-ung → feminin, Plural -en.", "-ung → feminine, plural -en."), S.unterwegs),
+
+  /* s10 */
+  v("a1_v_koerper", "noun", "Körper", "der", ["body"], ["die Körper", "Körper"],
+    bi("-er → maskulin, Plural unverändert.", "-er → masculine, plural unchanged."), S.gesund),
+  v("a1_v_bauch", "noun", "Bauch", "der", ["stomach", "belly"], ["die Bäuche", "Bäuche"],
+    bi("Umlaut + -e: die Bäuche.", "Umlaut plus -e: die Bäuche."), S.gesund),
+  v("a1_v_ruecken", "noun", "Rücken", "der", ["back"], ["die Rücken", "Rücken"],
+    bi("-en → maskulin, Plural unverändert.", "-en → masculine, plural unchanged."), S.gesund),
+  v("a1_v_erkaeltung", "noun", "Erkältung", "die", ["cold (illness)"], ["die Erkältungen", "Erkältungen"],
+    bi("-ung → feminin, Plural -en.", "-ung → feminine, plural -en."), S.gesund),
+  v("a1_v_fieber", "noun", "Fieber", "das", ["fever", "temperature"], [NO_PLURAL],
+    bi("Neutrum, kein Plural. Fieber haben.", "Neuter, no plural. Fieber haben."), S.gesund),
+  v("a1_v_husten", "noun", "Husten", "der", ["cough"], [NO_PLURAL],
+    bi("Maskulin, kein Plural. Husten haben.", "Masculine, no plural. Husten haben."), S.gesund),
+  v("a1_v_schmerz", "noun", "Schmerz", "der", ["pain", "ache"], ["die Schmerzen", "Schmerzen"],
+    bi("Meist im Plural: Ich habe Schmerzen. Kopfschmerzen.", "Mostly plural: Ich habe Schmerzen. Kopfschmerzen."), S.gesund),
+
+  /* s11 */
+  v("a1_v_wetter", "noun", "Wetter", "das", ["weather"], [NO_PLURAL],
+    bi("Neutrum, kein Plural.", "Neuter, no plural."), S.wetter),
+  v("a1_v_sonne", "noun", "Sonne", "die", ["sun"], ["die Sonnen", "Sonnen"],
+    bi("-e → feminin. Die Sonne scheint.", "-e → feminine. Die Sonne scheint."), S.wetter),
+  v("a1_v_regen", "noun", "Regen", "der", ["rain"], [NO_PLURAL],
+    bi("Maskulin, kein Plural. Es regnet.", "Masculine, no plural. Es regnet."), S.wetter),
+  v("a1_v_schnee", "noun", "Schnee", "der", ["snow"], [NO_PLURAL],
+    bi("Maskulin, kein Plural. Es schneit.", "Masculine, no plural. Es schneit."), S.wetter),
+  v("a1_v_wind", "noun", "Wind", "der", ["wind"], ["die Winde", "Winde"],
+    bi("Maskulin, Plural -e.", "Masculine, plural -e."), S.wetter),
+  v("a1_v_fruehling", "noun", "Frühling", "der", ["spring"], ["die Frühlinge", "Frühlinge"],
+    bi("-ling → maskulin, Plural -e.", "-ling → masculine, plural -e."), S.wetter),
+  v("a1_v_sommer", "noun", "Sommer", "der", ["summer"], ["die Sommer", "Sommer"],
+    bi("-er → maskulin, Plural unverändert.", "-er → masculine, plural unchanged."), S.wetter),
+  v("a1_v_herbst", "noun", "Herbst", "der", ["autumn", "fall"], ["die Herbste", "Herbste"],
+    bi("Maskulin, Plural -e.", "Masculine, plural -e."), S.wetter),
+  v("a1_v_winter", "noun", "Winter", "der", ["winter"], ["die Winter", "Winter"],
+    bi("-er → maskulin, Plural unverändert.", "-er → masculine, plural unchanged."), S.wetter),
+  v("a1_v_pullover", "noun", "Pullover", "der", ["jumper", "sweater", "pullover"], ["die Pullover", "Pullover"],
+    bi("-er → maskulin, Plural unverändert. Kurz: der Pulli.", "-er → masculine, plural unchanged. Short: der Pulli."), S.wetter),
+  v("a1_v_anziehen", "verb", "anziehen", "haben", ["to put on", "to get dressed", "put on"], ["angezogen"],
+    bi("Trennbar: an-ge-zogen. Ich ziehe mich an.", "Separable: an-ge-zogen. Ich ziehe mich an."), S.wetter),
+  v("a1_v_groesse", "noun", "Größe", "die", ["size"], ["die Größen", "Größen"],
+    bi("-e → feminin, Plural -n. Welche Größe haben Sie?", "-e → feminine, plural -n. Welche Größe haben Sie?"), S.wetter),
+
+  /* s12 */
+  v("a1_v_geburtsdatum", "noun", "Geburtsdatum", "das", ["date of birth"], ["die Geburtsdaten", "Geburtsdaten"],
+    bi("das Datum → die Daten.", "das Datum → die Daten."), S.schreiben),
+  v("a1_v_geburtsort", "noun", "Geburtsort", "der", ["place of birth"], ["die Geburtsorte", "Geburtsorte"],
+    bi("der Ort → die Orte.", "der Ort → die Orte."), S.schreiben)
 ];
 
 export const A1_GRAMMAR: readonly GrammarItem[] = [

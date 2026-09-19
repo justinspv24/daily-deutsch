@@ -1,4 +1,4 @@
-import type { Bilingual, VocabItem } from "../types";
+import { NO_PLURAL, type Bilingual, type VocabItem } from "../types";
 
 /**
  * The A2 bank's words. The first three were seeded from
@@ -247,5 +247,196 @@ export const VOCAB: readonly VocabItem[] = [
   v("a2_v_mitteilen", "verb", "mitteilen", "haben", ["to inform", "to let someone know", "to tell", "inform"], ["mitgeteilt"],
     bi("Trennbar: mit-ge-teilt. Mit Dativ: Ich teile Ihnen mit, dass …", "Separable: mit-ge-teilt. Takes the dative: Ich teile Ihnen mit, dass …"), S.schreiben),
   v("a2_v_antworten", "verb", "antworten", "haben", ["to answer", "to reply", "answer"], ["geantwortet"],
-    bi("Stamm auf -t → -et: geantwortet. Mit Dativ: Ich antworte dir.", "Stem in -t → -et: geantwortet. Takes the dative: Ich antworte dir."), S.schreiben)
+    bi("Stamm auf -t → -et: geantwortet. Mit Dativ: Ich antworte dir.", "Stem in -t → -et: geantwortet. Takes the dative: Ich antworte dir."), S.schreiben),
+
+  /* ================================================================
+   * The rest of the syllabus's words, so that what the map lists for a
+   * section is exactly what the drill asks. Appended, never interleaved:
+   * the first twelve words of the bank are a learner's first round, and
+   * the smoke test opens on them.
+   * ================================================================ */
+
+  /* s01 */
+  v("a2_v_vergangenheit", "noun", "Vergangenheit", "die", ["the past"], ["die Vergangenheiten", "Vergangenheiten"],
+    bi("-heit → feminin; Plural selten.", "-heit → feminine; plural rare."), S.perfekt),
+  v("a2_v_erleben", "verb", "erleben", "haben", ["to experience", "experience"], ["erlebt"],
+    bi("er- untrennbar → kein ge-: erlebt.", "er- inseparable → no ge-: erlebt."), S.perfekt),
+  v("a2_v_verstehen", "verb", "verstehen", "haben", ["to understand", "understand"], ["verstanden"],
+    bi("ver- → kein ge-: verstanden.", "ver- → no ge-: verstanden."), S.perfekt),
+
+  /* s02 */
+  v("a2_v_kindergarten", "noun", "Kindergarten", "der", ["kindergarten", "nursery school"], ["die Kindergärten", "Kindergärten"],
+    bi("der Garten → die Gärten. Als Kind war ich im Kindergarten.", "der Garten → die Gärten. Als Kind war ich im Kindergarten."), S.praet),
+  v("a2_v_jugend", "noun", "Jugend", "die", ["youth", "adolescence"], [NO_PLURAL],
+    bi("Feminin, kein Plural. In meiner Jugend …", "Feminine, no plural. In meiner Jugend …"), S.praet),
+
+  /* s03 */
+  v("a2_v_wohnungssuche", "noun", "Wohnungssuche", "die", ["flat hunting", "apartment search"], ["die Wohnungssuchen", "Wohnungssuchen"],
+    bi("die Suche → die Suchen (selten).", "die Suche → die Suchen (rare)."), S.wohnen),
+  v("a2_v_besichtigung", "noun", "Besichtigung", "die", ["viewing", "visit", "tour"], ["die Besichtigungen", "Besichtigungen"],
+    bi("-ung → feminin, Plural -en.", "-ung → feminine, plural -en."), S.wohnen),
+  v("a2_v_mieter", "noun", "Mieter", "der", ["tenant"], ["die Mieter", "Mieter"],
+    bi("-er → maskulin, Plural unverändert. Die Mieterin.", "-er → masculine, plural unchanged. Die Mieterin."), S.wohnen),
+  v("a2_v_nebenkosten", "noun", "Nebenkosten", "die", ["utility costs", "service charges"], [NO_PLURAL],
+    bi("Nur Plural — wie die Kosten.", "Plural only — like die Kosten."), S.wohnen),
+  v("a2_v_kaution", "noun", "Kaution", "die", ["deposit"], ["die Kautionen", "Kautionen"],
+    bi("-ion → feminin, Plural -en.", "-ion → feminine, plural -en."), S.wohnen),
+  v("a2_v_erdgeschoss", "noun", "Erdgeschoss", "das", ["ground floor"], ["die Erdgeschosse", "Erdgeschosse"],
+    bi("Neutrum, Plural -e. Im Erdgeschoss.", "Neuter, plural -e. Im Erdgeschoss."), S.wohnen),
+  v("a2_v_stock", "noun", "Stock", "der", ["floor", "storey"], ["die Stockwerke", "Stockwerke", "die Stöcke", "Stöcke"],
+    bi("Im ersten Stock. Plural meist: die Stockwerke.", "Im ersten Stock. Plural usually: die Stockwerke."), S.wohnen),
+  v("a2_v_haengen", "verb", "hängen", "haben", ["to hang", "hang"], ["gehängt", "gehangen"],
+    bi("Wohin? hängen → gehängt (regelmäßig). Wo? hängen → gehangen (stark).", "Wohin? hängen → gehängt (regular). Wo? hängen → gehangen (strong)."), S.wohnen),
+
+  /* s04 */
+  v("a2_v_verreisen", "verb", "verreisen", "sein", ["to go away", "to travel", "go away"], ["verreist"],
+    bi("Bewegung → sein, ver- → kein ge-: ist verreist.", "Movement → sein, ver- → no ge-: ist verreist."), S.reisen),
+  v("a2_v_verbindung", "noun", "Verbindung", "die", ["connection"], ["die Verbindungen", "Verbindungen"],
+    bi("-ung → feminin, Plural -en.", "-ung → feminine, plural -en."), S.reisen),
+  v("a2_v_hotel", "noun", "Hotel", "das", ["hotel"], ["die Hotels", "Hotels"],
+    bi("Fremdwort, Plural -s.", "Loanword, plural -s."), S.reisen),
+  v("a2_v_einzelzimmer", "noun", "Einzelzimmer", "das", ["single room"], ["die Einzelzimmer", "Einzelzimmer"],
+    bi("das Zimmer → die Zimmer.", "das Zimmer → die Zimmer."), S.reisen),
+  v("a2_v_doppelzimmer", "noun", "Doppelzimmer", "das", ["double room"], ["die Doppelzimmer", "Doppelzimmer"],
+    bi("das Zimmer → die Zimmer.", "das Zimmer → die Zimmer."), S.reisen),
+  v("a2_v_rezeption", "noun", "Rezeption", "die", ["reception", "front desk"], ["die Rezeptionen", "Rezeptionen"],
+    bi("-ion → feminin, Plural -en.", "-ion → feminine, plural -en."), S.reisen),
+  v("a2_v_sehenswuerdigkeit", "noun", "Sehenswürdigkeit", "die", ["sight", "attraction"], ["die Sehenswürdigkeiten", "Sehenswürdigkeiten"],
+    bi("-keit → feminin, Plural -en.", "-keit → feminine, plural -en."), S.reisen),
+  v("a2_v_ausflug", "noun", "Ausflug", "der", ["excursion", "trip", "outing"], ["die Ausflüge", "Ausflüge"],
+    bi("Umlaut + -e: die Ausflüge.", "Umlaut plus -e: die Ausflüge."), S.reisen),
+
+  /* s05 */
+  v("a2_v_studium", "noun", "Studium", "das", ["degree course", "studies"], ["die Studien", "Studien"],
+    bi("-ium → neutrum, Plural -ien.", "-ium → neuter, plural -ien."), S.arbeit),
+  v("a2_v_studieren", "verb", "studieren", "haben", ["to study (at university)", "study"], ["studiert"],
+    bi("-ieren → kein ge-: studiert.", "-ieren → no ge-: studiert."), S.arbeit),
+  v("a2_v_arbeitgeber", "noun", "Arbeitgeber", "der", ["employer"], ["die Arbeitgeber", "Arbeitgeber"],
+    bi("-er → maskulin, Plural unverändert.", "-er → masculine, plural unchanged."), S.arbeit),
+  v("a2_v_arbeitnehmer", "noun", "Arbeitnehmer", "der", ["employee"], ["die Arbeitnehmer", "Arbeitnehmer"],
+    bi("-er → maskulin, Plural unverändert.", "-er → masculine, plural unchanged."), S.arbeit),
+  v("a2_v_erfahrung", "noun", "Erfahrung", "die", ["experience"], ["die Erfahrungen", "Erfahrungen"],
+    bi("-ung → feminin, Plural -en.", "-ung → feminine, plural -en."), S.arbeit),
+  v("a2_v_ueberstunden", "noun", "Überstunden", "die", ["overtime"], [NO_PLURAL],
+    bi("Nur Plural. Überstunden machen.", "Plural only. Überstunden machen."), S.arbeit),
+  v("a2_v_vertrag", "noun", "Vertrag", "der", ["contract"], ["die Verträge", "Verträge"],
+    bi("Umlaut + -e: die Verträge.", "Umlaut plus -e: die Verträge."), S.arbeit),
+  v("a2_v_teilzeit", "noun", "Teilzeit", "die", ["part-time"], [NO_PLURAL],
+    bi("Feminin, kein Plural. In Teilzeit arbeiten.", "Feminine, no plural. In Teilzeit arbeiten."), S.arbeit),
+  v("a2_v_vollzeit", "noun", "Vollzeit", "die", ["full-time"], [NO_PLURAL],
+    bi("Feminin, kein Plural. In Vollzeit arbeiten.", "Feminine, no plural. In Vollzeit arbeiten."), S.arbeit),
+
+  /* s06 */
+  v("a2_v_anziehen", "verb", "sich anziehen", "haben", ["to get dressed", "get dressed"], ["angezogen"],
+    bi("Reflexiv + trennbar: Ich habe mich angezogen.", "Reflexive + separable: Ich habe mich angezogen."), S.gesund),
+  v("a2_v_ausziehen", "verb", "sich ausziehen", "haben", ["to get undressed", "get undressed"], ["ausgezogen"],
+    bi("Reflexiv + trennbar: aus-ge-zogen.", "Reflexive + separable: aus-ge-zogen."), S.gesund),
+  v("a2_v_krankenversicherung", "noun", "Krankenversicherung", "die", ["health insurance"], ["die Krankenversicherungen", "Krankenversicherungen"],
+    bi("-ung → feminin, Plural -en.", "-ung → feminine, plural -en."), S.gesund),
+  v("a2_v_krankschreibung", "noun", "Krankschreibung", "die", ["sick note"], ["die Krankschreibungen", "Krankschreibungen"],
+    bi("-ung → feminin, Plural -en.", "-ung → feminine, plural -en."), S.gesund),
+  v("a2_v_ernaehrung", "noun", "Ernährung", "die", ["nutrition", "diet"], [NO_PLURAL],
+    bi("-ung → feminin, kein Plural.", "-ung → feminine, no plural."), S.gesund),
+  v("a2_v_ernaehren", "verb", "sich ernähren", "haben", ["to eat (a diet)", "to feed oneself", "eat"], ["ernährt"],
+    bi("Reflexiv: Ich ernähre mich gesund. er- → kein ge-.", "Reflexive: Ich ernähre mich gesund. er- → no ge-."), S.gesund),
+  v("a2_v_abnehmen", "verb", "abnehmen", "haben", ["to lose weight", "lose weight"], ["abgenommen"],
+    bi("Trennbar: ab-ge-nommen.", "Separable: ab-ge-nommen."), S.gesund),
+  v("a2_v_zunehmen", "verb", "zunehmen", "haben", ["to gain weight", "to increase", "gain weight"], ["zugenommen"],
+    bi("Trennbar: zu-ge-nommen.", "Separable: zu-ge-nommen."), S.gesund),
+  v("a2_v_sport", "noun", "Sport", "der", ["sport", "sports"], [NO_PLURAL],
+    bi("Maskulin, kein Plural. Sport treiben / machen.", "Masculine, no plural. Sport treiben / machen."), S.gesund),
+
+  /* s07 */
+  v("a2_v_qualitaet", "noun", "Qualität", "die", ["quality"], ["die Qualitäten", "Qualitäten"],
+    bi("-tät → feminin, Plural -en.", "-tät → feminine, plural -en."), S.konsum),
+  v("a2_v_zurueckgeben", "verb", "zurückgeben", "haben", ["to return", "to give back", "return"], ["zurückgegeben"],
+    bi("Trennbar: zurück-ge-geben.", "Separable: zurück-ge-geben."), S.konsum),
+  v("a2_v_zurueckbekommen", "verb", "zurückbekommen", "haben", ["to get back", "get back"], ["zurückbekommen"],
+    bi("Trennbar, be- → kein ge-: zurückbekommen.", "Separable, be- → no ge-: zurückbekommen."), S.konsum),
+  v("a2_v_funktionieren", "verb", "funktionieren", "haben", ["to work", "to function", "work (function)"], ["funktioniert"],
+    bi("-ieren → kein ge-: funktioniert.", "-ieren → no ge-: funktioniert."), S.konsum),
+  v("a2_v_reklamation", "noun", "Reklamation", "die", ["complaint (about goods)"], ["die Reklamationen", "Reklamationen"],
+    bi("-ion → feminin, Plural -en.", "-ion → feminine, plural -en."), S.konsum),
+  v("a2_v_reklamieren", "verb", "reklamieren", "haben", ["to complain (about goods)", "to make a complaint", "complain"], ["reklamiert"],
+    bi("-ieren → kein ge-: reklamiert.", "-ieren → no ge-: reklamiert."), S.konsum),
+  v("a2_v_passen", "verb", "passen", "haben", ["to fit", "to suit", "fit"], ["gepasst"],
+    bi("Regelmäßig: gepasst. Mit Dativ: Das passt mir.", "Regular: gepasst. Takes the dative: Das passt mir."), S.konsum),
+  v("a2_v_werbung", "noun", "Werbung", "die", ["advertising", "advert"], ["die Werbungen", "Werbungen"],
+    bi("-ung → feminin, Plural selten.", "-ung → feminine, plural rare."), S.konsum),
+
+  /* s08 */
+  v("a2_v_hinterlassen", "verb", "hinterlassen", "haben", ["to leave (a message)", "to leave behind", "leave"], ["hinterlassen"],
+    bi("Untrennbar, Partizip = Infinitiv: hinterlassen.", "Inseparable, participle = infinitive: hinterlassen."), S.medien),
+  v("a2_v_verbinden", "verb", "verbinden", "haben", ["to connect", "to put through", "connect"], ["verbunden"],
+    bi("i → u: verbunden. ver- → kein ge-.", "i → u: verbunden. ver- → no ge-."), S.medien),
+  v("a2_v_mailbox", "noun", "Mailbox", "die", ["voicemail", "mailbox"], ["die Mailboxen", "Mailboxen"],
+    bi("Feminin, Plural -en.", "Feminine, plural -en."), S.medien),
+  v("a2_v_app", "noun", "App", "die", ["app"], ["die Apps", "Apps"],
+    bi("Feminin (die Applikation), Plural -s.", "Feminine (die Applikation), plural -s."), S.medien),
+  v("a2_v_internet", "noun", "Internet", "das", ["internet"], [NO_PLURAL],
+    bi("Neutrum, kein Plural. Im Internet.", "Neuter, no plural. Im Internet."), S.medien),
+  v("a2_v_informieren", "verb", "sich informieren", "haben", ["to find out", "to inform oneself", "find out"], ["informiert"],
+    bi("Reflexiv + über. -ieren → kein ge-.", "Reflexive + über. -ieren → no ge-."), S.medien),
+
+  /* s09 */
+  v("a2_v_weihnachten", "noun", "Weihnachten", "das", ["Christmas"], [NO_PLURAL],
+    bi("Neutrum; ohne Artikel: an Weihnachten, frohe Weihnachten.", "Neuter; used without an article: an Weihnachten, frohe Weihnachten."), S.feste),
+  v("a2_v_ostern", "noun", "Ostern", "das", ["Easter"], [NO_PLURAL],
+    bi("Neutrum; ohne Artikel: an Ostern, frohe Ostern.", "Neuter; used without an article: an Ostern, frohe Ostern."), S.feste),
+  v("a2_v_bedanken", "verb", "sich bedanken", "haben", ["to thank", "to say thank you", "thank"], ["bedankt"],
+    bi("Reflexiv + bei (Person) + für (Sache). be- → kein ge-.", "Reflexive + bei (person) + für (thing). be- → no ge-."), S.feste),
+  v("a2_v_einladen", "verb", "einladen", "haben", ["to invite", "invite"], ["eingeladen"],
+    bi("Trennbar: ein-ge-laden. Präsens: er lädt ein.", "Separable: ein-ge-laden. Present: er lädt ein."), S.feste),
+  v("a2_v_tradition", "noun", "Tradition", "die", ["tradition"], ["die Traditionen", "Traditionen"],
+    bi("-ion → feminin, Plural -en.", "-ion → feminine, plural -en."), S.feste),
+  v("a2_v_beziehung", "noun", "Beziehung", "die", ["relationship"], ["die Beziehungen", "Beziehungen"],
+    bi("-ung → feminin, Plural -en.", "-ung → feminine, plural -en."), S.feste),
+  v("a2_v_verlieben", "verb", "sich verlieben", "haben", ["to fall in love", "fall in love"], ["verliebt"],
+    bi("Reflexiv + in + Akkusativ. ver- → kein ge-.", "Reflexive + in + accusative. ver- → no ge-."), S.feste),
+  v("a2_v_trennen_sich", "verb", "sich trennen", "haben", ["to split up", "to separate", "split up"], ["getrennt"],
+    bi("Reflexiv + von + Dativ: Sie hat sich von ihm getrennt.", "Reflexive + von + dative: Sie hat sich von ihm getrennt."), S.feste),
+  v("a2_v_partner", "noun", "Partner", "der", ["partner"], ["die Partner", "Partner"],
+    bi("-er → maskulin, Plural unverändert. Die Partnerin.", "-er → masculine, plural unchanged. Die Partnerin."), S.feste),
+
+  /* s10 */
+  v("a2_v_zentrum", "noun", "Zentrum", "das", ["centre", "center"], ["die Zentren", "Zentren"],
+    bi("-um → neutrum, Plural -en: die Zentren.", "-um → neuter, plural -en: die Zentren."), S.stadt),
+  v("a2_v_innenstadt", "noun", "Innenstadt", "die", ["town centre", "city centre", "downtown"], ["die Innenstädte", "Innenstädte"],
+    bi("die Stadt → die Städte.", "die Stadt → die Städte."), S.stadt),
+  v("a2_v_umwelt", "noun", "Umwelt", "die", ["environment"], [NO_PLURAL],
+    bi("Feminin, kein Plural.", "Feminine, no plural."), S.stadt),
+  v("a2_v_muell", "noun", "Müll", "der", ["rubbish", "garbage", "waste"], [NO_PLURAL],
+    bi("Maskulin, kein Plural. Müll trennen.", "Masculine, no plural. Müll trennen."), S.stadt),
+  v("a2_v_luft", "noun", "Luft", "die", ["air"], [NO_PLURAL],
+    bi("Feminin, kein Plural (im Alltag).", "Feminine, no plural (in everyday use)."), S.stadt),
+  v("a2_v_klima", "noun", "Klima", "das", ["climate"], [NO_PLURAL],
+    bi("Neutrum, kein Plural. Der Klimawandel.", "Neuter, no plural. Der Klimawandel."), S.stadt),
+  v("a2_v_grad", "noun", "Grad", "der", ["degree"], ["die Grade", "Grade", "Grad"],
+    bi("Nach Zahlen ohne Endung: 25 Grad.", "No ending after a number: 25 Grad."), S.stadt),
+  v("a2_v_empfehlen", "verb", "empfehlen", "haben", ["to recommend", "recommend"], ["empfohlen"],
+    bi("Untrennbar → kein ge-. Präsens: er empfiehlt.", "Inseparable → no ge-. Present: er empfiehlt."), S.stadt),
+
+  /* s11 */
+  v("a2_v_interessieren", "verb", "sich interessieren", "haben", ["to be interested", "be interested"], ["interessiert"],
+    bi("Reflexiv + für + Akkusativ. -ieren → kein ge-.", "Reflexive + für + accusative. -ieren → no ge-."), S.kultur),
+  v("a2_v_freuen", "verb", "sich freuen", "haben", ["to be pleased", "to look forward", "be pleased"], ["gefreut"],
+    bi("sich freuen auf (Zukunft) / über (jetzt).", "sich freuen auf (future) / über (now)."), S.kultur),
+  v("a2_v_warten", "verb", "warten", "haben", ["to wait", "wait"], ["gewartet"],
+    bi("Stamm auf -t → -et. warten auf + Akkusativ.", "Stem in -t → -et. warten auf + accusative."), S.kultur),
+  v("a2_v_oeffnungszeiten", "noun", "Öffnungszeiten", "die", ["opening hours"], [NO_PLURAL],
+    bi("Nur Plural.", "Plural only."), S.kultur),
+  v("a2_v_trainieren", "verb", "trainieren", "haben", ["to train", "to work out", "train"], ["trainiert"],
+    bi("-ieren → kein ge-: trainiert.", "-ieren → no ge-: trainiert."), S.kultur),
+  v("a2_v_training", "noun", "Training", "das", ["training", "practice"], ["die Trainings", "Trainings"],
+    bi("Neutrum, Plural -s.", "Neuter, plural -s."), S.kultur),
+  v("a2_v_mitgliedschaft", "noun", "Mitgliedschaft", "die", ["membership"], ["die Mitgliedschaften", "Mitgliedschaften"],
+    bi("-schaft → feminin, Plural -en.", "-schaft → feminine, plural -en."), S.kultur),
+
+  /* s12 */
+  v("a2_v_leitpunkt", "noun", "Leitpunkt", "der", ["given point (in a writing task)", "guiding point"], ["die Leitpunkte", "Leitpunkte"],
+    bi("der Punkt → die Punkte. Alle Leitpunkte bearbeiten!", "der Punkt → die Punkte. Cover every Leitpunkt!"), S.schreiben),
+  v("a2_v_schild", "noun", "Schild", "das", ["sign"], ["die Schilder", "Schilder"],
+    bi("Neutrum, Plural -er.", "Neuter, plural -er."), S.schreiben),
+  v("a2_v_prospekt", "noun", "Prospekt", "der", ["leaflet", "brochure"], ["die Prospekte", "Prospekte"],
+    bi("Maskulin, Plural -e.", "Masculine, plural -e."), S.schreiben)
 ];

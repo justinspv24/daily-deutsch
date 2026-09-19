@@ -319,6 +319,11 @@
   font-weight: 600;
 }
 
+.unit__form {
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
 .unit__word dd {
   margin: 0;
   font-size: var(--step--1);

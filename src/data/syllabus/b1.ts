@@ -8,7 +8,6 @@ import {
   g,
   reading,
   section,
-  w,
   yt
 } from "./helpers";
 
@@ -49,24 +48,8 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Konjunktiv II: würde, hätte, wäre, könnte", "Konjunktiv II: würde, hätte, wäre, könnte", "Ich würde gern bei Ihnen arbeiten. Wenn ich mehr Zeit hätte, wäre ich flexibler.", "I'd like to work for you. If I had more time, I'd be more flexible.", "konjunktiv2"),
           g("Irreale Bedingung", "Unreal condition", "Wenn ich die Stelle bekäme, würde ich nach München ziehen.", "If I got the job, I'd move to Munich.", "nebensatz"),
           g("Bewerbung: feste Wendungen", "Application: set phrases", "Hiermit bewerbe ich mich um … · Über eine Einladung zum Gespräch würde ich mich sehr freuen.", "I hereby apply for … · I would be delighted to be invited to an interview."),
-          g("Verben mit Präposition: Beruf", "Verbs with prepositions: work", "sich bewerben um · sich vorbereiten auf · sich kümmern um · verantwortlich sein für", "to apply for · to prepare for · to take care of · to be responsible for", "pronominal-adverbs")
-        ],
-        vocab: [
-          w("die Stellenanzeige", "job advertisement"),
-          w("das Anschreiben", "cover letter"),
-          w("der Lebenslauf (tabellarisch)", "CV (in table form)"),
-          w("das Vorstellungsgespräch", "job interview"),
-          w("die Stärke / die Schwäche", "strength / weakness"),
-          w("die Berufserfahrung", "work experience"),
-          w("die Qualifikation, -en", "qualification"),
-          w("die Fähigkeit, -en", "skill, ability"),
-          w("zuverlässig / flexibel / belastbar", "reliable / flexible / resilient"),
-          w("die Arbeitsbedingungen (Pl.)", "working conditions"),
-          w("die Probezeit", "probation period"),
-          w("befristet / unbefristet", "fixed-term / permanent"),
-          w("der Betriebsrat", "works council"),
-          w("die Weiterbildung", "further training"),
-          w("einstellen / entlassen", "to hire / to dismiss")
+          g("Verben mit Präposition: Beruf", "Verbs with prepositions: work", "sich bewerben um · sich vorbereiten auf · sich kümmern um · verantwortlich sein für", "to apply for · to prepare for · to take care of · to be responsible for", "pronominal-adverbs"),
+          g("Adjektive für die Bewerbung", "Adjectives for the application", "zuverlässig · flexibel · belastbar · teamfähig · befristet / unbefristet — Ich bin belastbar und arbeite gern im Team.", "reliable · flexible · resilient · a team player · fixed-term / permanent — I'm resilient and enjoy teamwork.")
         ],
         links: [
           yt("Konjunktiv II würde hätte wäre B1 erklärt", "Konjunktiv II erklärt", "Konjunktiv II explained"),
@@ -91,23 +74,6 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Relativsatz: Verb ans Ende", "Relative clause: verb to the end", "Das ist die Frau, die im dritten Stock wohnt.", "That's the woman who lives on the third floor.", "nebensatz"),
           g("Beschwerde: Redemittel", "Complaint: phrases", "Ich möchte mich darüber beschweren, dass … · Ich bitte Sie, dafür zu sorgen, dass …", "I'd like to complain that … · I ask you to ensure that …")
         ],
-        vocab: [
-          w("die Wohngemeinschaft (WG)", "flat-share"),
-          w("der Mitbewohner, die Mitbewohnerin", "flatmate"),
-          w("die Hausordnung", "house rules"),
-          w("die Ruhezeit", "quiet hours"),
-          w("der Lärm / laut / leise", "noise / loud / quiet"),
-          w("sich beschweren über", "to complain about"),
-          w("der Streit / sich streiten", "argument / to argue"),
-          w("sich vertragen / sich einigen", "to get along / to come to an agreement"),
-          w("die Hausverwaltung", "property management"),
-          w("die Renovierung / renovieren", "renovation / to renovate"),
-          w("die Umgebung / das Viertel", "surroundings / neighbourhood"),
-          w("auf dem Land / in der Stadt", "in the country / in the city"),
-          w("die Miete erhöhen", "to raise the rent"),
-          w("die Kündigungsfrist", "notice period"),
-          w("die Wohnungsbesichtigung", "flat viewing")
-        ],
         links: [
           yt("Relativsätze Deutsch B1 erklärt", "Relativsätze erklärt", "Relative clauses explained"),
           yt("Nicos Weg B1 Wohnen Nachbarn", "Nicos Weg B1: Wohnen", "Nicos Weg B1: housing")
@@ -130,23 +96,6 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Passiv Präteritum", "Simple-past passive", "Der Patient wurde gestern operiert.", "The patient was operated on yesterday."),
           g("Passiv mit Modalverb", "Passive with a modal verb", "Die Tabletten müssen zweimal täglich genommen werden.", "The tablets must be taken twice a day."),
           g("von oder durch?", "von or durch?", "von + Person (vom Arzt) · durch + Mittel (durch Sport)", "von + person (by the doctor) · durch + means (through sport)")
-        ],
-        vocab: [
-          w("die Untersuchung / untersuchen", "examination / to examine"),
-          w("die Behandlung / behandeln", "treatment / to treat"),
-          w("die Operation / operieren", "operation / to operate"),
-          w("die Diagnose", "diagnosis"),
-          w("das Symptom, die Symptome", "symptom"),
-          w("der Stress / gestresst", "stress / stressed"),
-          w("sich entspannen", "to relax"),
-          w("die Vorsorge", "preventive care"),
-          w("die Impfung / impfen", "vaccination / to vaccinate"),
-          w("ausgewogen / vegetarisch / vegan", "balanced / vegetarian / vegan"),
-          w("die Kalorie, der Zucker, das Fett", "calorie, sugar, fat"),
-          w("verzichten auf", "to do without"),
-          w("die Sucht / süchtig", "addiction / addicted"),
-          w("das Fitnessstudio", "gym"),
-          w("regelmäßig", "regularly")
         ],
         links: [
           yt("Passiv Deutsch B1 werden Partizip erklärt", "Das Passiv erklärt", "The passive explained"),
@@ -171,23 +120,6 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Verben ohne zu", "Verbs without zu", "Modalverben · lassen · sehen, hören · gehen, bleiben: Ich gehe schwimmen.", "modals · lassen · sehen, hören · gehen, bleiben: I'm going swimming."),
           g("brauchen … zu / nicht brauchen", "brauchen … zu", "Du brauchst nicht zu kommen. Du brauchst nur anzurufen.", "You don't need to come. You only need to call.")
         ],
-        vocab: [
-          w("das Schulsystem", "school system"),
-          w("die Grundschule, das Gymnasium, die Realschule", "primary school, grammar school, secondary school"),
-          w("das Abitur / der Abschluss", "A-levels equivalent / qualification"),
-          w("die Ausbildung / die Lehre", "vocational training / apprenticeship"),
-          w("die Universität / die Hochschule", "university / college"),
-          w("das Fach, die Fächer", "subject"),
-          w("die Note, die Noten", "grade, mark"),
-          w("die Prüfung bestehen / durchfallen", "to pass / fail the exam"),
-          w("das Ziel / sich ein Ziel setzen", "goal / to set a goal"),
-          w("die Absicht / vorhaben", "intention / to intend"),
-          w("der Sprachkurs / das Sprachniveau", "language course / language level"),
-          w("die Fortbildung", "in-service training"),
-          w("das Stipendium", "scholarship"),
-          w("lebenslanges Lernen", "lifelong learning"),
-          w("sich konzentrieren auf", "to concentrate on")
-        ],
         links: [
           yt("Infinitiv mit zu um zu damit B1 erklärt", "Infinitiv mit zu · um … zu · damit", "Infinitive with zu · um … zu · damit"),
           yt("Easy German school system Germany", "Easy German: das Schulsystem", "Easy German: the school system")
@@ -210,23 +142,6 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Meinung äußern", "Expressing opinion", "Ich bin der Meinung, dass … · Meiner Meinung nach … · Ich finde es gut, wenn …", "I'm of the opinion that … · In my opinion … · I think it's good when …"),
           g("Indirekte Rede: erster Schritt", "Reported speech: first step", "Sie sagt, dass sie kein Fernsehen mehr schaut.", "She says that she doesn't watch TV any more.", "nebensatz"),
           g("Zustimmen & widersprechen", "Agreeing & disagreeing", "Da stimme ich dir zu. · Das sehe ich anders. · Einerseits … andererseits …", "I agree with you there. · I see that differently. · On the one hand … on the other …")
-        ],
-        vocab: [
-          w("die Medien (Pl.)", "media"),
-          w("die sozialen Netzwerke", "social networks"),
-          w("der Einfluss / beeinflussen", "influence / to influence"),
-          w("die Werbung / werben", "advertising / to advertise"),
-          w("die Nachricht / die Meldung", "news item / report"),
-          w("die Quelle / zuverlässig", "source / reliable"),
-          w("die Falschmeldung", "fake news"),
-          w("der Datenschutz", "data protection"),
-          w("die Privatsphäre", "privacy"),
-          w("abhängig sein von", "to be dependent on"),
-          w("die Meinung / meiner Meinung nach", "opinion / in my opinion"),
-          w("das Argument / der Vorteil / der Nachteil", "argument / advantage / disadvantage"),
-          w("zustimmen / widersprechen", "to agree / to contradict"),
-          w("einerseits … andererseits", "on the one hand … on the other"),
-          w("die Diskussion / diskutieren", "discussion / to discuss")
         ],
         links: [
           yt("deshalb trotzdem außerdem Konnektoren B1 erklärt", "deshalb, trotzdem, außerdem", "deshalb, trotzdem, außerdem"),
@@ -251,23 +166,6 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Plusquamperfekt", "Pluperfect", "Nachdem wir gegessen hatten, gingen wir spazieren.", "After we had eaten, we went for a walk.", "timeline"),
           g("Zwei Zeiten, eine Reihenfolge", "Two tenses, one order", "nachdem + Plusquamperfekt, Hauptsatz + Präteritum/Perfekt", "nachdem + pluperfect, main clause + simple past/perfect")
         ],
-        vocab: [
-          w("die Mobilität", "mobility"),
-          w("das Verkehrsmittel, -", "means of transport"),
-          w("der öffentliche Nahverkehr (ÖPNV)", "public transport"),
-          w("die Umbuchung / umbuchen", "rebooking / to rebook"),
-          w("die Erstattung / erstatten", "refund / to refund"),
-          w("der Anschluss (verpassen)", "connection (to miss)"),
-          w("das Fundbüro", "lost-property office"),
-          w("die Unterkunft, die Unterkünfte", "accommodation"),
-          w("die Ferienwohnung", "holiday flat"),
-          w("die Pauschalreise", "package holiday"),
-          w("das Reiseziel", "destination"),
-          w("die Landschaft", "landscape"),
-          w("unterwegs sein", "to be on the road"),
-          w("sich verfahren / sich verlaufen", "to lose one's way (driving / walking)"),
-          w("die Fahrgemeinschaft", "car pool")
-        ],
         links: [
           yt("als wenn nachdem bevor während temporale Nebensätze B1", "Temporale Nebensätze", "Temporal clauses"),
           yt("Nicos Weg B1 Reise", "Nicos Weg B1: Reisen", "Nicos Weg B1: travel")
@@ -290,23 +188,6 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Präpositionen mit Genitiv", "Prepositions with the genitive", "wegen · trotz · während · (an)statt · innerhalb · außerhalb", "because of · despite · during · instead of · within · outside"),
           g("Adjektivdeklination — alle Fälle", "Adjective declension — every case", "mit dem sauberen Wasser · wegen der starken Hitze · ein großes Problem", "with the clean water · because of the strong heat · a big problem", "adjective-endings"),
           g("Adjektive ohne Artikel", "Adjectives without an article", "frisches Wasser · saubere Luft · mit großem Interesse", "fresh water · clean air · with great interest")
-        ],
-        vocab: [
-          w("der Klimawandel", "climate change"),
-          w("die Erderwärmung", "global warming"),
-          w("die Umweltverschmutzung", "environmental pollution"),
-          w("der Abfall / die Verpackung", "waste / packaging"),
-          w("die erneuerbaren Energien", "renewable energies"),
-          w("der Strom / die Energie sparen", "electricity / to save energy"),
-          w("der Verbrauch / verbrauchen", "consumption / to consume"),
-          w("umweltfreundlich / nachhaltig", "eco-friendly / sustainable"),
-          w("schützen / der Naturschutz", "to protect / nature conservation"),
-          w("die Folge, die Folgen", "consequence"),
-          w("die Ursache / verursachen", "cause / to cause"),
-          w("der Wald, der Berg, der See, die Küste", "forest, mountain, lake, coast"),
-          w("das Tier / die Pflanze / die Art", "animal / plant / species"),
-          w("aussterben / bedroht", "to die out / endangered"),
-          w("die Maßnahme, die Maßnahmen", "measure")
         ],
         links: [
           yt("Genitiv Präpositionen wegen trotz während B1", "Genitiv & seine Präpositionen", "The genitive & its prepositions"),
@@ -331,23 +212,6 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Nebensatz vor dem Hauptsatz", "Subordinate clause first", "Weil ich Zeit habe, helfe ich. — Nebensatz zählt als Position 1, dann kommt das Verb.", "Because I have time, I help. — the clause is position 1, then the verb.", "v2"),
           g("Stellungnahme: Aufbau", "Statement: structure", "Einleitung → Argumente pro → Argumente contra → eigene Meinung → Schluss", "introduction → arguments for → arguments against → own view → conclusion")
         ],
-        vocab: [
-          w("die Gesellschaft / gesellschaftlich", "society / social"),
-          w("das Ehrenamt / ehrenamtlich", "volunteering / voluntary"),
-          w("sich engagieren für", "to get involved in"),
-          w("die Integration / sich integrieren", "integration / to integrate"),
-          w("die Migration / der Migrant, die Migrantin", "migration / migrant"),
-          w("die Staatsangehörigkeit", "nationality, citizenship"),
-          w("das Gesetz, die Gesetze", "law"),
-          w("die Regel / die Pflicht / das Recht", "rule / duty / right"),
-          w("die Gleichberechtigung", "equality"),
-          w("die Toleranz / tolerant", "tolerance / tolerant"),
-          w("das Vorurteil, die Vorurteile", "prejudice"),
-          w("die Verantwortung / verantwortlich", "responsibility / responsible"),
-          w("die Generation", "generation"),
-          w("der Zusammenhalt", "cohesion"),
-          w("die Stellungnahme", "statement of opinion")
-        ],
         links: [
           yt("zweiteilige Konnektoren nicht nur sondern auch B1", "Zweiteilige Konnektoren", "Two-part connectors"),
           yt("Easy German what do Germans think about", "Easy German: Meinungen auf der Straße", "Easy German: street opinions")
@@ -370,23 +234,6 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("n-Deklination", "n-declension", "der Kunde → den Kunden, dem Kunden · der Name → des Namens · der Herr → den Herrn", "the customer (all other cases: -n) · the name · the gentleman"),
           g("Verben mit Präposition: Geld", "Verbs with prepositions: money", "sich ärgern über · sich beschweren bei · achten auf · sparen für", "to be annoyed about · to complain to · to pay attention to · to save for"),
           g("Kündigung: Textbausteine", "Cancellation: building blocks", "Hiermit kündige ich meinen Vertrag fristgerecht zum … · Bitte bestätigen Sie mir die Kündigung schriftlich.", "I hereby cancel my contract with due notice as of … · Please confirm the cancellation in writing.")
-        ],
-        vocab: [
-          w("der Vertrag abschließen / kündigen", "to take out / cancel a contract"),
-          w("die Kündigung / fristgerecht", "cancellation / within the notice period"),
-          w("die Laufzeit", "contract term"),
-          w("die Gebühr, die Gebühren", "fee"),
-          w("die Rechnung / die Mahnung", "invoice / reminder"),
-          w("das Konto / überweisen", "account / to transfer"),
-          w("die Überweisung / die Lastschrift", "bank transfer / direct debit"),
-          w("sparen / die Ersparnisse", "to save / savings"),
-          w("die Ausgaben / die Einnahmen", "spending / income"),
-          w("der Kredit / die Schulden", "loan / debts"),
-          w("der Kunde, die Kundin", "customer"),
-          w("der Kundenservice", "customer service"),
-          w("die Versicherung / versichern", "insurance / to insure"),
-          w("das Kleingedruckte", "the small print"),
-          w("der Rabatt", "discount")
         ],
         links: [
           yt("Präpositionaladverbien darauf worauf erklärt B1", "darauf, worauf & Co.", "darauf, worauf & co."),
@@ -411,23 +258,6 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Präsens für die Zukunft", "Present for the future", "Morgen feiern wir. Nächste Woche fahre ich weg.", "We're celebrating tomorrow. Next week I'm going away."),
           g("Vergleichen: im Gegensatz zu, während", "Comparing: im Gegensatz zu, während", "Im Gegensatz zu Deutschland feiert man bei uns … Während hier …, ist es bei uns …", "Unlike Germany, we celebrate … While here …, at home it's …")
         ],
-        vocab: [
-          w("der Brauch, die Bräuche", "custom"),
-          w("die Tradition / traditionell", "tradition / traditional"),
-          w("der Feiertag, die Feiertage", "public holiday"),
-          w("der Karneval / der Fasching", "carnival"),
-          w("der Weihnachtsmarkt", "Christmas market"),
-          w("der Adventskalender", "advent calendar"),
-          w("das Oktoberfest", "Oktoberfest"),
-          w("die Kultur / kulturell", "culture / cultural"),
-          w("die Heimat", "home, homeland"),
-          w("der Vorsatz, die Vorsätze", "resolution"),
-          w("planen / der Plan", "to plan / plan"),
-          w("vermutlich / wahrscheinlich", "presumably / probably"),
-          w("die Zukunft / zukünftig", "future / in future"),
-          w("stattfinden (findet statt)", "to take place"),
-          w("die Stimmung", "atmosphere, mood")
-        ],
         links: [
           yt("Futur I werden Infinitiv Vermutung B1", "Futur I: Pläne & Vermutungen", "Futur I: plans & assumptions"),
           yt("Easy German Christmas traditions Germany", "Easy German: Weihnachten in Deutschland", "Easy German: Christmas in Germany")
@@ -449,24 +279,8 @@ export const B1_SYLLABUS: LevelSyllabus = {
           g("Wortbildung: -ung, -heit, -keit, -schaft", "Word formation: -ung, -heit, -keit, -schaft", "die Freundschaft · die Zufriedenheit · die Ehrlichkeit · die Erfahrung — alle feminin", "friendship · contentment · honesty · experience — all feminine", "wortbildung"),
           g("lassen", "lassen", "Ich lasse mein Auto reparieren. Lass mich in Ruhe! Er lässt die Tür offen.", "I'm having my car repaired. Leave me alone! He leaves the door open."),
           g("Verben mit Dativ", "Dative verbs", "helfen · danken · gefallen · gehören · fehlen · gratulieren · vertrauen · zuhören", "help · thank · please · belong · be missing · congratulate · trust · listen to", "verben-fall"),
-          g("Adjektive mit Präposition", "Adjectives with a preposition", "stolz auf · zufrieden mit · verliebt in · neugierig auf · enttäuscht von", "proud of · satisfied with · in love with · curious about · disappointed by")
-        ],
-        vocab: [
-          w("die Persönlichkeit / der Charakter", "personality / character"),
-          w("ehrlich / zuverlässig / geduldig", "honest / reliable / patient"),
-          w("selbstbewusst / schüchtern", "self-confident / shy"),
-          w("die Freundschaft / die Beziehung", "friendship / relationship"),
-          w("das Vertrauen / vertrauen", "trust / to trust"),
-          w("die Enttäuschung / enttäuscht", "disappointment / disappointed"),
-          w("die Eifersucht / eifersüchtig", "jealousy / jealous"),
-          w("die Angst / die Sorge", "fear / worry"),
-          w("sich Sorgen machen um", "to worry about"),
-          w("die Freude / sich freuen", "joy / to be pleased"),
-          w("wütend / traurig / glücklich", "angry / sad / happy"),
-          w("die Erziehung / erziehen", "upbringing / to bring up"),
-          w("der Kompromiss", "compromise"),
-          w("sich verstehen mit", "to get on with"),
-          w("die Gefühle zeigen", "to show feelings")
+          g("Adjektive mit Präposition", "Adjectives with a preposition", "stolz auf · zufrieden mit · verliebt in · neugierig auf · enttäuscht von", "proud of · satisfied with · in love with · curious about · disappointed by"),
+          g("Charakter & Gefühle: Adjektive", "Character & feelings: adjectives", "ehrlich · zuverlässig · geduldig · selbstbewusst · schüchtern · eifersüchtig — wütend · traurig · glücklich · enttäuscht", "honest · reliable · patient · self-confident · shy · jealous — angry · sad · happy · disappointed")
         ],
         links: [
           yt("Wortbildung Nomen ung heit keit Deutsch B1", "Wortbildung: -ung, -heit, -keit", "Word formation: -ung, -heit, -keit"),
@@ -488,22 +302,9 @@ export const B1_SYLLABUS: LevelSyllabus = {
         grammar: [
           g("Schreiben Teil 1–3", "Writing parts 1–3", "informelle Nachricht (80 W.) · Forumsbeitrag mit Meinung (80 W.) · formelle E-Mail (40 W.)", "informal message (80 words) · forum post with opinion (80 words) · formal e-mail (40 words)"),
           g("Präsentation: Aufbau", "Presentation: structure", "Thema vorstellen → persönliche Erfahrung → Situation im Heimatland → Vor- und Nachteile → Meinung → Abschluss", "introduce topic → own experience → situation at home → pros and cons → opinion → close"),
-          g("Redemittel Präsentation", "Presentation phrases", "Ich möchte über … sprechen. · Aus meiner Erfahrung … · Zusammenfassend kann ich sagen …", "I'd like to talk about … · From my experience … · To sum up, I can say …"),
+          g("Redemittel Präsentation", "Presentation phrases", "Ich möchte über … sprechen. · Aus meiner Erfahrung … · In meinem Heimatland … · Ein Vorteil ist, dass … / Ein Nachteil ist, dass … · Zusammenfassend kann ich sagen … · Vielen Dank für Ihre Aufmerksamkeit.", "I'd like to talk about … · From my experience … · In my home country … · One advantage is that … / One disadvantage is that … · To sum up, I can say … · Thank you for your attention."),
+          g("Redemittel Gespräch", "Discussion phrases", "Was hältst du davon? · Ich schlage vor, … · Wie wäre es, wenn …? · Einverstanden. / Das sehe ich anders.", "What do you think of that? · I suggest … · How about if …? · Agreed. / I see that differently."),
           g("Die Prüfung", "The exam", "Lesen 65 · Hören 40 · Schreiben 60 · Sprechen 15 Minuten — Module einzeln bestehbar", "Reading 65 · Listening 40 · Writing 60 · Speaking 15 minutes — modules can be passed separately")
-        ],
-        vocab: [
-          w("der Forumsbeitrag", "forum post"),
-          w("die Präsentation / präsentieren", "presentation / to present"),
-          w("das Thema, die Themen", "topic"),
-          w("die Folie / das Stichwort", "slide / keyword"),
-          w("Ich möchte über … sprechen.", "I'd like to talk about …"),
-          w("Aus meiner Erfahrung …", "From my experience …"),
-          w("In meinem Heimatland …", "In my home country …"),
-          w("Ein Vorteil ist, dass … / Ein Nachteil ist, dass …", "One advantage is that … / One disadvantage is that …"),
-          w("Zusammenfassend kann ich sagen, …", "To sum up, I can say …"),
-          w("Vielen Dank für Ihre Aufmerksamkeit.", "Thank you for your attention."),
-          w("Was hältst du davon?", "What do you think of that?"),
-          w("Ich schlage vor, … / Wie wäre es, wenn …", "I suggest … / How about if …")
         ],
         links: [
           reading(GOETHE_EXAMS, "Goethe-Institut: Zertifikat B1 — Modellsätze", "Goethe-Institut: Zertifikat B1 — sample papers"),

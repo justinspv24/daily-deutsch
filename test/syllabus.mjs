@@ -38,9 +38,9 @@ const { curriculumFor } = await load("../src/data/curriculum.ts");
 
 // Every section of the map has questions behind it: at least this many words,
 // table sentences and one review topic, each tagged with the section id. The
-// map may describe more than the drill asks — it names every grammar point
-// the exams test — but nothing on it is a promise the drill cannot keep.
-const MIN_WORDS = 5;
+// words a section shows ARE the drill's words for it — there is no second
+// list — so this is also the check that no section is thin.
+const MIN_WORDS = 8;
 const MIN_SENTENCES = 3;
 const MIN_TOPICS = 1;
 
@@ -94,7 +94,6 @@ for (const level of ["A1", "A2", "B1", "B2"]) {
 
     assert.ok(section.canDo.length >= 3, `${section.id}: at least three can-do statements`);
     assert.ok(section.grammar.length >= 3, `${section.id}: at least three grammar points`);
-    assert.ok(section.vocab.length >= 10, `${section.id}: at least ten words`);
     assert.ok(section.links.length >= 2, `${section.id}: at least two links`);
 
     for (const point of section.grammar) {
@@ -103,10 +102,6 @@ for (const level of ["A1", "A2", "B1", "B2"]) {
         illustrated += 1;
         assert.ok(known.has(point.illustration), `${section.id}: illustration "${point.illustration}" exists`);
       }
-    }
-
-    for (const word of section.vocab) {
-      assert.ok(word.de && word.en, `${section.id}: word has both languages`);
     }
 
     for (const link of [...section.links, ...syllabus.sources]) {
