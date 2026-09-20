@@ -271,6 +271,33 @@ export interface Strings {
   readonly syllabusNoPlural: string;
   readonly noPlural: string;
 
+  /* videos and podcasts */
+  readonly clipsTitle: string;
+  readonly clipPlay: string;
+  readonly clipWatchOn: (at: string) => string;
+  readonly clipRange: (from: string, to: string) => string;
+  readonly clipsNone: string;
+  readonly mediaWhy: string;
+  readonly mediaEvidence: string;
+  readonly podcastsButton: string;
+  readonly podcastsEyebrow: string;
+  readonly podcastsTitle: string;
+  readonly podcastsLede: string;
+  readonly podcastsBackground: string;
+  readonly podcastsShows: (level: string) => string;
+  readonly podcastsNone: string;
+  readonly podcastsNoEpisodes: string;
+  readonly podcastsSection: string;
+  readonly podcastPlay: string;
+  readonly podcastPause: string;
+  readonly podcastOpen: string;
+  readonly playerBack: string;
+  readonly playerForward: string;
+  readonly playerClose: string;
+  readonly playerSeek: string;
+  readonly playerLoading: string;
+  readonly playerError: string;
+
   /* account */
   readonly signIn: string;
   readonly signOut: string;
@@ -558,6 +585,33 @@ const de: Strings = {
   syllabusNoPlural: "kein Plural",
   noPlural: "kein Plural",
 
+  clipsTitle: "Videos zum Thema",
+  clipPlay: "Ausschnitt abspielen",
+  clipWatchOn: (at) => `Auf YouTube ab ${at} ansehen`,
+  clipRange: (from, to) => `${from} – ${to}`,
+  clipsNone: "Noch keine geprüften Videos zu diesem Thema.",
+  mediaWhy: "Was der Ausschnitt zeigt",
+  mediaEvidence: "Warum empfohlen",
+  podcastsButton: "Podcasts",
+  podcastsEyebrow: "Podcasts A1 – B2",
+  podcastsTitle: "Hören, wo du gerade bist",
+  podcastsLede:
+    "Die Podcasts, die für dein Niveau am häufigsten empfohlen werden — und zu jedem Thema des Lehrplans die passende Folge, direkt hier abspielbar.",
+  podcastsBackground: "Läuft weiter, wenn das Handy gesperrt ist — solange die App offen bleibt. Steuerung auf dem Sperrbildschirm.",
+  podcastsShows: (level) => `Die Podcasts für ${level}`,
+  podcastsNone: "Für dieses Niveau sind noch keine Podcasts geprüft.",
+  podcastsNoEpisodes: "Noch keine Folgen zu den Themen dieses Niveaus.",
+  podcastsSection: "Zum Thema",
+  podcastPlay: "Abspielen",
+  podcastPause: "Pause",
+  podcastOpen: "Folge auf der Website",
+  playerBack: "15 Sekunden zurück",
+  playerForward: "15 Sekunden vor",
+  playerClose: "Player schließen",
+  playerSeek: "Position",
+  playerLoading: "Lädt …",
+  playerError: "Die Folge konnte nicht geladen werden.",
+
   signIn: "Anmelden",
   signOut: "Abmelden",
   account: "Konto",
@@ -842,6 +896,33 @@ const en: Strings = {
   wordsWaiting: (n) => ` · +${n} waiting`,
   syllabusNoPlural: "no plural",
   noPlural: "no plural",
+
+  clipsTitle: "Videos on this topic",
+  clipPlay: "Play the clip",
+  clipWatchOn: (at) => `Watch on YouTube from ${at}`,
+  clipRange: (from, to) => `${from} – ${to}`,
+  clipsNone: "No verified videos for this topic yet.",
+  mediaWhy: "What the clip covers",
+  mediaEvidence: "Why it's recommended",
+  podcastsButton: "Podcasts",
+  podcastsEyebrow: "Podcasts A1 – B2",
+  podcastsTitle: "Listen at your level",
+  podcastsLede:
+    "The podcasts most often recommended for your level — and for every topic of the syllabus, the episode that fits, playable right here.",
+  podcastsBackground: "Keeps playing when the phone is locked, as long as the app stays open. Controls on the lock screen.",
+  podcastsShows: (level) => `The podcasts for ${level}`,
+  podcastsNone: "No podcasts verified for this level yet.",
+  podcastsNoEpisodes: "No episodes for this level's topics yet.",
+  podcastsSection: "On this topic",
+  podcastPlay: "Play",
+  podcastPause: "Pause",
+  podcastOpen: "Episode on the website",
+  playerBack: "Back 15 seconds",
+  playerForward: "Forward 15 seconds",
+  playerClose: "Close the player",
+  playerSeek: "Position",
+  playerLoading: "Loading …",
+  playerError: "The episode could not be loaded.",
 
   signIn: "Sign in",
   signOut: "Sign out",

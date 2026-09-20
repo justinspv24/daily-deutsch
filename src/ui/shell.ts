@@ -3,6 +3,7 @@ import { getLang, setLang, t } from "../i18n";
 import { getTheme, toggleTheme } from "../theme";
 import type { Lang, Learner, StepState } from "../types";
 import type { Route } from "./context";
+import { buildPlayerBar } from "./playerbar";
 import {
   clear,
   h,
@@ -107,7 +108,9 @@ export function buildShell(root: HTMLElement, handlers: ShellHandlers): Shell {
   const main = h("main", { class: "main" }, stepper, view);
   const foot = h("footer", { class: "pagefoot" }, t().footer);
 
-  root.append(h("div", { class: "app" }, topbar, main, foot, fab));
+  // The podcast bar belongs to the shell, not to any screen: an episode
+  // started on the syllabus page keeps its controls through a whole round.
+  root.append(h("div", { class: "app" }, topbar, main, foot, fab, buildPlayerBar()));
 
   const paintTitles = (): void => {
     for (const [button, title] of [

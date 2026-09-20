@@ -2474,3 +2474,17 @@ td.is-meta {
     padding: var(--sp-2) var(--sp-3);
   }
 }
+
+/* The call's clock in the tutor strip. */
+.tutor__clock {
+  align-self: center;
+  margin-right: var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+.tutor__clock:empty {
+  display: none;
+}

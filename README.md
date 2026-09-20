@@ -37,7 +37,23 @@ The drill follows that map. Every section has words, table sentences and a
 review topic tagged to it (`section` on each item, enforced by the test), and
 the words a section lists *are* the drill's words for it — read from the same
 bank, shown with the article and plural the card will ask for. A noun with no
-plural (*die Butter*, *die Eltern*) gets a two-field card. The banks are
+plural (*die Butter*, *die Eltern*) gets a two-field card.
+
+Each section also carries **videos and podcast episodes**, and none of them
+were written from memory: a research pass searched for what learners actually
+recommend, fetched every video to read its length and chapters and every
+podcast feed to read its episodes, and a second, independent pass tried to
+refute each link, timestamp and claim. A video appears as the *portion* that
+explains the section — the embed plays between `start` and `end`, the link out
+jumps to the same second — and each item shows why it is there.
+*Podcasts* on the home screen lists the shows for your level and, section by
+section, the episodes that fit, playable in the app; playback keeps going with
+the phone locked, with controls on the lock screen. `docs/media.md` has the
+method and how to rerun it.
+
+A voice call — *vv* or the spoken round — has **no time limit**: the session
+is resumed across Google's ten-minute connection resets, the panel shows the
+elapsed time, and the audio is routed so a locked phone treats it like a call. The banks are
 large now, so a round draws a **working set of twelve words**: a word one
 answer from retiring first, then words already in play, then fresh ones — so
 the set turns over as words are mastered rather than dealing twelve strangers
@@ -149,7 +165,7 @@ as a **Config** variable (Vercel refuses to save a `VITE_` variable as Secret):
 | `KEY_ENCRYPTION_SECRET` | any long random string, e.g. `openssl rand -base64 48` |
 | `SUPABASE_URL` | same project URL as above |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API Keys → Legacy → service_role |
-| `AI_DAILY_CHAT_LIMIT` · `AI_DAILY_TRANSLATE_LIMIT` · `AI_DAILY_VOICE_SESSIONS` · `VOICE_SESSION_MINUTES` | optional; sensible defaults |
+| `AI_DAILY_CHAT_LIMIT` · `AI_DAILY_TRANSLATE_LIMIT` · `AI_DAILY_VOICE_SESSIONS` · `VOICE_TOKEN_HOURS` | optional; sensible defaults. A voice call has no time limit — sessions per day is the only cap |
 | `GEMINI_TEXT_MODEL` | optional; defaults to `gemini-3.5-flash-lite` |
 
 `ANTHROPIC_API_KEY` and `GOOGLE_API_KEY` are no longer read and can be deleted.

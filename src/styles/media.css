@@ -1,0 +1,348 @@
+/*
+ * Video clips on the syllabus, the podcast screen and the player bar.
+ */
+
+/* ------------------------------------------------------------ clips */
+
+.clips {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.clip {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-raised);
+}
+
+.clip__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.clip__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: #000;
+  cursor: pointer;
+}
+
+.clip__thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.clip__poster:hover .clip__thumb {
+  opacity: 1;
+}
+
+.clip__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  color: var(--accent-ink);
+  background: linear-gradient(180deg, var(--hero-a), var(--accent));
+  font-size: 1.5rem;
+  padding-left: 5px;
+  box-shadow: 0 12px 30px -10px rgb(0 0 0 / 60%);
+}
+
+.clip__range {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: rgb(0 0 0 / 70%);
+}
+
+.clip__embed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.clip__caption {
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+.clip__label {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-0);
+}
+
+.clip__meta {
+  margin: 2px 0 0;
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+}
+
+.clip__why {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.clip__why strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------- podcasts */
+
+.shows {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.show {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.show:hover {
+  border-color: var(--accent);
+}
+
+.show__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-0);
+}
+
+.show__fit,
+.show__evidence {
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.unit__summary--static {
+  cursor: default;
+}
+
+.episodes {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.episode {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  transition: border-color var(--dur) var(--ease);
+}
+
+.episode[data-playing="true"] {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.episode__play {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--accent-ink);
+  background: linear-gradient(180deg, var(--hero-a), var(--accent));
+  font-size: 0.9rem;
+  box-shadow: 0 8px 20px -10px var(--accent-glow);
+  cursor: pointer;
+}
+
+.episode__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.episode__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-0);
+}
+
+.episode__meta {
+  margin: 2px 0 0;
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+}
+
+.episode__why {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.episode__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--sp-2);
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--accent-text);
+  text-decoration: none;
+}
+
+.episode__link svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* -------------------------------------------------------- player bar */
+
+.playerbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  padding-bottom: calc(var(--sp-3) + env(safe-area-inset-bottom));
+  background: var(--glass);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border-top: 1px solid var(--line);
+}
+
+.playerbar[hidden] {
+  display: none;
+}
+
+body.has-player .main {
+  padding-bottom: calc(var(--sp-8) + 88px);
+}
+
+body.has-player .fab {
+  bottom: calc(96px + env(safe-area-inset-bottom));
+}
+
+.playerbar__btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  height: 36px;
+  min-width: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.playerbar__btn--main {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  color: var(--accent-ink);
+  background: linear-gradient(180deg, var(--hero-a), var(--accent));
+  font-size: 0.95rem;
+}
+
+.playerbar__btn--close {
+  color: var(--ink-muted);
+}
+
+.playerbar__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.playerbar__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step--1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playerbar__meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playerbar__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: 4px;
+}
+
+.playerbar__range {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.playerbar__time {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+.playerbar__tools {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+@media (max-width: 560px) {
+  .playerbar__tools .playerbar__btn:not(.playerbar__btn--close) {
+    display: none;
+  }
+}

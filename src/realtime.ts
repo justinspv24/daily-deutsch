@@ -97,8 +97,8 @@ export interface VoiceOptions extends VoiceHandlers {
 
 export interface VoiceSession {
   stop(): void;
-  /** Seconds left before the token expires; the panel counts down with it. */
-  secondsLeft(): number;
+  /** Seconds since the call connected. There is no limit; this is a clock, not a countdown. */
+  elapsed(): number;
   /**
    * Send one user turn and let the tutor answer it. This is how the drill asks
    * its questions: the text is an instruction the tutor reads and acts on, not
@@ -118,8 +118,8 @@ interface TokenResponse {
   model: string;
   voice: string;
   scenario: string;
+  /** When the token stops being valid for reconnects; a new one is minted after that. */
   expiresAt: string;
-  sessionSeconds: number;
   /**
    * The setup config, composed server-side and sent on verbatim. It carries the
    * teacher's instructions, so it is built from the learner's level rather than
@@ -296,12 +296,14 @@ async function openMicrophone(): Promise<Microphone> {
 /* ------------------------------------------------------------- the session */
 
 async function connect(
-  credentials: TokenResponse,
+  initial: TokenResponse,
   microphone: Microphone,
   options: VoiceOptions
 ): Promise<VoiceSession> {
+  let credentials = initial;
   const player = new Player();
-  const deadline = Date.now() + credentials.sessionSeconds * 1000;
+  const startedAt = Date.now();
+  const keep = new KeepAlive();
 
   let socket: WebSocket;
   try {
@@ -314,6 +316,16 @@ async function connect(
   let finished = false;
   let learnerLine = "";
   let teacherLine = "";
+  /**
+   * Google resets the connection roughly every ten minutes and says so first
+   * (goAway). The session itself survives that: the server hands out a
+   * resumption handle as it goes, and reopening the socket with the latest
+   * handle picks the conversation up where it was. A call therefore has no
+   * length limit — the learner sees a short "connecting" and carries on.
+   */
+  let resumeHandle: string | null = null;
+  let reconnecting = false;
+  let piped = false;
   // Closed while the tutor is talking, so its own voice and the room's noise
   // never arrive as an answer. The drill opens it once the question has landed.
   let muted = options.muted === true;
@@ -328,12 +340,9 @@ async function connect(
     send({ clientContent: { turns: [{ role: "user", parts: [{ text }] }], turnComplete: true } });
   };
 
-  const expiry = window.setTimeout(() => end(null), credentials.sessionSeconds * 1000);
-
   function end(error: VoiceError | null): void {
     if (finished) return;
     finished = true;
-    window.clearTimeout(expiry);
     try {
       socket.close();
     } catch {
@@ -341,55 +350,103 @@ async function connect(
     }
     microphone.stop();
     player.close();
+    keep.release();
     options.onState("idle");
     options.onEnd(error);
   }
 
-  socket.onerror = () => end(new VoiceError("offline"));
-  socket.onclose = (event) => {
-    // 1000 is a clean close, and we also treat our own teardown as clean.
-    if (event.code === 1000 || finished) return end(null);
-    // 1007/1008 mean Google understood us and said no — a bad setup frame, an
-    // expired token. That is not a network problem, and telling the learner
-    // to check their wifi would send them looking in the wrong place.
-    if ((event.code === 1007 || event.code === 1008) && event.reason) {
-      return end(new VoiceError("failed", event.reason.split("\n")[0]?.slice(0, 200)));
+  /**
+   * Reopen the socket on the same session. If the token has run out (they
+   * last hours, so this is rare) a fresh one is minted first — that counts as
+   * a new session for the day's tally, which is the honest thing to count.
+   */
+  async function reconnect(): Promise<void> {
+    if (finished || reconnecting) return;
+    reconnecting = true;
+    options.onState("connecting");
+    try {
+      if (Date.parse(credentials.expiresAt) - Date.now() < 60_000) {
+        credentials = await mintToken(options);
+      }
+      const next = await open(credentials.token);
+      socket = next;
+      wire(next);
+      next.send(
+        JSON.stringify({
+          setup: {
+            model: credentials.model,
+            ...credentials.config,
+            ...(resumeHandle ? { sessionResumption: { handle: resumeHandle } } : {})
+          }
+        })
+      );
+    } catch (error) {
+      end(error instanceof VoiceError ? error : new VoiceError("offline"));
+    } finally {
+      reconnecting = false;
     }
-    end(new VoiceError("offline"));
-  };
+  }
 
-  socket.onmessage = (event) => {
+  function wire(ws: WebSocket): void {
+    ws.onerror = () => {
+      if (ws !== socket) return;
+      void reconnect();
+    };
+    ws.onclose = (event) => {
+      if (ws !== socket || finished) return;
+      // 1007/1008 mean Google understood us and said no — a bad setup frame, a
+      // dead token. That is not a network problem, and telling the learner to
+      // check their wifi would send them looking in the wrong place.
+      if ((event.code === 1007 || event.code === 1008) && event.reason) {
+        return end(new VoiceError("failed", event.reason.split("\n")[0]?.slice(0, 200)));
+      }
+      // Anything else — the ten-minute reset, a dropped network — is a reason
+      // to pick the session back up, not to hang up on the learner.
+      void reconnect();
+    };
+
+    ws.onmessage = (event) => {
     void (async () => {
       const message = await parse(event.data);
       if (!message) return;
 
       if (message.setupComplete) {
+        const resumed = resumeHandle !== null;
         // Kick the conversation off before the microphone opens. The model only
         // ever responds to a turn, and the learner should hear the teacher
         // first, not sit in silence wondering whether it worked. A caller that
         // drives the conversation itself passes its own opening turn, or null
-        // for none at all.
-        sendTurn(options.opener === undefined ? credentials.opener : (options.opener ?? ""));
+        // for none at all. A resumed session already has its conversation and
+        // needs no opener.
+        if (!resumed) sendTurn(options.opener === undefined ? credentials.opener : (options.opener ?? ""));
         options.onState("listening");
-        void microphone.pipe((frame) => {
-          if (muted || socket.readyState !== WebSocket.OPEN) return;
-          socket.send(
-            JSON.stringify({
-              realtimeInput: {
-                audio: { mimeType: `audio/pcm;rate=${INPUT_RATE}`, data: encode(frame) }
-              }
-            })
-          );
-        });
-        options.onReady?.();
+        if (!piped) {
+          piped = true;
+          void microphone.pipe((frame) => {
+            if (muted || socket.readyState !== WebSocket.OPEN) return;
+            socket.send(
+              JSON.stringify({
+                realtimeInput: {
+                  audio: { mimeType: `audio/pcm;rate=${INPUT_RATE}`, data: encode(frame) }
+                }
+              })
+            );
+          });
+        }
+        if (!resumed) options.onReady?.();
+        return;
+      }
+
+      if (message.sessionResumptionUpdate?.resumable && message.sessionResumptionUpdate.newHandle) {
+        resumeHandle = message.sessionResumptionUpdate.newHandle;
         return;
       }
 
       const content = message.serverContent;
       if (!content) {
-        // The server warns before it hangs up; treat it as the end of the call
-        // rather than letting the socket drop from under the learner.
-        if (message.goAway) end(null);
+        // The server warns before it resets the connection. Reconnecting now,
+        // on our own terms, beats waiting for the socket to drop mid-word.
+        if (message.goAway) void reconnect();
         return;
       }
 
@@ -435,17 +492,21 @@ async function connect(
         });
       }
     })();
-  };
+    };
+  }
 
+  wire(socket);
   // Everything the session needs goes in the setup frame: the model, and the
   // config the server composed — teacher prompt, voice, transcription,
-  // compression. The token itself only proves the learner is allowed to be here.
+  // compression, resumption. The token itself only proves the learner is
+  // allowed to be here.
   socket.send(JSON.stringify({ setup: { model: credentials.model, ...credentials.config } }));
   options.onState("connecting");
+  keep.acquire(options.scenario === "drill" ? "Daily Deutsch — Lehrer" : "Daily Deutsch — Sprachmodus", () => end(null));
 
   return {
     stop: () => end(null),
-    secondsLeft: () => Math.max(0, Math.round((deadline - Date.now()) / 1000)),
+    elapsed: () => Math.max(0, Math.round((Date.now() - startedAt) / 1000)),
     say: (text) => sendTurn(text),
     setMuted: (next) => {
       muted = next;
@@ -503,6 +564,32 @@ class Player {
   private readonly context = new AudioContext({ sampleRate: OUTPUT_RATE });
   private readonly playing = new Set<AudioBufferSourceNode>();
   private head = 0;
+  /**
+   * Playback goes through a real <audio> element rather than straight to the
+   * context's destination. To the phone that is the difference between a web
+   * page making noises and a media session: with an element playing, iOS and
+   * Android keep the page's audio — and with it the microphone and the
+   * socket — alive when the screen locks, the way they do for a call.
+   */
+  private readonly sink: MediaStreamAudioDestinationNode | null;
+  private readonly element: HTMLAudioElement | null;
+
+  constructor() {
+    try {
+      this.sink = this.context.createMediaStreamDestination();
+      const element = document.createElement("audio");
+      element.srcObject = this.sink.stream;
+      element.setAttribute("playsinline", "true");
+      element.autoplay = true;
+      element.style.display = "none";
+      document.body.append(element);
+      void element.play().catch(() => undefined);
+      this.element = element;
+    } catch {
+      this.sink = null;
+      this.element = null;
+    }
+  }
 
   push(base64: string): void {
     const samples = decode(base64);
@@ -513,7 +600,7 @@ class Player {
 
     const source = this.context.createBufferSource();
     source.buffer = buffer;
-    source.connect(this.context.destination);
+    source.connect(this.sink ?? this.context.destination);
 
     const start = Math.max(this.context.currentTime + 0.02, this.head);
     source.start(start);
@@ -544,7 +631,74 @@ class Player {
 
   close(): void {
     this.flush();
+    if (this.element) {
+      this.element.pause();
+      this.element.srcObject = null;
+      this.element.remove();
+    }
     void this.context.close().catch(() => undefined);
+  }
+}
+
+/* ------------------------------------------------------------ keep-alive */
+
+/**
+ * What keeps a call going when the learner stops looking at it.
+ *
+ * Two mechanisms, for two different moments. A screen wake lock stops the
+ * phone from locking itself while the call is up — most "it stopped" reports
+ * are really the screen timing out. And a media session tells the OS this
+ * page is playing something that matters, so that when the learner does lock
+ * the phone on purpose the audio, the microphone and the socket are treated
+ * like a phone call rather than a background tab. Its pause/stop buttons on
+ * the lock screen hang up, which is the only honest thing they can do.
+ */
+class KeepAlive {
+  private lock: WakeLockSentinel | null = null;
+  private onVisible: (() => void) | null = null;
+
+  acquire(title: string, onStop: () => void): void {
+    const request = (): void => {
+      if (!("wakeLock" in navigator) || document.visibilityState !== "visible") return;
+      navigator.wakeLock
+        .request("screen")
+        .then((lock) => {
+          this.lock = lock;
+        })
+        .catch(() => undefined);
+    };
+    request();
+    // The lock is released by the OS whenever the page is hidden; take it
+    // back the moment the learner returns.
+    this.onVisible = () => request();
+    document.addEventListener("visibilitychange", this.onVisible);
+
+    if ("mediaSession" in navigator) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({ title, artist: "Daily Deutsch" });
+        navigator.mediaSession.playbackState = "playing";
+        for (const action of ["pause", "stop"] as const) {
+          navigator.mediaSession.setActionHandler(action, () => onStop());
+        }
+      } catch {
+        /* an older browser without the API is fine */
+      }
+    }
+  }
+
+  release(): void {
+    if (this.onVisible) document.removeEventListener("visibilitychange", this.onVisible);
+    this.onVisible = null;
+    void this.lock?.release().catch(() => undefined);
+    this.lock = null;
+    if ("mediaSession" in navigator) {
+      try {
+        navigator.mediaSession.playbackState = "none";
+        for (const action of ["pause", "stop"] as const) navigator.mediaSession.setActionHandler(action, null);
+      } catch {
+        /* nothing to undo */
+      }
+    }
   }
 }
 
@@ -590,6 +744,7 @@ function decode(base64: string) {
 interface ServerMessage {
   setupComplete?: unknown;
   goAway?: unknown;
+  sessionResumptionUpdate?: { newHandle?: string; resumable?: boolean };
   serverContent?: {
     modelTurn?: { parts?: Array<{ inlineData?: { mimeType?: string; data?: string } }> };
     inputTranscription?: { text?: string };

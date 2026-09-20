@@ -183,12 +183,13 @@ answer empty. `test/speech.mjs` pins all of it down.
 
 ### Reconnecting mid-round
 
-A round takes about 25 minutes and a session lasts `VOICE_SESSION_MINUTES`, so
-the token expires part-way through — every time, not occasionally. A clean
-close mid-round is treated as exactly that: the tutor reconnects, puts the
-current question back, and the learner notices a pause. Up to three times, then
-it gives up and says so, because each reconnection spends one of the day's
-sessions. A spoken round therefore costs two or three of the default twelve.
+Google resets the WebSocket roughly every ten minutes, and a round takes
+twenty-five. That reset is handled inside `realtime.ts` now (see *No time
+limit* below): the socket is reopened on the same session with its resumption
+handle, the microphone and player are kept, and the tutor carries on with the
+same question after a second's pause. The drill's own reconnect path in
+`tutor.ts` remains as a fallback for a genuinely dead session, but in normal
+use it never fires, and a spoken round costs exactly one of the day's sessions.
 
 If the voice gives out at any point — no key, no microphone, no network — the
 round does not. The strip says what happened, the caret is handed back to the
@@ -254,10 +255,12 @@ again.
 
 ### The token, and what it does not protect
 
-The session token the browser holds is deliberately weak: single-use, expires
-after `VOICE_SESSION_MINUTES`, and can only *open* a session within 60 seconds
-of being minted. It is derived from the learner's key but is not the key —
-a leaked token cannot be used to start anything after that minute.
+The session token the browser holds is deliberately weak: single-use, and it
+can only *open* a session within 60 seconds of being minted. After that minute
+it is good for one thing only — resuming the session it already belongs to,
+for up to `VOICE_TOKEN_HOURS` (default 12; Google allows just under 20). It is
+derived from the learner's key but is not the key: a leaked token cannot be
+used to start anything, only to rejoin a call that is already the learner's.
 
 The browser sends the full setup frame — prompt included — so someone with
 devtools open could edit the prompt of their own session. That is their own
@@ -268,11 +271,12 @@ session on their own key; the blast radius is themselves.
 `/api/ai` can count every call because every call passes through it. Voice
 cannot. So the limit lives at the only moment we control: token minting.
 
-The ceiling on one account is `AI_DAILY_VOICE_SESSIONS × VOICE_SESSION_MINUTES`
-— at the defaults, 3 hours a day, enforced before any audio flows. With every
-learner on their own key this is a seatbelt for *their* bill (a tab left open,
-a key that leaks), not yours, which is why the defaults are generous. Sessions
-are counted in `ai_usage` under `kind = 'voice'`; migration `0004` adds it to
+The ceiling on one account is `AI_DAILY_VOICE_SESSIONS` calls a day (default
+12), enforced before any audio flows — and a call has no length limit, so this
+is a cap on how often, not how long. With every learner on their own key it is
+a seatbelt for *their* quota (a tab left open, a key that leaks), not your
+bill, which is why the default is generous. Sessions are counted in `ai_usage`
+under `kind = 'voice'`; migration `0004` adds it to
 the check constraint.
 
 Without `SUPABASE_SERVICE_ROLE_KEY` the endpoint fails closed. It will not mint
@@ -351,13 +355,59 @@ before every sentence stops feeling like a conversation.
 `contextWindowCompression` is on, which is what lets a session run past the
 15-minute audio limit the API otherwise imposes.
 
+## No time limit
+
+A call runs until the learner ends it. Three things make that true:
+
+- **The token lasts hours, not minutes.** `expireTime` is `VOICE_TOKEN_HOURS`
+  ahead (default 12). Google's rule is that a single-use token may still be
+  used to *resume* its session for as long as it is valid, so one token covers
+  one call of any length.
+- **Session resumption.** The setup config carries `sessionResumption: {}`;
+  the server then sends `sessionResumptionUpdate { newHandle, resumable }` as
+  the call goes on, and `realtime.ts` keeps the latest handle. When Google
+  announces a reset (`goAway`) or the socket drops for any reason other than a
+  rejection (close codes 1007/1008), the client reopens the socket and sends
+  the setup again with `sessionResumption: { handle }`. The conversation, the
+  microphone tap and the player all carry over; a resumed session gets no
+  opener and no second `onReady`. If the token itself is about to expire, a
+  fresh one is minted first — that counts as a new session for the day, which
+  is the honest thing to count.
+- **A clock instead of a countdown.** `VoiceSession.elapsed()` is seconds since
+  the call connected. The panel and the tutor strip show it as `m:ss` (or
+  `h:mm:ss`), ticking every second.
+
+## Playing on with the screen locked
+
+Phones treat a page that merely makes sounds through Web Audio as a tab, and
+suspend it when the screen locks. They treat a page with a playing `<audio>`
+element as media — it keeps going, it appears on the lock screen, and a
+microphone or socket it holds is left alone, the way a call is. So the tutor's
+voice is not played straight into the audio context's destination but into a
+`MediaStreamAudioDestinationNode` whose stream feeds a hidden `<audio>`
+element (`Player` in `realtime.ts`). The Media Session API supplies the
+lock-screen title and makes its pause/stop buttons hang up.
+
+A screen wake lock (`navigator.wakeLock`) is taken for the length of the call
+as well, and re-taken whenever the page becomes visible again, so the phone
+does not lock itself mid-sentence in the first place — that is the common
+failure, not the deliberate lock.
+
+What this does not do: survive the app being closed, or the browser being
+swiped away. It also depends on the phone honouring a playing media element
+in a web app; iOS has done so for WebRTC-style pages since iOS 14, Android
+Chrome for longer. Podcasts (`player.ts`) use the same mechanism with a plain
+`<audio src>` and get the full lock-screen transport: play, pause, ±15 s and
+scrubbing.
+
 ## Switching it on
 
 1. Run `supabase/migrations/0004_voice_sessions.sql` and
    `0005_voice_keys.sql` in the SQL editor.
 2. In Vercel → Settings → Environment Variables, for Production and Preview:
    `KEY_ENCRYPTION_SECRET` (any long random string), `AI_DAILY_VOICE_SESSIONS`,
-   `VOICE_SESSION_MINUTES`, and `VITE_VOICE_ENABLED=true` as a Config variable.
+   `VOICE_TOKEN_HOURS` (optional), and `VITE_VOICE_ENABLED=true` as a Config
+   variable. `VOICE_SESSION_MINUTES` is no longer read.
    `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are shared with `/api/ai`.
    `GOOGLE_API_KEY` is no longer read and can be deleted.
 3. Redeploy, then open `/api/realtime-token` in a tab: it lists which settings
@@ -383,10 +433,12 @@ now are:
 
 ## Known limits
 
-- `sessionResumption` is not implemented. The WebSocket itself is dropped by
-  Google at roughly 10 minutes; `VOICE_SESSION_MINUTES` defaults to 10 to stay
-  inside that. Going longer means handling the resumption handshake.
-- `goAway` is treated as the end of the call.
+- Reconnection has been verified against the API's documented handshake, not
+  yet against a long live call: the first ten-minute reset on a real phone is
+  the thing to watch. If it fails, the panel reports it as a connection error
+  rather than silently ending.
+- Lock-screen playback is best effort on the web platform (see *Playing on
+  with the screen locked*); closing the app ends the call.
 - The model starts each call with no memory of the last one. The panel keeps
   the transcript on screen for the session, but that is display only — there is
   no conversation history in the database yet, and no cross-session insight into

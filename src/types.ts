@@ -148,6 +148,63 @@ export interface LevelSyllabus {
   readonly sections: readonly SyllabusSection[];
 }
 
+/* ------------------------------------------------------------------- media */
+
+/**
+ * A portion of a YouTube video that explains one section's topic. Only the
+ * portion: `start` and `end` are the seconds the embed plays between, and the
+ * link out jumps to `start`. Every clip here was found by research against
+ * community recommendations and re-verified by a second, skeptical pass
+ * before it was written down — `evidence` says by what.
+ */
+export interface VideoClip {
+  readonly videoId: string;
+  readonly title: string;
+  readonly channel: string;
+  readonly start: number;
+  readonly end: number;
+  readonly lengthSeconds: number;
+  readonly label: Bilingual;
+  /** What the clip covers, and how its start and end were determined. */
+  readonly why: string;
+  /** The recommendation evidence the research turned up, with its source. */
+  readonly evidence: string;
+  readonly viewCount?: number;
+  readonly language?: string;
+}
+
+/** A podcast that suits a level, with the feed its episodes are read from. */
+export interface PodcastShow {
+  readonly level: Level;
+  readonly name: string;
+  readonly homepage: string;
+  readonly feedUrl: string;
+  readonly fit: string;
+  readonly evidence: string;
+}
+
+/** One episode, matched to one section, playable in the app from its audio URL. */
+export interface PodcastEpisode {
+  readonly section: string;
+  readonly level: Level;
+  readonly show: string;
+  readonly title: string;
+  readonly pageUrl: string;
+  readonly audioUrl: string;
+  readonly durationSeconds?: number;
+  readonly label: Bilingual;
+  readonly why: string;
+  readonly evidence: string;
+}
+
+/** Everything to watch and listen to for one section. */
+export interface SectionMedia {
+  readonly section: string;
+  readonly level: Level;
+  readonly videos: readonly VideoClip[];
+  readonly podcasts: readonly PodcastEpisode[];
+}
+
 /* ---------------------------------------------------------------- progress */
 
 export interface VocabProgress {

@@ -17,9 +17,12 @@
  *
  * Metering works differently from /api/ai. There the server sees every turn and
  * can count them; here the audio goes straight to Google, so the only moment we
- * control is this one. We therefore count *sessions* and make each token expire
- * after VOICE_SESSION_MINUTES. Sessions per day x minutes per session is a hard
- * ceiling on what one account can spend, enforced before any audio flows.
+ * control is this one. We therefore count *sessions*: one per call, however
+ * long the call runs. A call has no time limit — the token lasts for hours and
+ * the client resumes the session across Google's ten-minute connection resets
+ * — so the day's cap is a cap on calls, not minutes. Every learner is on their
+ * own key, so that cap protects their quota against a tab left open, nobody
+ * else's bill.
  */
 
 import { createDecipheriv, createHash } from "node:crypto";
@@ -290,8 +293,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   // With every learner on their own key the daily cap is no longer about the
   // owner's bill; it is a seatbelt for the learner's, against a tab left open
   // or a key that leaks. The defaults are generous for that reason.
-  const sessionMinutes = clamp(Number(env("VOICE_SESSION_MINUTES") || 15), 1, 30);
   const dailySessions = clamp(Number(env("AI_DAILY_VOICE_SESSIONS") || 12), 1, 100);
+  // How long one token stays valid for reconnects. Google allows just under
+  // twenty hours; twelve covers any conceivable sitting.
+  const tokenHours = clamp(Number(env("VOICE_TOKEN_HOURS") || 12), 1, 19);
 
   if (!(await countSession(userId, dailySessions))) {
     res.status(429).json({
@@ -314,10 +319,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const scenario = pick(SCENARIOS, body.scenario) ?? "freestyle";
 
   const now = Date.now();
-  // expireTime bounds the whole conversation; newSessionExpireTime is the much
-  // shorter window in which the socket must actually be opened. A token that
-  // leaks after the fact is worthless because it can no longer start anything.
-  const expireTime = new Date(now + sessionMinutes * 60_000).toISOString();
+  // expireTime bounds how long the token can keep reconnecting to its session;
+  // newSessionExpireTime is the much shorter window in which the first socket
+  // must be opened. A token that leaks after the fact is worthless because it
+  // can no longer start anything — only resume the one session it belongs to.
+  const expireTime = new Date(now + tokenHours * 3_600_000).toISOString();
   const newSessionExpireTime = new Date(now + 60_000).toISOString();
 
   try {
@@ -346,7 +352,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       voice,
       scenario,
       expiresAt: expireTime,
-      sessionSeconds: sessionMinutes * 60,
       // The Live API answers turns; it does not start them. Telling the tutor
       // to "speak first" in the prompt changes nothing until something arrives
       // for it to respond to, so the client sends this as a single user turn
@@ -379,7 +384,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         outputAudioTranscription: {},
         // Without this the API cuts audio sessions off at 15 minutes. With it a
         // long conversation keeps going on a sliding window instead.
-        contextWindowCompression: { slidingWindow: {} }
+        contextWindowCompression: { slidingWindow: {} },
+        // The server then hands out resumption handles as the call goes on;
+        // the client reopens the socket with the latest one when Google
+        // resets the connection, and the conversation carries on. This is
+        // what makes a call open-ended.
+        sessionResumption: {}
       }
     });
   } catch (error) {

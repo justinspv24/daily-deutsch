@@ -3,6 +3,7 @@ import "./styles/base.css";
 import "./styles/components.css";
 import "./styles/overlay.css";
 import "./styles/syllabus.css";
+import "./styles/media.css";
 
 import { currentLearner, onAuthChange, supabase } from "./auth";
 import { CLOUD_ENABLED } from "./config";
@@ -44,6 +45,7 @@ import { renderLoading, renderLogin, renderRecovery } from "./ui/login";
 import { renderProgress } from "./ui/progress";
 import { buildShell, paintStepper, type Shell } from "./ui/shell";
 import { renderSummary } from "./ui/summary";
+import { renderPodcasts } from "./ui/podcasts";
 import { renderSyllabus } from "./ui/syllabus";
 import { openTranslator } from "./ui/translate";
 import { openVoice, storedVoice } from "./ui/voice";
@@ -430,6 +432,9 @@ class App {
         break;
       case "syllabus":
         view.append(renderSyllabus(ctx));
+        break;
+      case "podcasts":
+        view.append(renderPodcasts(ctx));
         break;
       case "home":
       default:

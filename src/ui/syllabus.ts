@@ -1,7 +1,17 @@
 import { LEVELS, curriculumFor } from "../data/curriculum";
+import { mediaFor } from "../data/media";
 import { syllabusFor } from "../data/syllabus";
 import { pick, t } from "../i18n";
-import { NO_PLURAL, type Level, type SyllabusLink, type SyllabusSection, type VocabItem } from "../types";
+import { formatClock } from "../player";
+import {
+  NO_PLURAL,
+  type Level,
+  type SyllabusLink,
+  type SyllabusSection,
+  type VideoClip,
+  type VocabItem
+} from "../types";
+import { episodeList } from "./podcasts";
 
 /** What the drill banks hold for one section. */
 interface Coverage {
@@ -193,24 +203,105 @@ function renderSection(
   const links = h("div", { class: "syllabus__links" });
   for (const link of section.links) links.append(renderLink(link));
 
-  const details = h(
-    "details",
-    { class: "unit", id: section.id },
-    summary,
+  // The verified clips and episodes for this section. Both come from the
+  // research pass, not from memory, and each carries the reason it is here.
+  const media = mediaFor(section.id);
+  const clips = h("div", { class: "clips" });
+  for (const clip of media.videos) clips.append(renderClip(clip));
+  if (!media.videos.length) clips.append(h("p", { class: "hint" }, s.clipsNone));
+
+  const body = h(
+    "div",
+    { class: "unit__body" },
+    h("h4", { class: "sectiontitle" }, s.syllabusCanDo),
+    canDo,
+    h("h4", { class: "sectiontitle" }, s.syllabusGrammar),
+    grammar,
+    h("h4", { class: "sectiontitle" }, s.clipsTitle),
+    clips
+  );
+  if (media.podcasts.length) {
+    body.append(h("h4", { class: "sectiontitle" }, s.podcastsSection), episodeList(media.podcasts));
+  }
+  body.append(
+    h("h4", { class: "sectiontitle" }, s.syllabusVocab),
+    vocab,
+    h("h4", { class: "sectiontitle" }, s.syllabusLinks),
+    links
+  );
+
+  return h("details", { class: "unit", id: section.id }, summary, body);
+}
+
+/**
+ * One clip: the thumbnail until it is tapped, then the embed playing only the
+ * portion between start and end. Nothing from YouTube loads until the tap —
+ * a page of twelve sections must not open twelve players — and the link out
+ * jumps to the same second, for anyone who would rather watch in the app.
+ */
+function renderClip(clip: VideoClip): HTMLElement {
+  const s = t();
+  const from = formatClock(clip.start);
+  const to = formatClock(clip.end);
+
+  const frame = h("div", { class: "clip__frame" });
+  const poster = h(
+    "button",
+    { class: "clip__poster", type: "button", "aria-label": `${s.clipPlay}: ${pick(clip.label)}` },
+    h("img", {
+      class: "clip__thumb",
+      src: `https://i.ytimg.com/vi/${clip.videoId}/hqdefault.jpg`,
+      alt: "",
+      loading: "lazy",
+      decoding: "async"
+    }),
+    h("span", { class: "clip__play", "aria-hidden": "true" }, "▶"),
+    h("span", { class: "clip__range" }, s.clipRange(from, to))
+  );
+  poster.addEventListener("click", () => {
+    const params = new URLSearchParams({
+      start: String(clip.start),
+      end: String(clip.end),
+      autoplay: "1",
+      rel: "0",
+      modestbranding: "1"
+    });
+    const iframe = h("iframe", {
+      class: "clip__embed",
+      src: `https://www.youtube-nocookie.com/embed/${clip.videoId}?${params.toString()}`,
+      title: clip.title,
+      allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+      allowfullscreen: "true",
+      referrerpolicy: "strict-origin-when-cross-origin"
+    });
+    clear(frame).append(iframe);
+  });
+  frame.append(poster);
+
+  return h(
+    "figure",
+    { class: "clip" },
+    frame,
     h(
-      "div",
-      { class: "unit__body" },
-      h("h4", { class: "sectiontitle" }, s.syllabusCanDo),
-      canDo,
-      h("h4", { class: "sectiontitle" }, s.syllabusGrammar),
-      grammar,
-      h("h4", { class: "sectiontitle" }, s.syllabusVocab),
-      vocab,
-      h("h4", { class: "sectiontitle" }, s.syllabusLinks),
-      links
+      "figcaption",
+      { class: "clip__caption" },
+      h("p", { class: "clip__label" }, pick(clip.label)),
+      h("p", { class: "clip__meta" }, `${clip.channel} · ${clip.title}`),
+      h("p", { class: "clip__why" }, h("strong", {}, `${s.mediaWhy}: `), clip.why),
+      h("p", { class: "clip__why" }, h("strong", {}, `${s.mediaEvidence}: `), clip.evidence),
+      h(
+        "a",
+        {
+          class: "episode__link",
+          href: `https://www.youtube.com/watch?v=${clip.videoId}&t=${clip.start}s`,
+          target: "_blank",
+          rel: "noopener noreferrer"
+        },
+        s.clipWatchOn(from),
+        svgIcon(ICON_ARROW, "open")
+      )
     )
   );
-  return details;
 }
 
 /** "der Tisch, die Tische" · "die Butter (kein Plural)" · "aufstehen (ist aufgestanden)". */

@@ -120,6 +120,9 @@ export function renderHome(ctx: AppContext): HTMLElement {
   const syllabusButton = h("button", { class: "btn btn--ghost", type: "button" }, s.syllabusButton);
   syllabusButton.addEventListener("click", () => ctx.go("syllabus"));
 
+  const podcastsButton = h("button", { class: "btn btn--ghost", type: "button" }, s.podcastsButton);
+  podcastsButton.addEventListener("click", () => ctx.go("podcasts"));
+
   // Offered only where it can be acted on: never once installed, and on iOS
   // as a written hint, because Safari has no install prompt to replay.
   const install = buildInstallOffer();
@@ -130,7 +133,7 @@ export function renderHome(ctx: AppContext): HTMLElement {
     h("p", { class: "eyebrow" }, level ? `${level} · ${formatToday()}` : formatToday()),
     h("h2", { class: "display" }, s.greeting(ctx.learner?.displayName ?? null)),
     lede,
-    h("div", { class: "actions" }, start, speak, progressButton, syllabusButton, addButton)
+    h("div", { class: "actions" }, start, speak, progressButton, syllabusButton, podcastsButton, addButton)
   );
   if (speak) hero.append(h("p", { class: "kbdhint hero__speakhint" }, s.tutorStartHint));
   if (install) hero.append(install);

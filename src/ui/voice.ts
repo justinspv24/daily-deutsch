@@ -91,6 +91,16 @@ function rememberVoice(name: string): void {
   }
 }
 
+/** 0:07 · 12:40 · 1:03:15 — the elapsed time of a call, as a phone shows it. */
+export function formatElapsed(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    : `${m}:${String(s).padStart(2, "0")}`;
+}
+
 export function describeVoiceError(error: unknown): string {
   const s = t();
   if (!(error instanceof VoiceError)) return s.aiFailed;
@@ -254,13 +264,16 @@ export function openVoice(level: Level | null, handlers: VoiceHandlers): Overlay
     timer.textContent = "";
   };
 
+  // A clock, not a countdown: there is no limit on a call. It shows how long
+  // the two of you have been talking, and ticks every second.
   const startTicker = (): void => {
     stopTicker();
-    ticker = window.setInterval(() => {
+    const tick = (): void => {
       if (!session) return stopTicker();
-      const left = session.secondsLeft();
-      timer.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
-    }, 1000);
+      timer.textContent = formatElapsed(session.elapsed());
+    };
+    tick();
+    ticker = window.setInterval(tick, 1000);
   };
 
   /* ------------------------------------------------------- can we do this */

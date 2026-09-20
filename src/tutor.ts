@@ -56,8 +56,8 @@ export interface TutorStatus {
   readonly said: string;
   /** Set when the session could not start or could not carry on. */
   readonly error: VoiceError | null;
-  /** Seconds of speaking time left on this token. */
-  readonly secondsLeft: number;
+  /** Seconds since the call connected. */
+  readonly elapsed: number;
 }
 
 /** One question, as the tutor should ask it. */
@@ -159,7 +159,7 @@ export class DrillTutor {
       heard: this.heard,
       said: this.said,
       error: this.error,
-      secondsLeft: this.session?.secondsLeft() ?? 0
+      elapsed: this.session?.elapsed() ?? 0
     };
   }
 

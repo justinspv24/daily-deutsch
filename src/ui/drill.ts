@@ -15,7 +15,7 @@ import {
   type VocabTask
 } from "../types";
 import type { AppContext } from "./context";
-import { describeVoiceError } from "./voice";
+import { describeVoiceError, formatElapsed } from "./voice";
 import { esc, h, ICON_CHECK, ICON_MIC, ICON_TILDE, ICON_X, svgIcon } from "./dom";
 
 /**
@@ -241,6 +241,7 @@ function buildTutorStrip(tutor: DrillTutor, inputs: HTMLInputElement[]): HTMLEle
   );
   const status = h("p", { class: "tutor__status", role: "status" }, s.tutorConnecting);
   const line = h("p", { class: "tutor__line" });
+  const clock = h("span", { class: "tutor__clock", role: "timer" });
 
   const again = h(
     "button",
@@ -260,8 +261,18 @@ function buildTutorStrip(tutor: DrillTutor, inputs: HTMLInputElement[]): HTMLEle
     { class: "tutor", "data-phase": "connecting" },
     orb,
     h("div", { class: "tutor__body" }, status, line),
-    h("div", { class: "tutor__tools" }, again, off)
+    h("div", { class: "tutor__tools" }, clock, again, off)
   );
+
+  // The call's clock, ticking on its own: the strip repaints on the tutor's
+  // events, which is the wrong rhythm for a second hand.
+  const ticker = window.setInterval(() => {
+    if (!strip.isConnected || !tutor.running) {
+      window.clearInterval(ticker);
+      return;
+    }
+    clock.textContent = formatElapsed(tutor.status().elapsed);
+  }, 1000);
 
   off.addEventListener("click", () => {
     tutor.stop();

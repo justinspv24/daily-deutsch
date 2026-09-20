@@ -10,7 +10,8 @@ export type Route =
   | "drill"
   | "summary"
   | "progress"
-  | "syllabus";
+  | "syllabus"
+  | "podcasts";
 
 /** Everything a view needs from the app shell, and nothing more. */
 export interface AppContext {
