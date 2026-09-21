@@ -1,97 +1,28 @@
-import { formatToday, getLang, pick, t } from "../i18n";
-import { todayISO } from "../scheduler";
-import {
-  GRAMMAR_PER_SESSION,
-  TOPICS_PER_SESSION,
-  activeVocab,
-  dueTables,
-  dueTopics,
-  sessionVocab,
-  suggestedTopic
-} from "../session";
+import { buildAgenda } from "../agenda";
+import { formatDate, formatToday, getLang, pick, t } from "../i18n";
 import { canInstall, isIOS, isStandalone, promptInstall } from "../pwa";
-import { DrillTutor } from "../tutor";
+import { liveSeconds } from "../liveclass";
+import { suggestedTopic } from "../session";
+import { ClassTutor } from "../tutor";
+import type { ClassAgenda } from "../types";
 import { openAddWord } from "./addword";
 import { h, ICON_ARROW, ICON_MIC, svgIcon } from "./dom";
 import type { AppContext } from "./context";
 import { statsRow } from "./widgets";
 
-interface Row {
-  title: string;
-  detail: string;
-  count: string;
-  empty: boolean;
-}
-
+/**
+ * The front door, and there is only one of them now.
+ *
+ * The app used to offer a choice every morning — type the round, or speak it —
+ * and the choice was the first thing a learner had to make before they could
+ * begin. It is a class now, spoken, and the home screen's whole job is to say
+ * what today holds and get out of the way.
+ */
 export function renderHome(ctx: AppContext): HTMLElement {
   const s = t();
-  // Today's working set, not the whole queue: the row lists what the round
-  // will actually ask, and the count beside it says how many are still waiting.
-  const words = sessionVocab(ctx.progress);
-  const waiting = activeVocab(ctx.progress).length - words.length;
-  const due = dueTopics(ctx.progress);
-  const grids = dueTables(ctx.progress);
-  const overdue = due.filter((topic) => (ctx.progress.topics[topic.id]?.due ?? "") < todayISO()).length;
-  const upcoming = suggestedTopic(ctx.progress, ctx.learner?.id ?? "");
   const level = ctx.progress.level;
-
-  const rows: Row[] = [
-    {
-      title: s.steps[0],
-      detail: words.length
-        ? words.map((w) => w.word).join(" · ") + (waiting > 0 ? s.wordsWaiting(waiting) : "")
-        : s.stepVocabDetailEmpty,
-      count: String(words.length),
-      empty: words.length === 0
-    },
-    {
-      title: s.steps[1],
-      detail: grids.length ? grids.map((table) => table.name.de).join(" · ") : s.stepGridDetailEmpty,
-      count: String(grids.length),
-      empty: grids.length === 0
-    },
-    {
-      title: s.steps[2],
-      detail: s.stepTablesDetail,
-      count: String(GRAMMAR_PER_SESSION),
-      empty: false
-    },
-    {
-      title: s.steps[3],
-      detail: due.length
-        ? due
-            .slice(0, TOPICS_PER_SESSION)
-            .map((topic) => pick(topic.name))
-            .join(" · ") + (overdue ? s.overdueSuffix(overdue) : "")
-        : s.stepReviewDetailEmpty,
-      count: String(Math.min(due.length, TOPICS_PER_SESSION)),
-      empty: due.length === 0
-    },
-    {
-      title: s.steps[4],
-      detail: `${pick(upcoming.title)} — ${pick(upcoming.blurb)}`,
-      count: s.upNext,
-      empty: true
-    }
-  ];
-
-  const agenda = h("ul", { class: "agenda" });
-  rows.forEach((row, index) => {
-    agenda.append(
-      h(
-        "li",
-        { class: "agenda__row", "data-empty": String(row.empty) },
-        h("span", { class: "agenda__n" }, `0${index + 1}`),
-        h(
-          "span",
-          { class: "agenda__body" },
-          h("span", { class: "agenda__title" }, row.title),
-          h("span", { class: "agenda__detail" }, row.detail)
-        ),
-        h("span", { class: "agenda__count" }, row.count)
-      )
-    );
-  });
+  const live = ctx.progress.live;
+  const agenda = buildAgenda(ctx.progress);
 
   const lede = h("p", { class: "lede" }, s.lede);
   if (getLang() === "de") {
@@ -99,23 +30,17 @@ export function renderHome(ctx: AppContext): HTMLElement {
     lede.append(h("span", { class: "gloss" }, ENGLISH_LEDE));
   }
 
-  const start = h("button", { class: "btn btn--lg", type: "button" }, s.start, svgIcon(ICON_ARROW, "start"));
-  start.addEventListener("click", () => ctx.startSession());
+  const hero = h(
+    "section",
+    { class: "card hero" },
+    h("p", { class: "eyebrow" }, level ? `${level} · ${formatToday()}` : formatToday()),
+    h("h2", { class: "display" }, s.greeting(ctx.learner?.displayName ?? null)),
+    lede,
+    startPill(ctx, agenda)
+  );
 
-  // The same round, read out loud. Offered as its own door rather than a
-  // setting, because it is a different way to spend the next half hour —
-  // headphones and a quiet room, or a keyboard on the train — and that is a
-  // choice made fresh each morning, not once in a preferences panel.
-  const speak = DrillTutor.offerable()
-    ? h("button", { class: "btn btn--lg btn--speak", type: "button" }, svgIcon(ICON_MIC, "voice"), s.tutorStart)
-    : null;
-  speak?.addEventListener("click", () => ctx.startSession(true));
-
-  const progressButton = h("button", { class: "btn btn--ghost", type: "button" }, s.viewProgress);
-  progressButton.addEventListener("click", () => ctx.go("progress"));
-
-  const addButton = h("button", { class: "btn btn--ghost", type: "button" }, s.addWordButton);
-  addButton.addEventListener("click", () => openAddWord((item) => ctx.addWord(item)));
+  const profileButton = h("button", { class: "btn btn--ghost", type: "button" }, s.profileButton);
+  profileButton.addEventListener("click", () => ctx.go("profile"));
 
   const syllabusButton = h("button", { class: "btn btn--ghost", type: "button" }, s.syllabusButton);
   syllabusButton.addEventListener("click", () => ctx.go("syllabus"));
@@ -123,24 +48,159 @@ export function renderHome(ctx: AppContext): HTMLElement {
   const podcastsButton = h("button", { class: "btn btn--ghost", type: "button" }, s.podcastsButton);
   podcastsButton.addEventListener("click", () => ctx.go("podcasts"));
 
+  const addButton = h("button", { class: "btn btn--ghost", type: "button" }, s.addWordButton);
+  addButton.addEventListener("click", () => openAddWord((item) => ctx.addWord(item)));
+
+  hero.append(h("div", { class: "actions" }, profileButton, syllabusButton, podcastsButton, addButton));
+
+  const closed = autoClosedCard(ctx);
+  if (closed) hero.append(closed);
+
   // Offered only where it can be acted on: never once installed, and on iOS
   // as a written hint, because Safari has no install prompt to replay.
   const install = buildInstallOffer();
-
-  const hero = h(
-    "section",
-    { class: "card hero" },
-    h("p", { class: "eyebrow" }, level ? `${level} · ${formatToday()}` : formatToday()),
-    h("h2", { class: "display" }, s.greeting(ctx.learner?.displayName ?? null)),
-    lede,
-    h("div", { class: "actions" }, start, speak, progressButton, syllabusButton, podcastsButton, addButton)
-  );
-  if (speak) hero.append(h("p", { class: "kbdhint hero__speakhint" }, s.tutorStartHint));
   if (install) hero.append(install);
 
-  const plan = h("section", { class: "plan" }, h("h3", { class: "sectiontitle" }, s.todayPlan), agenda);
+  const plan = h(
+    "section",
+    { class: "plan" },
+    h("h3", { class: "sectiontitle" }, s.classPlanTitle),
+    planList(agenda, live ? liveSeconds(live) : 0)
+  );
 
   return h("div", { class: "home" }, hero, statsRow(ctx.progress), plan);
+}
+
+/* ------------------------------------------------------------------ pill */
+
+/**
+ * The single door into the day.
+ *
+ * Three states and no others. A class already open resumes rather than
+ * restarts — losing twenty minutes of talking because a phone rang would be
+ * unforgivable. And where voice cannot run at all the pill stays on screen and
+ * says why: a button that explains itself beats a button that has vanished.
+ */
+function startPill(ctx: AppContext, agenda: ClassAgenda): HTMLElement {
+  const s = t();
+  const topic = pick(suggestedTopic(ctx.progress, ctx.learner?.id ?? "").title);
+
+  if (!ClassTutor.offerable()) {
+    return h(
+      "div",
+      { class: "startpill startpill--blocked" },
+      h("span", { class: "startpill__glyph" }, svgIcon(ICON_MIC, "voice")),
+      h(
+        "span",
+        { class: "startpill__body" },
+        h("span", { class: "startpill__label" }, s.classUnavailable),
+        h("span", { class: "startpill__meta" }, s.tutorUnavailable)
+      )
+    );
+  }
+
+  const live = ctx.progress.live;
+  const resuming = live !== null;
+  const minutes = resuming ? Math.round(liveSeconds(live) / 60) : agenda.minutes;
+
+  const pill = h(
+    "button",
+    { class: "startpill", type: "button", "data-state": resuming ? "resume" : "start" },
+    h("span", { class: "startpill__glyph" }, svgIcon(ICON_MIC, "voice")),
+    h(
+      "span",
+      { class: "startpill__body" },
+      h("span", { class: "startpill__label" }, resuming ? s.classResume : s.classStart),
+      h(
+        "span",
+        { class: "startpill__meta" },
+        resuming ? s.classResumeMeta(minutes, topic) : s.classStartMeta(minutes, topic)
+      )
+    ),
+    h("span", { class: "startpill__go" }, svgIcon(ICON_ARROW, "start"))
+  );
+  pill.addEventListener("click", () => ctx.startClass());
+  return pill;
+}
+
+/* ------------------------------------------------------------------ plan */
+
+/** What today's class actually holds, counted from the agenda it will use. */
+function planList(agenda: ClassAgenda, spent: number): HTMLElement {
+  const s = t();
+  let reviews = 0;
+  let cells = 0;
+  let sentences = 0;
+  let talk = 0;
+  const words = new Set<string>();
+
+  for (const item of agenda.items) {
+    switch (item.kind) {
+      case "review":
+        reviews += 1;
+        break;
+      case "vocab":
+        words.add(item.subject);
+        break;
+      case "cell":
+        cells += 1;
+        break;
+      case "blank":
+        sentences += 1;
+        break;
+      case "talk":
+        talk += item.minutes;
+        break;
+    }
+  }
+
+  const rows: string[] = [s.classPlanTopic(pick(agenda.sectionTitle))];
+  if (reviews) rows.push(s.classPlanReviews(reviews));
+  if (words.size) rows.push(`${s.classPlanWords(words.size)} — ${[...words].join(" · ")}`);
+  if (cells) rows.push(s.classPlanTables(cells));
+  if (sentences) rows.push(s.classPlanSentences(sentences));
+  if (talk) rows.push(s.classPlanTalk(talk));
+  if (spent > 0) rows.push(s.classResumeMeta(Math.round(spent / 60), pick(agenda.sectionTitle)));
+
+  const list = h("ul", { class: "agenda agenda--plan" });
+  rows.forEach((row, index) => {
+    list.append(
+      h(
+        "li",
+        { class: "agenda__row", "data-empty": "false" },
+        h("span", { class: "agenda__n" }, `0${index + 1}`),
+        h("span", { class: "agenda__body" }, h("span", { class: "agenda__detail" }, row))
+      )
+    );
+  });
+  return list;
+}
+
+/* ------------------------------------------------------- the night before */
+
+function autoClosedCard(ctx: AppContext): HTMLElement | null {
+  const record = ctx.autoClosed;
+  if (!record) return null;
+  const s = t();
+
+  const open = h("button", { class: "btn btn--ghost", type: "button" }, s.profileButton);
+  open.addEventListener("click", () => ctx.go("profile"));
+  const seen = h("button", { class: "linkbtn", type: "button" }, s.classAutoClosedSeen);
+  seen.addEventListener("click", () => ctx.dismissAutoClosed());
+
+  return h(
+    "div",
+    { class: "install notice--closed" },
+    h(
+      "span",
+      { class: "install__blurb" },
+      s.classAutoClosed(formatDate(record.date)),
+      h("br"),
+      s.classAutoClosedNote
+    ),
+    open,
+    seen
+  );
 }
 
 /** The install row, or null when there is nothing useful to offer. */
@@ -163,4 +223,4 @@ function buildInstallOffer(): HTMLElement | null {
 
 /** Kept verbatim so the German view can gloss it without a second lookup. */
 const ENGLISH_LEDE =
-  "A round takes about 25 minutes. Anything you get wrong comes back tomorrow; anything you get right twice disappears.";
+  "A class lasts about half an hour and is spoken out loud. Anything you get wrong comes back on day 3, day 7 and day 21.";

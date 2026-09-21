@@ -1,5 +1,5 @@
 import { normalise, type Repository } from "../repository";
-import type { Progress, SessionRecord, VocabItem } from "../types";
+import type { ClassRecord, LiveClass, Progress, SessionRecord, VocabItem } from "../types";
 
 const PREFIX = "daily-deutsch.progress.v1";
 
@@ -60,6 +60,23 @@ export class LocalRepository implements Repository {
   }
 
   async removeWord(_id: string): Promise<void> {
+    /* handled by save() */
+  }
+
+  /**
+   * Classes, the book of errors and the class still open all live inside the
+   * progress document here, so `save()` has already written them. Writing them
+   * again would count a class twice in the calendar.
+   */
+  async recordClass(_record: ClassRecord): Promise<void> {
+    /* handled by save() */
+  }
+
+  async forgetMistake(_id: string): Promise<void> {
+    /* handled by save() */
+  }
+
+  async saveLive(_live: LiveClass | null): Promise<void> {
     /* handled by save() */
   }
 }

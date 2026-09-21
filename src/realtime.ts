@@ -1,5 +1,6 @@
 import { supabase } from "./auth";
 import { VOICE_ENABLED } from "./config";
+import type { AgendaDigest } from "./agenda";
 
 /**
  * Client half of voice mode — a live, two-way audio conversation with the
@@ -46,6 +47,21 @@ export class VoiceError extends Error {
   }
 }
 
+/**
+ * One structured report from the tutor, as the model sent it.
+ *
+ * `args` is whatever the model chose to put in the call and is deliberately not
+ * validated here: this module's job is to get it off the socket and answer
+ * promptly, and the classroom is the only thing that knows what a well-formed
+ * report looks like. Treat it the way you would treat a form the learner filled
+ * in — every field optional, every field possibly nonsense.
+ */
+export interface VoiceToolCall {
+  readonly id: string;
+  readonly name: string;
+  readonly args: Record<string, unknown>;
+}
+
 export interface VoiceHandlers {
   /** Connection/turn state, for the orb. */
   onState(state: VoiceState): void;
@@ -70,6 +86,23 @@ export interface VoiceHandlers {
    * before sending any, or the first one races the handshake it depends on.
    */
   onReady?(): void;
+  /**
+   * The tutor has reported something structured — a correction it is about to
+   * speak, an answer it has just heard.
+   *
+   * This runs while the tutor is mute. Function calling on this model is
+   * synchronous only: it produces no further audio until the reply is on the
+   * wire, and there is no asynchronous mode to escape into. So the handler must
+   * be synchronous and cheap — render, queue, return. Anything that awaits (a
+   * database write, a network call, a re-render that forces layout) belongs
+   * after the return, because every millisecond spent in here is silence the
+   * learner is sitting in.
+   *
+   * Whatever object it returns becomes the function's result and is added to
+   * the conversation, so it is also the way to answer the tutor back. Returning
+   * nothing sends `{ ok: true }`.
+   */
+  onToolCall?(call: VoiceToolCall): Record<string, unknown> | void;
   /** Session ended — by the learner, by the clock, or by an error. */
   onEnd(error: VoiceError | null): void;
 }
@@ -81,16 +114,28 @@ export interface VoiceOptions extends VoiceHandlers {
   voice: string;
   scenario: string;
   /**
-   * Replaces the opening turn the server composed. The drill sends its first
-   * question instead of a greeting, so the tutor opens by teaching rather than
-   * by making conversation. `null` opens the call silently.
+   * The shape of today's class — theme, grammar points, the day's words as
+   * cues, and how much of each there is. It goes into the system prompt the
+   * server composes, so the tutor can open by saying what the hour holds and
+   * keep one thread across forty minutes.
+   *
+   * It carries no answers, by construction: `digestOf` withholds meanings,
+   * plurals and table cells precisely because a tutor that knows an answer
+   * eventually says it. Sending the whole agenda instead would be one line
+   * shorter and would undo the entire arrangement.
+   */
+  plan?: AgendaDigest | null;
+  /**
+   * Replaces the opening turn the server composed. The classroom drives its own
+   * opening, so the tutor starts by teaching rather than by making
+   * conversation. `null` opens the call silently.
    */
   opener?: string | null;
   /**
-   * Whether the microphone starts closed. The drill opens muted and unmutes
-   * only once its first question has been read out; setting it here rather
-   * than on the returned session closes the window between the tap starting
-   * and the caller getting a chance to shut it.
+   * Whether the microphone starts closed. The classroom opens muted and unmutes
+   * only once the first thing has been read out; setting it here rather than on
+   * the returned session closes the window between the tap starting and the
+   * caller getting a chance to shut it.
    */
   muted?: boolean;
 }
@@ -100,9 +145,9 @@ export interface VoiceSession {
   /** Seconds since the call connected. There is no limit; this is a clock, not a countdown. */
   elapsed(): number;
   /**
-   * Send one user turn and let the tutor answer it. This is how the drill asks
-   * its questions: the text is an instruction the tutor reads and acts on, not
-   * something the learner said.
+   * Send one user turn and let the tutor answer it. This is how the classroom
+   * drives the lesson: the text is a stage direction the tutor reads and acts
+   * on, not something the learner said.
    */
   say(text: string): void;
   /**
@@ -176,7 +221,13 @@ async function mintToken(options: VoiceOptions): Promise<TokenResponse> {
         level: options.level,
         target: options.target,
         voice: options.voice,
-        scenario: options.scenario
+        scenario: options.scenario,
+        // The server re-validates every field of this rather than trusting it.
+        // It is the learner's own plan on the learner's own key, so this is
+        // not a trust boundary in the usual sense — but it ends up inside a
+        // system prompt, and a string that ends up in a system prompt gets
+        // checked wherever it came from.
+        plan: options.plan ?? null
       })
     });
   } catch {
@@ -327,7 +378,8 @@ async function connect(
   let reconnecting = false;
   let piped = false;
   // Closed while the tutor is talking, so its own voice and the room's noise
-  // never arrive as an answer. The drill opens it once the question has landed.
+  // never arrive as an answer. The classroom opens it once the question has
+  // landed, and simply leaves it open for the conversation stretches.
   let muted = options.muted === true;
 
   const send = (payload: unknown): void => {
@@ -442,6 +494,49 @@ async function connect(
         return;
       }
 
+      // A tool call is a frame of its own, not part of serverContent — which is
+      // why this branch has to sit above the bail-out below rather than in the
+      // tidier place among the content handlers. Down there every call would be
+      // dropped in silence, and because function calling on this model is
+      // blocking, a dropped call is not a lost report: it is a tutor that never
+      // says another word for the rest of the class.
+      //
+      // The reply therefore goes out here, the moment the call lands, with
+      // nothing awaited in between, on the socket that delivered it — the
+      // handler below is required to be synchronous for the same reason.
+      // After Google's ten-minute reset the ids belong to a
+      // connection that no longer exists, so a call that arrives on the old
+      // socket is let go rather than answered on the new one — a lost report
+      // instead of a response the server cannot match to anything.
+      if (message.toolCall) {
+        if (ws !== socket) return;
+        const responses = (message.toolCall.functionCalls ?? []).map((call) => {
+          const reply = options.onToolCall?.({
+            id: call.id ?? "",
+            name: call.name ?? "",
+            args: call.args ?? {}
+          });
+          return {
+            id: call.id ?? "",
+            name: call.name ?? "",
+            response: isStruct(reply) ? reply : { ok: true }
+          };
+        });
+        // Every call in the frame is answered, including one nobody could make
+        // sense of, and all of them in a single response: the model may well
+        // send a correction and an answer together, and answering only the
+        // first leaves the rest pending, which wedges the session just as
+        // thoroughly as answering none.
+        if (responses.length) send({ toolResponse: { functionResponses: responses } });
+        return;
+      }
+
+      // The server withdraws calls it made during a turn the learner talked
+      // over. There is nothing to undo: reports are acted on the moment they
+      // arrive, and a correction already on screen was a real correction of
+      // something really said. Swallowing the frame is the whole handling.
+      if (message.toolCallCancellation) return;
+
       const content = message.serverContent;
       if (!content) {
         // The server warns before it resets the connection. Reconnecting now,
@@ -502,7 +597,7 @@ async function connect(
   // allowed to be here.
   socket.send(JSON.stringify({ setup: { model: credentials.model, ...credentials.config } }));
   options.onState("connecting");
-  keep.acquire(options.scenario === "drill" ? "Daily Deutsch — Lehrer" : "Daily Deutsch — Sprachmodus", () => end(null));
+  keep.acquire(options.scenario === "class" ? "Daily Deutsch — Unterricht" : "Daily Deutsch — Sprachmodus", () => end(null));
 
   return {
     stop: () => end(null),
@@ -745,6 +840,10 @@ interface ServerMessage {
   setupComplete?: unknown;
   goAway?: unknown;
   sessionResumptionUpdate?: { newHandle?: string; resumable?: boolean };
+  /** The tutor is asking the app to run one of the functions it was declared. */
+  toolCall?: { functionCalls?: Array<{ id?: string; name?: string; args?: Record<string, unknown> }> };
+  /** Calls withdrawn because the learner interrupted the turn that made them. */
+  toolCallCancellation?: { ids?: string[] };
   serverContent?: {
     modelTurn?: { parts?: Array<{ inlineData?: { mimeType?: string; data?: string } }> };
     inputTranscription?: { text?: string };
@@ -752,6 +851,19 @@ interface ServerMessage {
     interrupted?: boolean;
     turnComplete?: boolean;
   };
+}
+
+/**
+ * Whether a handler's return value can go on the wire as a function result.
+ *
+ * The API wants a Struct there — a plain JSON object. An array would serialise
+ * happily and then be rejected at the far end, which on a blocking call means a
+ * silent tutor, so the array case is ruled out here rather than discovered
+ * later. The guard also does the narrowing the optional handler's `void` return
+ * needs under `strict`.
+ */
+function isStruct(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /** Frames arrive as text, Blob or ArrayBuffer depending on the browser. */

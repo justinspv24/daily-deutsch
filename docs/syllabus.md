@@ -34,22 +34,22 @@ vocabulary is thematic and abstract by design — that is what the level is,
 talking about the world rather than about yourself — and was chosen to match
 the exams' text types rather than a frequency count.
 
-## The drill follows the map
+## The class follows the map
 
-The drill banks in `src/data/a1.ts` and friends are the questions the app
+The content banks in `src/data/a1.ts` and friends are the questions the app
 actually asks, and every item in them carries the syllabus section it belongs
 to (`section: "a1_s05"`). `test/syllabus.mjs` insists that every section of
 every level has at least five words, three table sentences and one review
-topic behind it, and the syllabus screen shows on each section what the drill
-holds — so a gap between what the map promises and what the drill asks is a
+topic behind it, and the syllabus screen shows on each section what the class
+holds — so a gap between what the map promises and what the class asks is a
 visible thing, not a surprise.
 
 The map is still broader in what it *describes*: it names every grammar point
-the exams test, with a diagram, whether the drill has three sentences on it or
+the exams test, with a diagram, whether the class has three sentences on it or
 thirty. That is the right way round. A syllabus that only listed what was
 already drilled would be a table of contents, not a course.
 
-Two consequences for the drill itself:
+Two consequences for the class itself:
 
 - **The banks are large now** — roughly a hundred words a level — so a round
   no longer asks every active word. It draws a working set of twelve
@@ -62,7 +62,7 @@ Two consequences for the drill itself:
   added or retagged but never renamed; the original A2 words seeded from the
   learner's own mistake list keep their ids exactly.
 
-**The words a section shows are the words the drill asks — the same list,
+**The words a section shows are the words the class asks — the same list,
 read from the same place.** The syllabus files carry no vocabulary of their
 own; `renderSection` reads the bank's items tagged with the section and shows
 them the way the card will ask them (*der Tisch, die Tische* · *aufstehen (ist

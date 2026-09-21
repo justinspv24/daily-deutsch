@@ -92,5 +92,19 @@ export const ICON_CHAT =
 export const ICON_TRANSLATE =
   '<path d="M4 5h9M8 3v2M11 5c-1 4-3.5 7-7 9M6 8c1.5 3 4 5 7 6M13 21l4-9 4 9M14.5 17h5"/>';
 
+export const ICON_HOME =
+  '<path d="M4 11.2 12 4l8 7.2"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/>';
+
+export const ICON_PAUSE = '<path d="M9.5 5v14M14.5 5v14"/>';
+
+export const ICON_PLAY = '<path d="M8 5.2 18.5 12 8 18.8Z"/>';
+
+export const ICON_STOP = '<rect x="6.5" y="6.5" width="11" height="11" rx="2.5"/>';
+
+export const ICON_CLOCK = '<circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.2 2"/>';
+
+export const ICON_BOOK =
+  '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5A2.5 2.5 0 0 1 4 20.5Z"/>';
+
 export const ICON_EYE_OFF =
   '<path d="m3 3 18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2M6.6 6.6C3.9 8.5 2 12 2 12s3.5 7 10 7c1.5 0 2.9-.3 4.1-.8"/>';

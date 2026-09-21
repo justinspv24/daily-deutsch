@@ -16,8 +16,13 @@
  * never invent what was not said.
  */
 
-/** What a field is asking for, which decides how a spoken answer is read. */
-export type Expects = "article" | "aux" | "english" | "german" | "none";
+/**
+ * What a question is asking for, which decides how a spoken answer is read.
+ * The type itself belongs to the domain and lives in `types.ts`; it is
+ * re-exported here because this is the module that acts on it.
+ */
+export type { Expects } from "./types";
+import type { Expects } from "./types";
 
 /**
  * Spoken padding around an answer.

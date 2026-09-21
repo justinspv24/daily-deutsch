@@ -3,7 +3,18 @@ import { allCurricula, isLevel } from "../data/curriculum";
 import { TABLES } from "../data/tables";
 import { isVocabItem, normalise, type Repository } from "../repository";
 import { todayISO } from "../scheduler";
-import type { Progress, SessionRecord, VocabItem } from "../types";
+import type {
+  ClassRecord,
+  Expects,
+  LiveClass,
+  Mistake,
+  MistakeKind,
+  MistakeNote,
+  ClassPlanItem,
+  Progress,
+  SessionRecord,
+  VocabItem
+} from "../types";
 
 /**
  * Progress kept in Postgres, one row per learner per item. Row-level security
@@ -19,7 +30,8 @@ export class SupabaseRepository implements Repository {
   ) {}
 
   async load(): Promise<Progress> {
-    const [profile, custom, vocab, grammar, topics, tables, sessions] = await Promise.all([
+    const [profile, custom, vocab, grammar, topics, tables, sessions, mistakes, classes, live] =
+      await Promise.all([
       this.client.from("profiles").select("level").eq("id", this.userId).maybeSingle(),
       this.client
         .from("custom_vocab")
@@ -31,10 +43,23 @@ export class SupabaseRepository implements Repository {
       this.client.from("table_state").select("table_id, day_streak, due, last_date, missed, studied"),
       this.client
         .from("sessions")
-        .select("played_on, right_count, total_count")
+        .select("played_on, right_count, total_count, seconds")
         .order("played_on", { ascending: true })
-        .limit(400)
-    ]);
+        .limit(400),
+      this.client
+        .from("mistakes")
+        .select(
+          "mistake_id, kind, ref, subject, gloss, prompt, expected, accepted, expects, given, first_missed, last_asked, stage, due, misses"
+        ),
+      this.client
+        .from("classes")
+        .select(
+          "id, held_on, started_at, ended_at, seconds, level, section_ids, table_ids, word_ids, right_count, wrong_count, mistakes, ending"
+        )
+        .order("held_on", { ascending: true })
+        .limit(600),
+      this.client.from("live_class").select("*").eq("user_id", this.userId).maybeSingle()
+      ]);
 
     const storedLevel = (profile.data as { level?: unknown } | null)?.level;
     const added = (custom.data ?? []).map(toVocabItem).filter(isVocabItem);
@@ -83,8 +108,13 @@ export class SupabaseRepository implements Repository {
     progress.sessions = (sessions.data ?? []).map((row) => ({
       date: row.played_on as string,
       right: Number(row.right_count ?? 0),
-      total: Number(row.total_count ?? 0)
+      total: Number(row.total_count ?? 0),
+      seconds: Number(row.seconds ?? 0)
     }));
+
+    progress.mistakes = (mistakes.data ?? []).map(toMistake);
+    progress.classes = (classes.data ?? []).map(toClassRecord);
+    progress.live = live.data ? toLiveClass(live.data as Record<string, unknown>) : null;
 
     progress.updatedAt = new Date().toISOString();
     return progress;
@@ -133,11 +163,34 @@ export class SupabaseRepository implements Repository {
       updated_at: stamp
     }));
 
+    const mistakeRows = progress.mistakes.map((entry) => ({
+      user_id: this.userId,
+      mistake_id: entry.id,
+      kind: entry.kind,
+      ref: entry.ref || entry.id,
+      subject: entry.subject,
+      gloss: entry.gloss,
+      prompt: entry.prompt,
+      expected: entry.expected,
+      accepted: [...entry.accepted],
+      expects: entry.expects,
+      given: entry.given,
+      first_missed: entry.firstMissed,
+      last_asked: entry.lastAsked,
+      stage: entry.stage,
+      due: entry.due,
+      misses: entry.misses,
+      updated_at: stamp
+    }));
+
     const results = await Promise.all([
       this.client.from("vocab_state").upsert(vocabRows, { onConflict: "user_id,word_id" }),
       this.client.from("grammar_state").upsert(grammarRows, { onConflict: "user_id,item_id" }),
       this.client.from("topic_state").upsert(topicRows, { onConflict: "user_id,topic_id" }),
-      this.client.from("table_state").upsert(tableRows, { onConflict: "user_id,table_id" })
+      this.client.from("table_state").upsert(tableRows, { onConflict: "user_id,table_id" }),
+      mistakeRows.length
+        ? this.client.from("mistakes").upsert(mistakeRows, { onConflict: "user_id,mistake_id" })
+        : Promise.resolve({ error: null })
     ]);
     const failure = results.find((r) => r.error);
     if (failure?.error) throw new Error(failure.error.message);
@@ -157,8 +210,83 @@ export class SupabaseRepository implements Repository {
       user_id: this.userId,
       played_on: record.date,
       right_count: record.right,
-      total_count: record.total
+      total_count: record.total,
+      seconds: record.seconds ?? 0
     });
+    if (error) throw new Error(error.message);
+  }
+
+  /**
+   * A finished class, written once. `upsert` rather than `insert` because the
+   * same class may be closed by the device that held it and then again by the
+   * midnight sweep on another — the id is the same either way, and the second
+   * write must not produce a second square on the calendar.
+   */
+  async recordClass(record: ClassRecord): Promise<void> {
+    const { error } = await this.client.from("classes").upsert(
+      {
+        id: record.id,
+        user_id: this.userId,
+        held_on: record.date,
+        started_at: record.startedAt,
+        ended_at: record.endedAt,
+        seconds: record.seconds,
+        level: record.level,
+        section_ids: [...record.sections],
+        table_ids: [...record.tables],
+        word_ids: [...record.words],
+        right_count: record.right,
+        wrong_count: record.wrong,
+        mistakes: record.mistakes,
+        ending: record.ending
+      },
+      { onConflict: "id" }
+    );
+    if (error) throw new Error(error.message);
+  }
+
+  async forgetMistake(id: string): Promise<void> {
+    const { error } = await this.client
+      .from("mistakes")
+      .delete()
+      .eq("user_id", this.userId)
+      .eq("mistake_id", id);
+    if (error) throw new Error(error.message);
+  }
+
+  /**
+   * The class still open, or the absence of one. At most one row per learner,
+   * so this is an upsert on the primary key and a delete when the class ends.
+   */
+  async saveLive(live: LiveClass | null): Promise<void> {
+    if (!live) {
+      const { error } = await this.client.from("live_class").delete().eq("user_id", this.userId);
+      if (error) throw new Error(error.message);
+      return;
+    }
+
+    const { error } = await this.client.from("live_class").upsert(
+      {
+        user_id: this.userId,
+        class_id: live.id,
+        held_on: live.date,
+        started_at: live.startedAt,
+        level: live.level,
+        plan: live.plan,
+        cursor_at: live.cursor,
+        seconds: live.seconds,
+        resumed_at: live.resumedAt,
+        right_count: live.right,
+        wrong_count: live.wrong,
+        answers: live.answers,
+        mistakes: live.mistakes,
+        section_ids: [...live.sections],
+        table_ids: [...live.tables],
+        word_ids: [...live.words],
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: "user_id" }
+    );
     if (error) throw new Error(error.message);
   }
 
@@ -197,6 +325,91 @@ function toVocabItem(row: Record<string, unknown>): VocabItem {
       de: typeof row["note_de"] === "string" ? row["note_de"] : "",
       en: typeof row["note_en"] === "string" ? row["note_en"] : ""
     }
+  };
+}
+
+/* ---------------------------------------------------- rows into the domain */
+
+function strings(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+}
+
+function toMistake(row: Record<string, unknown>): Mistake {
+  const expected = String(row["expected"] ?? "");
+  const accepted = strings(row["accepted"]);
+  return {
+    id: String(row["mistake_id"] ?? ""),
+    kind: (row["kind"] as MistakeKind) ?? "vocab",
+    ref: String(row["ref"] ?? ""),
+    subject: String(row["subject"] ?? ""),
+    gloss: String(row["gloss"] ?? ""),
+    prompt: String(row["prompt"] ?? ""),
+    expected,
+    accepted: accepted.length ? accepted : [expected],
+    expects: ((row["expects"] as Expects) ?? "german"),
+    given: String(row["given"] ?? ""),
+    firstMissed: String(row["first_missed"] ?? todayISO()),
+    lastAsked: (row["last_asked"] as string | null) ?? null,
+    stage: Number(row["stage"] ?? 0),
+    due: String(row["due"] ?? todayISO()),
+    misses: Number(row["misses"] ?? 1)
+  };
+}
+
+/** Notes are stored as jsonb, so they arrive as whatever was written. */
+function toNotes(value: unknown): MistakeNote[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object")
+    .map((entry) => ({
+      kind: (entry["kind"] as MistakeKind) ?? "vocab",
+      subject: String(entry["subject"] ?? ""),
+      prompt: String(entry["prompt"] ?? ""),
+      expected: String(entry["expected"] ?? ""),
+      given: String(entry["given"] ?? "")
+    }));
+}
+
+function toClassRecord(row: Record<string, unknown>): ClassRecord {
+  return {
+    id: String(row["id"] ?? ""),
+    date: String(row["held_on"] ?? ""),
+    startedAt: String(row["started_at"] ?? ""),
+    endedAt: String(row["ended_at"] ?? ""),
+    seconds: Number(row["seconds"] ?? 0),
+    level: isLevel(row["level"]) ? row["level"] : "A2",
+    sections: strings(row["section_ids"]),
+    tables: strings(row["table_ids"]),
+    words: strings(row["word_ids"]),
+    right: Number(row["right_count"] ?? 0),
+    wrong: Number(row["wrong_count"] ?? 0),
+    mistakes: toNotes(row["mistakes"]),
+    ending:
+      row["ending"] === "midnight" || row["ending"] === "dropped"
+        ? row["ending"]
+        : "ended"
+  };
+}
+
+function toLiveClass(row: Record<string, unknown>): LiveClass {
+  const plan = Array.isArray(row["plan"]) ? (row["plan"] as ClassPlanItem[]) : [];
+  return {
+    id: String(row["class_id"] ?? ""),
+    date: String(row["held_on"] ?? todayISO()),
+    startedAt: String(row["started_at"] ?? new Date().toISOString()),
+    level: isLevel(row["level"]) ? row["level"] : "A2",
+    plan,
+    cursor: Number(row["cursor_at"] ?? 0),
+    seconds: Number(row["seconds"] ?? 0),
+    // Never resumed from a stored timestamp: the tab that was counting is gone.
+    resumedAt: null,
+    right: Number(row["right_count"] ?? 0),
+    wrong: Number(row["wrong_count"] ?? 0),
+    answers: Array.isArray(row["answers"]) ? (row["answers"] as LiveClass["answers"]) : [],
+    mistakes: toNotes(row["mistakes"]),
+    sections: strings(row["section_ids"]),
+    tables: strings(row["table_ids"]),
+    words: strings(row["word_ids"])
   };
 }
 

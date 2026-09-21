@@ -1,50 +1,55 @@
-import { readSpokenAnswer, type Expects } from "./speech";
+import { readSpokenAnswer } from "./speech";
 import {
   startVoice,
   VoiceError,
   voiceAvailable,
   voiceSupported,
-  type VoiceSession
+  type VoiceSession,
+  type VoiceToolCall
 } from "./realtime";
-import type { Level, Verdict } from "./types";
+import type { AgendaDigest } from "./agenda";
+import type { Expects, Level, Verdict } from "./types";
 
 /**
- * The spoken half of the daily round.
+ * The spoken half of the daily class.
  *
- * Voice mode used to be a room you went into: a button, a panel, a
- * conversation, and then back to typing. This is the opposite — the tutor sits
- * with the learner for the whole round, reads out every question as it comes
- * up, hears the answer, and says something about it before the next one. The
- * drill on screen does not change. It is the same questions in the same order
- * with the same grading; it has simply acquired a voice.
+ * The lesson is not a conversation the model is having. It is a lesson the app
+ * is giving, out loud, through a voice that is very good at being warm and
+ * very bad at being consistent. Three things follow from that, and changing
+ * any of them changes what the app is.
  *
- * Three things are worth understanding before changing anything here.
+ * **The app judges, never the tutor.** Every closed answer is graded by
+ * `grading.ts`, and that verdict is what reaches the streaks, the tables and
+ * the book of errors. The tutor is told the verdict afterwards and reacts to
+ * it. Letting the model mark answers would be less code and a worse app: a
+ * schedule is only worth trusting if the same answer is always marked the same
+ * way, and two judges eventually disagree in front of the learner. Free
+ * conversation is the one exception, because there is no expected answer to
+ * compare against — and there the model's corrections go on the screen and
+ * into the day's summary, never onto a ladder.
  *
- * **The app judges, not the tutor.** Every answer is graded by `grading.ts`
- * exactly as a typed one is, and that verdict is what reaches the streaks and
- * the review schedule. The tutor is told the verdict afterwards and reacts to
- * it. Letting the model mark the answers would have been less code and a worse
- * app: the schedule is only worth trusting if the same answer is always marked
- * the same way, and two judges eventually disagree in front of the learner.
+ * **Nothing is ever said over the tutor.** The Live API will accept a turn
+ * while it is still speaking, and the result is two voices at once and a
+ * question half-heard. So instructions queue and go out on `onTurnEnd`, when
+ * the floor is genuinely free.
  *
- * **Nothing is ever said over the tutor.** The Live API will happily accept a
- * turn while it is still speaking, and the result is two voices at once and a
- * question the learner half-heard. So instructions queue up and go out on
- * `onTurnEnd`, when the floor is genuinely free.
- *
- * **The microphone is shut between turns.** It opens when a question has
- * finished being read and closes the moment an answer lands. A tutor reading
- * the next question must not hear itself, and a learner thinking out loud
- * after they have answered should not have it taken for a second attempt.
+ * **The microphone is shut between questions and open during conversation.**
+ * Those are two different modes and the difference is the whole feel of the
+ * thing. Asking, the mic opens when the question has finished being read and
+ * shuts the moment an answer lands, so a tutor reading aloud cannot hear
+ * itself and a learner thinking out loud afterwards is not taken for a second
+ * attempt. Talking, it simply stays open, because that is what a conversation
+ * is.
  */
 
-/** What the strip above the question is showing. */
+/** What the strip above the class is showing. */
 export type TutorPhase =
   | "off"
   | "connecting"
   | "asking"
   | "listening"
   | "thinking"
+  | "talking"
   | "ended"
   | "error";
 
@@ -54,17 +59,15 @@ export interface TutorStatus {
   readonly heard: string;
   /** The tutor's most recent line. */
   readonly said: string;
-  /** Set when the session could not start or could not carry on. */
   readonly error: VoiceError | null;
-  /** Seconds since the call connected. */
   readonly elapsed: number;
 }
 
 /** One question, as the tutor should ask it. */
 export interface AskScript {
-  /** Question plus field, so the same thing is never asked twice over. */
+  /** Unique, so the same thing is never asked twice over. */
   readonly key: string;
-  /** The question itself, in German. */
+  /** The question itself, in German — a stage direction, not a script. */
   readonly prompt: string;
   /** How a spoken answer to it should be read. */
   readonly expects: Expects;
@@ -75,12 +78,30 @@ export interface AskScript {
 }
 
 export interface VerdictDetail {
-  /** What they said. */
   readonly given: string;
-  /** What it should have been. */
   readonly expected: string;
-  /** The explanation already on screen, so both agree. */
+  /** The explanation the screen is showing, so both agree. */
   readonly why: string;
+}
+
+/** A correction the tutor reported before speaking it. */
+export interface ReportedCorrection {
+  readonly said: string;
+  readonly fixed: string;
+  readonly why: string;
+}
+
+/** A question the tutor asked on its own account, and how it went. */
+export interface ReportedAnswer {
+  readonly topic: "vocab" | "table" | "grammar";
+  readonly correct: boolean;
+  readonly question: string;
+  readonly said: string;
+  readonly expected: string;
+  readonly word: string;
+  readonly meaning: string;
+  readonly tableId: string;
+  readonly cell: string;
 }
 
 /**
@@ -91,7 +112,7 @@ export interface VerdictDetail {
 const NUDGE_AFTER_MS = 12_000;
 
 /**
- * Tokens expire mid-round — a round is longer than one session. Reconnecting
+ * Tokens expire mid-class — a class is longer than one session. Reconnecting
  * is invisible to the learner but costs one of the day's sessions each time,
  * so it is not something to do without limit.
  */
@@ -100,11 +121,17 @@ const MAX_RECONNECTS = 3;
 export interface TutorOptions {
   level: Level | null;
   voice: string;
-  /** The learner has no key saved; the drill offers them the account panel. */
+  /** The shape of today's class, for the tutor's opening and its thread. */
+  plan: AgendaDigest | null;
+  /** The learner has no key saved; the class offers them the account panel. */
   onNeedKey(): void;
+  /** The tutor corrected the learner's German and is about to say so. */
+  onCorrection?(correction: ReportedCorrection): void;
+  /** The tutor asked something of its own and heard an answer. */
+  onReported?(answer: ReportedAnswer): void;
 }
 
-export class DrillTutor {
+export class ClassTutor {
   private session: VoiceSession | null = null;
   private phase: TutorPhase = "off";
   private heard = "";
@@ -117,6 +144,15 @@ export class DrillTutor {
   private busy = false;
   /** False until the socket has acknowledged setup and will accept turns. */
   private ready = false;
+
+  /**
+   * Asking or talking.
+   *
+   * In `quiz` the microphone is a gate that opens for one answer. In `talk` it
+   * stays open and the tutor answers back — the app is not listening for
+   * anything in particular, it is getting out of the way.
+   */
+  private mode: "idle" | "quiz" | "talk" = "idle";
 
   /** The question on the table, kept so it can be repeated or re-asked. */
   private script: AskScript | null = null;
@@ -137,17 +173,16 @@ export class DrillTutor {
   private afterReaction: (() => void) | null = null;
 
   private reconnects = 0;
-  /** False once the round ends or the learner switches the tutor off. */
+  /** False once the class ends or the learner switches the tutor off. */
   private live = false;
 
-  /** Repainting the strip must not rebuild the card underneath it. */
+  /** Repainting the strip must not rebuild the screen underneath it. */
   private readonly listeners = new Set<() => void>();
 
   constructor(private readonly options: TutorOptions) {}
 
   /* ------------------------------------------------------------- reading */
 
-  /** Redraw on every change of state, for as long as the returned function is unused. */
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -167,7 +202,7 @@ export class DrillTutor {
     return this.live;
   }
 
-  /** Whether the tutor can be offered at all on this build and browser. */
+  /** Whether a spoken class can be offered at all on this build and browser. */
   static offerable(): boolean {
     return voiceAvailable() && voiceSupported();
   }
@@ -193,11 +228,12 @@ export class DrillTutor {
         level: this.options.level ?? "A2",
         target: null,
         voice: this.options.voice,
-        scenario: "drill",
-        // No small talk. The round's first question is the opening turn, so
-        // the tutor starts by teaching instead of by introducing itself.
+        scenario: "class",
+        plan: this.options.plan,
+        // No small talk of its own: the app opens the class, so the first
+        // thing out of the tutor is the lesson rather than an introduction.
         opener: null,
-        // Nothing is heard until a question has been read out.
+        // Nothing is heard until something has been read out.
         muted: true,
 
         onReady: () => {
@@ -207,7 +243,7 @@ export class DrillTutor {
 
         onState: (state) => {
           if (!this.live) return;
-          if (state === "speaking") this.setPhase("asking");
+          if (state === "speaking") this.setPhase(this.mode === "talk" ? "talking" : "asking");
         },
 
         onLearner: (text, final) => this.hear(text, final),
@@ -219,11 +255,13 @@ export class DrillTutor {
 
         onTurnEnd: () => this.floorIsFree(),
 
+        onToolCall: (call) => this.report(call),
+
         onEnd: (error) => {
           this.session = null;
           if (!this.live) return this.setPhase("off");
           if (error) return this.fail(error);
-          // A clean end mid-round is the token expiring. Pick the thread back
+          // A clean end mid-class is the token expiring. Pick the thread back
           // up rather than leaving the learner talking to nobody.
           void this.reconnect();
         }
@@ -231,6 +269,51 @@ export class DrillTutor {
     } catch (error) {
       this.fail(error);
     }
+  }
+
+  /**
+   * What the tutor reported.
+   *
+   * This runs while the tutor is mute and waiting: function calling on this
+   * model is synchronous, so the socket is holding the whole conversation open
+   * until the reply is sent. Everything here must therefore be cheap and
+   * synchronous — hand the report on, return, and let the caller persist it
+   * afterwards. Every millisecond spent here is silence the learner sits in.
+   */
+  private report(call: VoiceToolCall): Record<string, unknown> {
+    const args = call.args;
+    const text = (key: string): string => {
+      const value = args[key];
+      return typeof value === "string" ? value.trim() : "";
+    };
+
+    if (call.name === "report_correction") {
+      const fixed = text("corrected");
+      // A half-formed correction costs one correction if dropped and costs
+      // trust in the screen if shown, so it is dropped.
+      if (fixed) {
+        this.options.onCorrection?.({ said: text("said"), fixed, why: text("why") });
+      }
+      return { ok: true };
+    }
+
+    if (call.name === "report_answer") {
+      const topic = text("topic");
+      this.options.onReported?.({
+        topic: topic === "vocab" || topic === "table" ? topic : "grammar",
+        correct: args["correct"] === true,
+        question: text("question"),
+        said: text("said"),
+        expected: text("expected"),
+        word: text("word"),
+        meaning: text("meaning"),
+        tableId: text("table_id"),
+        cell: text("cell")
+      });
+      return { ok: true };
+    }
+
+    return { ok: true };
   }
 
   /** Re-open after a token expires, and put the current question back. */
@@ -242,7 +325,7 @@ export class DrillTutor {
       return;
     }
     this.reconnects += 1;
-    // Where the round was when the socket went: waiting on a correction, or
+    // Where the class was when the socket went: waiting on a correction, or
     // waiting on an answer. Only one of the two survives a reconnection.
     const midReaction = this.afterReaction !== null;
     const pending = this.script;
@@ -253,16 +336,16 @@ export class DrillTutor {
     await this.open();
     if (!this.live) return;
 
-    // Mid-correction: the verdict is already on screen, so let the round move
+    // Mid-correction: the verdict is already on screen, so let the class move
     // on rather than replay a reaction to a question that has been answered.
     if (midReaction) return this.releaseReaction();
-    // Mid-question: ask it again rather than skipping it.
     if (pending) this.ask(pending);
   }
 
   stop(): void {
     this.live = false;
     this.ready = false;
+    this.mode = "idle";
     this.clearNudge();
     this.queue.length = 0;
     this.script = null;
@@ -274,9 +357,9 @@ export class DrillTutor {
   }
 
   /**
-   * Let go of a round that was waiting for the tutor to finish speaking. A
-   * learner whose connection drops mid-correction must be left with a drill
-   * they can carry on typing into, not one stuck on a question for ever.
+   * Let go of a class that was waiting for the tutor to finish speaking. A
+   * learner whose connection drops mid-correction must be left with a class
+   * they can carry on with, not one stuck on a question for ever.
    */
   private releaseReaction(): void {
     const done = this.afterReaction;
@@ -284,9 +367,10 @@ export class DrillTutor {
     done?.();
   }
 
-  /** Wind the round up in one spoken line, then hang up. */
+  /** Wind the class up in one spoken line, then hang up. */
   finish(line: string): void {
     if (!this.live || !this.session) return this.stop();
+    this.mode = "idle";
     this.script = null;
     this.awaitingAnswer = false;
     this.send(`[ENDE] ${line}`);
@@ -299,14 +383,33 @@ export class DrillTutor {
   ask(script: AskScript): void {
     if (!this.live) return;
     if (this.script?.key === script.key) return;
+    this.mode = "quiz";
     this.script = script;
     this.awaitingAnswer = false;
     this.answered = false;
-    // One piece of encouragement per question, not one per round: a learner
+    // One piece of encouragement per question, not one per class: a learner
     // who stalled on the articles should still be nudged on the plurals.
     this.nudged = false;
     this.heard = "";
     this.send(`[FRAGE] ${script.prompt}`);
+  }
+
+  /**
+   * Hand the floor over for a stretch of conversation.
+   *
+   * Unlike a question this does not end by itself. The microphone stays open
+   * and the two of them talk until the class moves on, which is the app's
+   * decision and not the tutor's — a model that could decide when a
+   * conversation was finished would also decide what came next.
+   */
+  talk(direction: string): void {
+    if (!this.live) return;
+    this.mode = "talk";
+    this.script = null;
+    this.awaitingAnswer = false;
+    this.answered = false;
+    this.heard = "";
+    this.send(direction);
   }
 
   /** Say the current question again, unchanged. */
@@ -319,9 +422,10 @@ export class DrillTutor {
     this.send(`[WEITER] Stelle dieselbe Frage noch einmal, langsamer: ${script.prompt}`);
   }
 
-  /** Something to say that is not a question — a table to read, a step change. */
+  /** Something to say that is not a question — a table going up, a step change. */
   announce(line: string): void {
     if (!this.live) return;
+    this.mode = "idle";
     this.script = null;
     this.awaitingAnswer = false;
     this.send(line);
@@ -336,7 +440,7 @@ export class DrillTutor {
     if (!this.live) return onSpoken?.();
     this.script = null;
     this.awaitingAnswer = false;
-    // The round moves on when the tutor has finished, not on a timer: a
+    // The class moves on when the tutor has finished, not on a timer: a
     // correction cut off halfway is worse than no correction at all.
     this.afterReaction = onSpoken ?? null;
 
@@ -353,7 +457,18 @@ export class DrillTutor {
   /* ----------------------------------------------------------- listening */
 
   private hear(text: string, final: boolean): void {
-    if (!this.live || !this.awaitingAnswer) return;
+    if (!this.live) return;
+
+    // In conversation everything heard is simply what was said: there is no
+    // question outstanding, so nothing is graded and nothing is gated.
+    if (this.mode === "talk") {
+      this.heard = text;
+      if (!final) this.setPhase("listening");
+      this.emit();
+      return;
+    }
+
+    if (!this.awaitingAnswer) return;
 
     this.heard = text;
     if (!final) {
@@ -391,8 +506,17 @@ export class DrillTutor {
       return;
     }
 
+    // Conversation: the floor is simply the learner's again, and stays theirs
+    // until the class moves on.
+    if (this.mode === "talk") {
+      this.heard = "";
+      this.session?.setMuted(false);
+      this.setPhase("listening");
+      return;
+    }
+
     // A question was just read out and nothing else is waiting — the learner's
-    // turn. Anything else the tutor said was a reaction, and the drill sends
+    // turn. Anything else the tutor said was a reaction, and the class sends
     // the next question when it is ready.
     if (this.script && !this.awaitingAnswer && !this.answered) {
       this.awaitingAnswer = true;
@@ -417,7 +541,7 @@ export class DrillTutor {
     this.clearNudge();
     this.session.setMuted(true);
     this.said = "";
-    this.setPhase("asking");
+    this.setPhase(this.mode === "talk" ? "talking" : "asking");
     this.session.say(line);
   }
 
@@ -456,7 +580,6 @@ export class DrillTutor {
     this.emit();
   }
 
-  /** Redraw the strip. Never rebuilds the question underneath it. */
   private emit(): void {
     for (const listener of this.listeners) listener();
   }

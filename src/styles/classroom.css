@@ -1,0 +1,519 @@
+/*
+ * The classroom — the fullscreen screen the app now lives in.
+ *
+ * This sheet must be imported AFTER overlay.css. It re-sizes .orb and
+ * .orb__core, which overlay.css declares with the same specificity plus a
+ * hard-coded 88px core, and it relies on source order rather than on winning a
+ * specificity game. Move the import and the orb goes back to panel size in the
+ * middle of a wall-sized screen.
+ *
+ * Fixed rather than flowed because the learner spends half an hour in here and
+ * nothing behind it has any business scrolling. z-index 40 clears the top bar
+ * (20), the phone FABs and the player bar (30), and still sits under the modal
+ * scrim (50) — which is what lets the account panel open over the classroom
+ * when a class turns out to be missing its key.
+ */
+
+.classroom {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  background:
+    radial-gradient(70vw 50vh at 50% -12%, color-mix(in srgb, var(--hero-a) 16%, transparent), transparent 70%),
+    var(--bg);
+  color: var(--ink);
+  /* The app's safe-area rule pads <body>, and body padding cannot move a
+     fixed element, so the insets belong here. env() resolves to 0 in an
+     ordinary browser tab, which is why this is unconditional rather than
+     wrapped in a display-mode query. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  animation: classroom-in var(--dur-slow) var(--ease) both;
+}
+
+@supports not (height: 100dvh) {
+  /* iOS 15.0-15.3: 100vh is the large viewport there, so the controls would
+     sit under Safari's toolbar and "End class" would be unreachable. */
+  .classroom {
+    height: -webkit-fill-available;
+  }
+}
+
+@keyframes classroom-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Set on <body> by the shell for the duration of the class. Without this the
+   page behind the classroom still scrolls under the learner's thumb. */
+body.in-class {
+  overflow: hidden;
+}
+
+/* Nothing of the ordinary chrome may show through a fullscreen screen. */
+body.in-class .playerbar,
+body.in-class .fab {
+  display: none;
+}
+
+/* ------------------------------------------------------------------- bar */
+
+.classroom__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--glass);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+}
+
+.classroom__home {
+  flex: none;
+  /* Kills the 300ms double-tap-zoom delay on the one control a learner
+     reaches for when they want out in a hurry. */
+  touch-action: manipulation;
+}
+
+/* The shared .iconbtn tilts on hover. A house that tilts is wrong. */
+.classroom__home:hover {
+  transform: none;
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.classroom__meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  min-width: 0;
+  flex: 1;
+}
+
+.classroom__level {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--accent-text);
+  background: var(--accent-wash);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.classroom__focus {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step--1);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.classroom__clock {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+/* ------------------------------------------------------------------ main */
+
+.classroom__main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--sp-4);
+  min-height: 0;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--sp-4);
+}
+
+.classroom__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+/* The voice panel's orb, sized to the screen it is on now. overlay.css pins
+   .orb__core at 88px, so the core and its glyph are both re-expressed here in
+   terms of --orb-size. This sheet loads after overlay.css. */
+.classroom .orb {
+  --orb-size: clamp(88px, 22vmin, 148px);
+  margin-top: 0;
+  cursor: default;
+}
+
+.classroom .orb__core {
+  width: calc(var(--orb-size) * 0.66);
+  height: calc(var(--orb-size) * 0.66);
+}
+
+.classroom .orb__core svg {
+  width: calc(var(--orb-size) * 0.26);
+  height: calc(var(--orb-size) * 0.26);
+}
+
+.classroom__state {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-1);
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-wrap: balance;
+  max-width: 34ch;
+}
+
+/* Interim recognition. It lives beside the orb and never in the log — the log
+   is a live region, and a partial re-announced every few hundred milliseconds
+   is unusable with a screen reader. */
+.classroom__live {
+  margin: 0;
+  max-width: 44ch;
+  color: var(--ink-muted);
+  font-style: italic;
+  text-align: center;
+}
+
+/* No reserved line: an empty hint that still takes height makes the whole
+   stage jump every time the microphone goes quiet. */
+.classroom__live:empty {
+  display: none;
+}
+
+/* What the class is working on right now. */
+.classroom__now {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+}
+
+.classroom__nowbody {
+  min-width: 0;
+}
+
+.classroom__nowkind {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.classroom__nowtext {
+  margin: 2px 0 0;
+  font-size: var(--step--1);
+  line-height: 1.5;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.classroom__nowcount {
+  font-variant-numeric: tabular-nums;
+}
+
+.classroom__notice {
+  align-self: stretch;
+}
+
+/* ------------------------------------------------------------ transcript */
+
+.classroom__transcript {
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The one and only scroller on this screen. Everything else is a fixed-height
+   grid row, which is what makes the on-screen keyboard a non-issue here. */
+.classroom__log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+}
+
+.classroom__jump {
+  position: absolute;
+  left: 50%;
+  bottom: var(--sp-3);
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  box-shadow: var(--shadow-card);
+}
+
+/* -------------------------------------------------------------- controls */
+
+.classroom__controls {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+/* The root already pads the bottom inset, and it is the grid container these
+   sit in, so they are clear of the home indicator without paying for it a
+   second time here. */
+
+.classroom__break,
+.classroom__end {
+  flex: 1 1 0;
+  min-height: 3rem;
+  touch-action: manipulation;
+}
+
+/* Ending is the irreversible one, so it is the loud one and the wider one. */
+.classroom__end {
+  flex: 1.4 1 0;
+}
+
+.classroom__glyph {
+  display: inline-flex;
+  flex: none;
+}
+
+/* ------------------------------------------------------------ correction */
+
+/*
+ * Not a bubble. Bubbles alternate left and right and read as conversation;
+ * this spans the log and breaks that rhythm, which is what makes it
+ * unmistakable before a single colour has been taken in.
+ *
+ * Contrast, measured against tokens.css. In the light theme --ok on --ok-wash
+ * is 3.59:1, which clears AA only as large bold text: hence the corrected
+ * sentence at var(--step-1)/700. Do not shrink it without re-measuring. --no
+ * on --no-wash is 4.03:1, which clears nothing, so the wrong sentence is set
+ * in --ink-muted (5.48:1 on that wash) and --no appears only as the rule, the
+ * glyph and the underline under the changed words. In dark the same pairs are
+ * 8.55:1 and comfortable; light was always the constraint.
+ *
+ * The inversion is also the better design: the sentence worth keeping is the
+ * loud one.
+ */
+
+.correction {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--no);
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+  animation: pop var(--dur) var(--ease) both;
+}
+
+.correction__label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.correction__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: var(--sp-3);
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+}
+
+.correction__row svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 0.22em;
+}
+
+.correction__row[data-side="was"] {
+  background: var(--no-wash);
+  color: var(--ink-muted);
+}
+
+.correction__row[data-side="was"] svg {
+  color: var(--no);
+}
+
+.correction__row[data-side="now"] {
+  background: var(--ok-wash);
+  color: var(--ink);
+}
+
+.correction__row[data-side="now"] svg {
+  color: var(--ok);
+}
+
+.correction__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.correction__row[data-side="was"] .correction__text {
+  font-size: var(--step-0);
+  line-height: 1.5;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--no);
+}
+
+/* 19px at 700 — the size at which --ok clears AA on --ok-wash in the light
+   theme. See the block comment above before touching this. */
+.correction__row[data-side="now"] .correction__text {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+/* The changed words. A <mark> rather than a <span> so the change survives a
+   copy-paste and is announced, not merely tinted. */
+.correction__was {
+  color: var(--ink);
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--no);
+}
+
+.correction__now {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 18%, transparent);
+  border-radius: 4px;
+  padding: 0 3px;
+  font-weight: 700;
+}
+
+.correction__why {
+  margin: 0;
+  font-size: var(--step--1);
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+/*
+ * Read aloud, never drawn. The correction rows say "you said" and "it should
+ * be" to a screen reader, because a strike and a colour are not a sentence.
+ * Declared here as well as wherever else the app may come to need it: two
+ * identical copies of this rule cost nothing, and a classroom whose glyphs
+ * are the only signal costs a lot.
+ */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------- wide screens */
+
+@media (min-width: 900px) {
+  .classroom__main {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--sp-5);
+    padding: var(--sp-5);
+  }
+
+  .classroom__stage {
+    justify-content: center;
+    gap: var(--sp-4);
+  }
+
+  .classroom__transcript {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .classroom__log {
+    padding: var(--sp-4);
+  }
+
+  .classroom__controls {
+    justify-content: flex-end;
+  }
+
+  .classroom__break,
+  .classroom__end {
+    flex: 0 0 auto;
+    min-width: 11rem;
+  }
+}
+
+/* A phone on its side. The orb yields first, because Break and End leaving
+   the screen is the one failure this layout cannot recover from. */
+@media (max-height: 520px) {
+  .classroom__main {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(200px, 0.8fr) minmax(0, 1.2fr);
+    padding: var(--sp-3);
+    gap: var(--sp-3);
+  }
+
+  .classroom .orb {
+    --orb-size: 64px;
+  }
+
+  .classroom__state {
+    font-size: var(--step-0);
+  }
+
+  .classroom__bar,
+  .classroom__controls {
+    padding-top: var(--sp-2);
+    padding-bottom: var(--sp-2);
+  }
+
+  .classroom__now {
+    display: none;
+  }
+}

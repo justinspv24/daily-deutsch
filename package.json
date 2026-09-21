@@ -9,7 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node test/drill.mjs && node test/repository.mjs && node test/speech.mjs && node test/syllabus.mjs && node test/media.mjs"
+    "test": "node test/class.mjs && node test/repository.mjs && node test/speech.mjs && node test/syllabus.mjs && node test/media.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4"

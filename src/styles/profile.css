@@ -1,0 +1,383 @@
+/*
+  The profile — a year of effort, the day behind one square, and the book of
+  errors.
+
+  The contribution calendar is built from --ok rather than the brand gold,
+  because green is already this app's word for "right": the streak dots, the
+  done pill, the sentence the tutor put straight. A year shading from nothing
+  to green is saying the same thing about the hours, and a second meaning for
+  the gold would have weakened both.
+
+  The ramp is mixed into --surface-sunk, so an empty square is the page's own
+  hollow rather than a colour of its own. It is written out for both themes
+  because the same percentages do not do the same work twice over: mixing a
+  pale green into warm paper moves slowly, while mixing a bright mint into
+  near-black moves very fast indeed, and a dark scheme left on the light
+  scheme's numbers turns a one-minute day into something that looks like an
+  hour. The dark ramp is therefore held back at the bottom so that the five
+  steps stay evenly spaced in lightness in both schemes — which is also what
+  keeps the calendar readable in greyscale and to a colour-blind eye.
+*/
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+/* A card that opens on a section title does not want the gap above it too. */
+.profile .card > .sectiontitle:first-child {
+  margin-top: 0;
+}
+
+/* ---------------------------------------------------------------- the tiles */
+
+/*
+  .stats is three columns and the home screen still wants three, so the fourth
+  tile asks for its own modifier rather than widening the shared rule.
+*/
+.stats--four {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.stats--four .stat:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+@media (max-width: 45rem) {
+  .stats--four {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------- the calendar */
+
+.cal {
+  --cal-cell: 11px;
+  --cal-gap: 3px;
+  --cal-head: 0.875rem;
+
+  --cal-shade-0: var(--surface-sunk);
+  --cal-shade-1: color-mix(in srgb, var(--ok) 26%, var(--surface-sunk));
+  --cal-shade-2: color-mix(in srgb, var(--ok) 50%, var(--surface-sunk));
+  --cal-shade-3: color-mix(in srgb, var(--ok) 75%, var(--surface-sunk));
+  --cal-shade-4: var(--ok);
+  /* On paper --surface-sunk is barely a shade off the card it sits on, so an
+     empty square needs an outline to exist at all. */
+  --cal-ring: inset 0 0 0 1px var(--line);
+
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+:root[data-theme="dark"] .cal {
+  /* See the note at the top: the same percentages climb far faster off black. */
+  --cal-shade-1: color-mix(in srgb, var(--ok) 18%, var(--surface-sunk));
+  --cal-shade-2: color-mix(in srgb, var(--ok) 40%, var(--surface-sunk));
+  --cal-shade-3: color-mix(in srgb, var(--ok) 66%, var(--surface-sunk));
+  /* In the dark scheme --surface-sunk is a real hole against the raised card,
+     so an empty square reads without help — and a 1px ring is a surprising
+     share of an 11px box, which turned a year of rest days into a grid of
+     little white cages. */
+  --cal-ring: none;
+}
+
+.cal__weekdays {
+  display: grid;
+  grid-template-rows: var(--cal-head) repeat(7, var(--cal-cell));
+  row-gap: var(--cal-gap);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+
+/* Holds the weekday column level with the row of month labels beside it. */
+.cal__head {
+  height: var(--cal-head);
+}
+
+.cal__weekday {
+  line-height: var(--cal-cell);
+}
+
+.cal__scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: var(--sp-2);
+}
+
+/*
+  Month labels are placed by column, not flowed, so this row and the grid under
+  it line up without either having to know how many weeks there are. The tracks
+  are implicit — a label at grid-column 12 brings eleven --cal-cell columns into
+  existence ahead of it, each with the same gap as the squares below.
+*/
+.cal__months {
+  display: grid;
+  grid-auto-columns: var(--cal-cell);
+  column-gap: var(--cal-gap);
+  height: var(--cal-head);
+  margin-bottom: var(--cal-gap);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+
+.cal__month {
+  grid-row: 1;
+  white-space: nowrap;
+}
+
+/*
+  Seven rows, flowing down the columns: calendarDays() hands back whole weeks
+  seven days at a time, so the returned order drops straight in and a week is
+  one column with no arithmetic anywhere.
+*/
+.cal__grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, var(--cal-cell));
+  grid-auto-columns: var(--cal-cell);
+  gap: var(--cal-gap);
+  width: max-content;
+}
+
+.cal__day,
+.cal__swatch {
+  width: var(--cal-cell);
+  height: var(--cal-cell);
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: var(--cal-shade-0);
+  box-shadow: var(--cal-ring);
+}
+
+.cal__day {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: box-shadow var(--dur) var(--ease);
+}
+
+.cal__day[data-shade="1"],
+.cal__swatch[data-shade="1"] {
+  background: var(--cal-shade-1);
+  box-shadow: none;
+}
+
+.cal__day[data-shade="2"],
+.cal__swatch[data-shade="2"] {
+  background: var(--cal-shade-2);
+  box-shadow: none;
+}
+
+.cal__day[data-shade="3"],
+.cal__swatch[data-shade="3"] {
+  background: var(--cal-shade-3);
+  box-shadow: none;
+}
+
+.cal__day[data-shade="4"],
+.cal__swatch[data-shade="4"] {
+  background: var(--cal-shade-4);
+  box-shadow: none;
+}
+
+/* After the shades, so today keeps its ring however green it is. */
+.cal__day[data-today="true"] {
+  box-shadow: inset 0 0 0 1px var(--ink-faint);
+}
+
+.cal__day[data-selected="true"] {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.cal__day:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cal__legend {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.cal__key {
+  display: inline-flex;
+  gap: var(--cal-gap);
+}
+
+/*
+  Fingers, not pointers. An 11px square is well under the minimum target size,
+  and the horizontal scroll can carry the extra width at no cost to anything
+  else. The same media query the umlaut strip already uses.
+*/
+@media (hover: none) and (pointer: coarse) {
+  .cal {
+    --cal-cell: 14px;
+    --cal-gap: 4px;
+  }
+}
+
+/* --------------------------------------------------------------- one day */
+
+/*
+  Nothing chosen, nothing shown: the panel is genuinely empty until a square is
+  clicked, so :empty hides it — margin and border included — without the view
+  needing a second piece of state to remember whether it is open.
+*/
+.day:empty {
+  display: none;
+}
+
+.day {
+  margin-top: var(--sp-5);
+  padding: var(--sp-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.day__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.day__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--step-1);
+  letter-spacing: -0.015em;
+}
+
+/* It is focused when the panel opens; a keyboard user should see where. */
+.day__title:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.day__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.day__sub {
+  margin-top: var(--sp-5);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.day__group {
+  margin-top: var(--sp-4);
+  margin-bottom: var(--sp-2);
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.day__covered {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+}
+
+.day__covered li {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunk);
+  color: var(--ink-muted);
+  font-size: var(--step--1);
+}
+
+/* The two that are worth picking out of the list at a glance. */
+.day__covered li[data-kind="table"] {
+  background: var(--accent-wash);
+  color: var(--accent-text);
+}
+
+.day__covered li[data-kind="word"] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.day__empty {
+  margin-top: var(--sp-3);
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* ----------------------------------------------------- the book of errors */
+
+/* The number column: narrow, right-aligned and lined up down the page. */
+td.is-n {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+/*
+  What was actually said, struck through. Crossing it out rather than merely
+  colouring it means the right answer is never the thing that looks optional,
+  which matters on a page the learner is reading to revise from.
+*/
+td.is-said,
+.misslist__said {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--no);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--no) 55%, transparent);
+}
+
+/* Which rung of the 3 / 7 / 21 ladder the word is on, under its date. */
+.rung {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.5625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.misslist__n {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+/* Worst first, so the number is a running order and not just a count. */
+.misslist--numbered .misslist__item {
+  gap: 0.5rem;
+}

@@ -1,4 +1,4 @@
-import type { Progress, SessionRecord, TableProgress } from "./types";
+import type { Progress, TableProgress } from "./types";
 
 /**
  * Expanding review intervals, after Cepeda et al. — the ladder written into
@@ -23,6 +23,16 @@ export function daysBetween(from: string, to: string): number {
   const a = new Date(`${from}T12:00:00`).getTime();
   const b = new Date(`${to}T12:00:00`).getTime();
   return Math.round((b - a) / 86_400_000);
+}
+
+/**
+ * Days since the epoch, for rotations that must land on the same thing all day
+ * and on something else tomorrow — which section the class hangs on, which
+ * window of a grid it asks. Anything that must be the same twice in one day
+ * uses this rather than a random draw.
+ */
+export function dayNumber(iso: string = todayISO()): number {
+  return Math.floor(Date.parse(`${iso}T00:00:00Z`) / 86_400_000);
 }
 
 /**
@@ -96,8 +106,14 @@ export function tableMastered(state: TableProgress | undefined): boolean {
   return (state?.dayStreak ?? 0) >= TABLE_MASTERY_DAYS;
 }
 
-/** Consecutive days ending today (or yesterday, so an evening gap is forgiving). */
-export function consecutiveDays(sessions: readonly SessionRecord[]): number {
+/**
+ * Consecutive days ending today (or yesterday, so an evening gap is forgiving).
+ *
+ * Typed as "anything with a date" rather than as a list of rounds, because
+ * both the day's rounds and the day's classes are counted this way and neither
+ * is more the streak than the other.
+ */
+export function consecutiveDays(sessions: readonly { readonly date: string }[]): number {
   const dates = [...new Set(sessions.map((s) => s.date))].sort().reverse();
   if (dates.length === 0) return 0;
 

@@ -1,5 +1,4 @@
-import type { DrillTutor } from "../tutor";
-import type { Learner, Level, Progress, SessionState, VocabItem } from "../types";
+import type { ClassRecord, Learner, Level, Progress, VocabItem } from "../types";
 
 export type Route =
   | "loading"
@@ -7,38 +6,46 @@ export type Route =
   | "recovery"
   | "level"
   | "home"
-  | "drill"
+  | "classroom"
   | "summary"
-  | "progress"
+  | "profile"
   | "syllabus"
   | "podcasts";
 
 /** Everything a view needs from the app shell, and nothing more. */
 export interface AppContext {
   readonly progress: Progress;
-  readonly session: SessionState | null;
   readonly learner: Learner | null;
   /**
-   * The spoken tutor, when the round is being done out loud. It outlives every
-   * redraw of the question, which is the point: a conversation cannot be
-   * rebuilt from scratch each time a field is filled in.
+   * The class that just ended, for the summary to read.
+   *
+   * It is the record rather than the class itself because by the time the
+   * summary is drawn the class is over: its ladders have been rolled forward
+   * and `progress.live` has been cleared. A summary is a photograph, and this
+   * is the photograph.
    */
-  readonly tutor: DrillTutor | null;
+  readonly lastClass: ClassRecord | null;
+  /**
+   * A class the day ran out on, found and closed at boot. Home says so once —
+   * a card, not a modal: the learner did nothing wrong by falling asleep, and
+   * the work was saved.
+   */
+  readonly autoClosed: ClassRecord | null;
+  /** Stop showing the auto-closed card. */
+  dismissAutoClosed(): void;
   /** Re-render the current route in place. */
   refresh(): void;
   go(route: Route): void;
-  /** Begin a round. `spoken` opens it with the tutor reading the questions out. */
-  startSession(spoken?: boolean): void;
+  /** Open the classroom — resuming the class still open, or starting today's. */
+  startClass(): void;
   /** Pick (or change) the level; the content bank switches with it. */
   setLevel(level: Level): void;
-  /** Add a word of the learner's own to the vocabulary drill. */
+  /** Add a word of the learner's own to the class's vocabulary. */
   addWord(item: VocabItem): void;
   /** Remove one they added. Bank words cannot be removed. */
   removeWord(id: string): void;
-  /** Jump to the first unanswered question of a step, mid-round. */
-  jumpToStep(step: number): void;
   /** Leave the new-password screen once the password has been saved. */
   finishRecovery(): void;
-  /** Persist after a graded answer. */
+  /** Persist after something changed. */
   commit(): void;
 }

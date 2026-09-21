@@ -77,25 +77,42 @@ written for), with B2 structures allowed in gradually. The prompts are composed
 in `api/realtime-token.ts`, not in the bundle, so they are built from the
 learner's actual level and are not sitting in a JavaScript file to be read.
 
-## The tutor who runs the round
+## The tutor who runs the class
 
-`vv` is a room you go into. The **spoken drill** is the opposite: the tutor
-sits with the learner for the whole daily round, reads every question out,
-hears the answer, and says something about it before the next one. It starts
-from the home screen — *Mit Lehrer sprechen* beside the ordinary *Drill
-starten* — and it is the same round either way. Same questions, same order,
-same grading, same effect on the schedule. It has simply acquired a voice.
+`vv` is a room you go into for a chat. The **class** is the opposite: the
+tutor sits with the learner for the whole half hour, works through a lesson the
+app wrote down before the call opened, and talks with them between the
+questions. It is not offered beside anything — it is the only way to practise
+now, and `src/ui/classroom.ts` is a screen of its own rather than a panel over
+the app.
 
-Offered as its own door rather than a setting on purpose: doing the round out
-loud is a different way to spend half an hour — headphones and a quiet room, or
-a keyboard on the train — and that is a choice made fresh each morning, not once
-in a preferences panel.
+That is the change worth stating plainly, because everything below follows from
+it. The voice used to be a second door onto a typed round, which meant it could
+fail gracefully: the microphone died, the caret went back to the field, and the
+learner typed. There is no field to fall back to. What replaces that safety net
+is described under *When the voice gives out*.
 
 ### The app judges, the tutor speaks
 
-This is the load-bearing decision. Every answer is graded by `grading.ts`,
-exactly as a typed one is, and that verdict is what reaches the streaks and the
-review ladder. The tutor is told the verdict *afterwards* and reacts to it.
+This is the load-bearing decision. Every **closed** question — a word's
+meaning, a cell of a grammar table, a gapped sentence — is graded by
+`grading.ts`, exactly as a typed one was, and that verdict is what reaches the
+streaks, the three-day table chain and the 3/7/21 book of errors. The tutor is
+told the verdict *afterwards* and reacts to it.
+
+The rule is now partial, and the line is worth drawing precisely, because the
+class also contains stretches of real conversation:
+
+| | judged by | reaches |
+|---|---|---|
+| vocabulary, table cells, gapped sentences, reviews | the app, `grading.ts` | streaks, the topic and table ladders, the book of errors |
+| free speech during a `[GESPRÄCH]` | the model | the screen and the day's summary, and nothing else |
+
+Free speech has no expected answer, so the app cannot mark it and the model
+must. But a correction the model made is never written to a ladder: it is shown
+in the correction colour, listed in the day's summary, and left there. That
+keeps every ladder exactly as reproducible as it was while still giving the
+learner the thing they asked for — being put right, on screen, as they speak.
 
 Letting the model mark the answers would have been less code and a worse app.
 The schedule is only worth trusting if the same answer is always marked the
@@ -120,7 +137,39 @@ stage directions — never read aloud, never mentioned.
 | `[TAFEL] …` | Two sentences about a grid that is up to be read, not answered. |
 | `[PAUSE]` | One encouraging line when an answer has not come for 12 seconds. |
 | `[WEITER]` | Asks the same question again, slower. |
+| `[GESPRÄCH] …` | Opens a stretch of conversation on a theme, steers it towards one grammar point, and leaves the microphone open. Here — and only here — it corrects the learner's German itself. |
 | `[ENDE] …` | One closing line, then the call hangs up. |
+
+During a `[FRAGE]` the tutor must *not* correct: a verdict is already on its
+way from the app, and two teachers contradicting each other in the same second
+is the failure this whole design exists to prevent.
+
+### What the tutor reports back
+
+A correction has to be on screen *before* it is spoken, and everything the
+model emits as text is also spoken aloud — so a marker inside the reply would
+be read out. The channel is function calling, which travels as its own frame on
+the socket: structured, silent, matched back by an id.
+
+| Tool | Called when |
+|---|---|
+| `report_correction` | Immediately before saying a correction out loud. The classroom renders it as a full-width slab, struck wrong sentence above, corrected sentence below in the "right" colour. |
+| `report_answer` | After the learner answers a question the tutor asked on its own account during conversation. Logged for the summary and the book of errors; never allowed near a streak. |
+
+Two properties of this model decide the implementation, and both are in
+`src/realtime.ts`:
+
+- **It is synchronous only.** `gemini-3.1-flash-live-preview` has no
+  `NON_BLOCKING` behaviour: the tutor produces no further audio until the
+  browser sends `toolResponse`. That is exactly the ordering the feature wants
+  — the correction lands while the tutor is silent — but it means the handler
+  must be synchronous and cheap. Anything awaited inside it is dead air the
+  learner hears, so the classroom renders, returns, and persists afterwards.
+- **An unanswered call wedges the session permanently.** Every entry in a
+  `toolCall` frame is answered, including one nobody could make sense of, and
+  all of them in one `toolResponse`. The branch sits *before* the
+  `serverContent` bail-out, because a tool call carries no `serverContent` and
+  would otherwise be swallowed in silence.
 
 Between a question and its verdict the learner speaks, and the model takes a
 turn of its own whether we want it to or not. It is instructed to answer that
@@ -140,18 +189,25 @@ Two invariants hold the rest together:
   hears itself would transcribe its own question as the answer and mark it,
   silently, against the schedule.
 
-### Three questions where the screen shows one
+### Three questions per word
 
-The vocabulary card has three boxes — article, meaning, plural — and a learner
-fills them in whatever order they like. Nobody asks all three at once out loud,
-so spoken it becomes three questions, which is how a teacher has always done
-it: *der, die oder das?* … *und was heißt das auf Englisch?* … *und der
-Plural?* Each answer lands in its own box as it is given, so what the tutor
-heard is visible while the next question is asked.
+A word is three questions, not one — article, meaning, plural — which is how a
+teacher has always asked it: *der, die oder das?* … *und was heißt das auf
+Englisch?* … *und der Plural?* A card is always asked whole, because
+`scoreClass` only advances a word's streak when every field of it was right;
+asking a subset would retire words on the strength of their meanings alone.
 
-Phrasing lives in `src/tutorscript.ts` and is written to be *heard*: "Partizip
-II" is spelled "Partizip zwei" there, because a model reading the first version
-aloud says "Partizip zwei Strich Strich" often enough to matter.
+Phrasing lives in `src/agenda.ts` and is written to be *heard*: "Partizip II"
+is spelled "Partizip zwei" there, because a model reading the first version
+aloud says "Partizip zwei Strich Strich" often enough to matter. What the app
+sends is a stage direction, never a script — *"Frage nach dem Plural von „die
+Reise“."* — and the tutor puts it in its own warm words.
+
+The answers themselves never leave the browser. A model told what `die Reise`
+means will, somewhere across forty questions, say so before the learner does —
+not out of malice, but because confirming is what a helpful speaker does. It is
+given the day's words as *cues* so it can weave them into the conversation, and
+never their meanings, plurals or table cells.
 
 ### Hearing an answer
 
@@ -181,20 +237,34 @@ questions where saying one short word is the whole point. They are out of the
 filler list, and a backstop refuses to strip anything that would leave the
 answer empty. `test/speech.mjs` pins all of it down.
 
-### Reconnecting mid-round
+### Reconnecting mid-class
 
-Google resets the WebSocket roughly every ten minutes, and a round takes
-twenty-five. That reset is handled inside `realtime.ts` now (see *No time
-limit* below): the socket is reopened on the same session with its resumption
-handle, the microphone and player are kept, and the tutor carries on with the
-same question after a second's pause. The drill's own reconnect path in
-`tutor.ts` remains as a fallback for a genuinely dead session, but in normal
-use it never fires, and a spoken round costs exactly one of the day's sessions.
+Google resets the WebSocket roughly every ten minutes, and a class takes
+twenty-five. That reset is handled inside `realtime.ts` (see *No time limit*
+below): the socket is reopened on the same session with its resumption handle,
+the microphone and player are kept, and the tutor carries on with the same
+question after a second's pause. `ClassTutor`'s own reconnect path remains for
+a genuinely dead session — it puts the outstanding question back rather than
+skipping it — and a class costs exactly one of the day's sessions unless it has
+to mint a fresh token.
 
-If the voice gives out at any point — no key, no microphone, no network — the
-round does not. The strip says what happened, the caret is handed back to the
-first field, and it carries on as a typed round from wherever it had got to.
-The ✕ in the strip does the same thing on purpose.
+### When the voice gives out
+
+There is no typed round to fall back to, so this had to be answered rather than
+inherited. What happens is: **the class stays open, and nothing is lost.**
+
+- The classroom shows the failure in plain words — `describeVoiceError` is the
+  only source of that prose — with a *Noch einmal verbinden* button.
+- **End class stays enabled in every failed state.** A class that could not
+  connect still happened, and the learner must be able to close it and get its
+  summary rather than being trapped on an error screen.
+- Break and the home icon both keep the class open. Every answer given before
+  the failure is already written down: `live_class` is saved after each one,
+  and the ladders are rolled forward when the class is finally closed — by the
+  learner, or by the midnight sweep.
+- A learner with no Google AI key gets that case discriminated from a network
+  failure, with a button into the account panel; the panel opens *over* the
+  classroom, so the class is still there behind it.
 
 ## How it fits together
 
@@ -331,10 +401,12 @@ free-tier audio is not used for training.
 | `supabase/migrations/0005_voice_keys.sql` | The `voice_keys` table — RLS on, no policies, service role only. |
 | `src/realtime.ts` | The socket, the microphone, the playback queue, the codecs. No DOM. |
 | `src/ui/voice.ts` | The panel: mode picker, orb, voice picker, countdown, transcript. No protocol. |
-| `src/tutor.ts` | The spoken round: session lifecycle, the bracketed protocol, the turn queue, reconnection. No DOM. |
-| `src/tutorscript.ts` | How each question sounds when it is asked rather than read. Pure. |
+| `src/tutor.ts` | `ClassTutor`: session lifecycle, the bracketed protocol, the turn queue, the two microphone modes, reconnection, and the tool reports. No DOM. |
+| `src/agenda.ts` | Today's lesson, computed before the call opens, and how each question sounds when it is asked rather than read. Pure. |
+| `src/classrun.ts` | The lesson running: walks the agenda, marks what comes back, tells the tutor the verdict, writes it down. |
+| `src/classscore.ts` | What a finished class does to every ladder it touched. Once, at the end. |
 | `src/speech.ts` | Transcript in, answer out. Pure, and tested by `test/speech.mjs`. |
-| `src/ui/drill.ts` | The strip above the question, and the wiring that puts a spoken answer through the same grader as a typed one. |
+| `src/ui/classroom.ts` | The fullscreen classroom: orb, clock, transcript, the correction slab, Break and End class. No protocol. |
 | `supabase/migrations/0004_voice_sessions.sql` | Adds `'voice'` to the `ai_usage` kinds. |
 
 ### Audio, concretely
@@ -439,9 +511,13 @@ now are:
   rather than silently ending.
 - Lock-screen playback is best effort on the web platform (see *Playing on
   with the screen locked*); closing the app ends the call.
-- The model starts each call with no memory of the last one. The panel keeps
-  the transcript on screen for the session, but that is display only — there is
-  no conversation history in the database yet, and no cross-session insight into
-  which mistakes keep recurring. That is the obvious next feature: the drill
-  already has `mistakes_tracker` thinking, and voice corrections are exactly the
-  same kind of data.
+- The model starts each call with no memory of the last one, and the
+  transcript is display only — there is no conversation history in the
+  database. What *is* remembered is the part that matters: every wrong answer
+  and every correction goes into `public.mistakes` and comes back on day 3,
+  day 7 and day 21, and every class leaves a row in `public.classes` that the
+  profile's calendar reads a year later.
+- Whether the model calls its tools reliably at `thinkingLevel: "minimal"` is
+  the thing to watch on a real call. The class does not wait for a tool call
+  and never blocks on one; a class that ends with no reports is a signal to
+  raise the thinking level, not an error to show the learner.

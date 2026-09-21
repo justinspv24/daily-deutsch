@@ -4,26 +4,97 @@ import type { Bilingual, Lang } from "./types";
  * Interface language. German is the default: the point is immersion, so the
  * German UI also prints an English gloss under key sentences. English mode
  * drops the glosses and translates the chrome outright.
+ *
+ * `Strings` is the contract between this file and every screen. Both `de` and
+ * `en` are annotated with it rather than inferred, so a key added to one and
+ * forgotten in the other is a compile error here and not a blank label in
+ * production. Keep the three lists in the same order for the same reason —
+ * the eye finds a missing entry far faster than the type checker explains it.
  */
 
 export interface Strings {
   readonly tagline: string;
   readonly greeting: (name: string | null) => string;
   readonly lede: string;
-  readonly steps: readonly [string, string, string, string, string];
-  readonly stepVocabDetailEmpty: string;
-  readonly stepTablesDetail: string;
-  readonly stepGridDetail: string;
-  readonly stepGridDetailEmpty: string;
-  readonly stepReviewDetailEmpty: string;
-  readonly gridStudyEyebrow: string;
-  readonly gridStudyHint: string;
-  readonly gridCellPrompt: (row: string, col: string) => string;
+
+  /* home — the one door in */
+  readonly classStart: string;
+  readonly classResume: string;
+  readonly classStartMeta: (minutes: number, topic: string) => string;
+  readonly classResumeMeta: (minutes: number, topic: string) => string;
+  readonly classUnavailable: string;
+  readonly classPlanTitle: string;
+  readonly classPlanReviews: (n: number) => string;
+  readonly classPlanWords: (n: number) => string;
+  readonly classPlanTables: (n: number) => string;
+  readonly classPlanSentences: (n: number) => string;
+  readonly classPlanTalk: (minutes: number) => string;
+  readonly classPlanTopic: (topic: string) => string;
+  readonly classAutoClosed: (date: string) => string;
+  readonly classAutoClosedNote: string;
+  readonly classAutoClosedSeen: string;
+  readonly profileButton: string;
+
+  /* the classroom */
+  readonly classTitle: string;
+  readonly classHomeTitle: string;
+  readonly classClockLabel: string;
+  readonly classTranscriptLabel: string;
+  readonly classJumpToLatest: string;
+  readonly classConnecting: string;
+  readonly classListening: string;
+  readonly classSpeaking: string;
+  readonly classThinking: string;
+  readonly classPaused: string;
+  readonly classEnded: string;
+  readonly classBreak: string;
+  readonly classResumeClass: string;
+  readonly classEnd: string;
+  readonly classEndConfirm: string;
+  readonly classRetry: string;
+  readonly classErrorTitle: string;
+  readonly classCorrection: string;
+  readonly classCorrectionSaid: string;
+  readonly classCorrectionShould: string;
+  readonly classNowTalk: string;
+  readonly classNowVocab: string;
+  readonly classNowTable: string;
+  readonly classNowSentence: string;
+  readonly classNowReview: string;
+  readonly classProgress: (done: number, total: number) => string;
+
+  /* the day's summary */
+  readonly classSummaryEyebrow: string;
+  readonly classSummaryTitle: string;
+  /** Stands in for the title when the class came through without a slip. */
+  readonly classSummaryClean: string;
+  /** The headline when there is no record at all — a class too short to keep. */
+  readonly classSummaryNothing: string;
+  /** `text` arrives already formatted by `formatDuration` — never reformat it. */
+  readonly classSummaryDuration: (text: string) => string;
+  /** The word under the duration figure, which carries the number itself. */
+  readonly classSummaryDurationLabel: string;
+  readonly classSummaryScore: (right: number, total: number) => string;
+  readonly classSummaryScoreLabel: string;
+  readonly classSummaryShareLabel: string;
+  /** The note on a class nobody ended. */
+  readonly classSummaryMidnight: string;
+  readonly classSummaryCovered: string;
+  readonly classSummaryMistakes: string;
+  readonly classSummaryNoMistakes: string;
+  readonly classSummaryReturn: (n: number) => string;
+  readonly classSummaryWords: string;
+  readonly classSummaryTables: string;
+  readonly classSummaryGrammar: string;
+  readonly classSummaryCorrections: string;
+  readonly classSummarySection: (name: string) => string;
+  /** The bare unit words `formatDuration` glues its numbers to. */
+  readonly unitMinutes: string;
+  readonly unitHours: string;
+
+  /* the paradigm tables */
   readonly gridExample: string;
   readonly gridMalayalam: string;
-  readonly gridMasteredNow: string;
-  readonly gridDaysToGo: (n: number) => string;
-  readonly gridChainBroken: string;
   readonly gridSectionTitle: string;
   readonly gridSecure: (done: number, total: number) => string;
   readonly gridMissedTitle: string;
@@ -31,29 +102,18 @@ export interface Strings {
   readonly gridStatusMastered: string;
   readonly gridStatusDay: (n: number) => string;
   readonly gridStatusNew: string;
-  readonly overdueSuffix: (n: number) => string;
+
   readonly installButton: string;
   readonly installBlurb: string;
   readonly installIOSHint: string;
-  readonly wordsUnit: (n: number) => string;
-  readonly tablesUnit: (n: number) => string;
-  readonly sentencesUnit: (n: number) => string;
-  readonly dueUnit: (n: number) => string;
-  readonly nothingDue: string;
-  readonly allClear: string;
-  readonly inChat: string;
-  readonly upNext: string;
-  readonly start: string;
+
   readonly viewProgress: string;
-  readonly backToDrill: string;
+  /** Title and accessible name of the wordmark and the shell's home button. */
+  readonly homeTitle: string;
   readonly back: string;
-  readonly again: string;
-  readonly check: string;
-  readonly next: string;
-  readonly finish: string;
-  readonly enterHint: string;
-  readonly navHint: string;
-  readonly vocabCheck: string;
+  readonly backHome: string;
+
+  /* the vocabulary card's field labels — shared with ui/addword.ts */
   readonly auxiliary: string;
   readonly article: string;
   readonly meaning: string;
@@ -61,22 +121,43 @@ export interface Strings {
   readonly plural: string;
   readonly verb: string;
   readonly noun: string;
-  readonly correct: string;
-  readonly nearly: string;
-  readonly notQuite: string;
-  readonly masteredNow: string;
-  readonly oneMoreDay: (n: number) => string;
-  readonly counterReset: string;
-  readonly correctAnswer: string;
-  readonly evaluation: string;
-  readonly flawless: string;
-  readonly solid: string;
-  readonly workToDo: string;
-  readonly percentRight: (n: number) => string;
-  readonly staysInDrill: (n: number) => string;
-  readonly nothingNew: string;
+
   readonly streakDays: (n: number) => string;
   readonly reviewAgain: string;
+
+  /* the profile */
+  readonly profileTitle: string;
+  readonly profileEyebrow: string;
+  readonly profileHours: string;
+  readonly profileDays: string;
+  readonly profileClasses: string;
+  readonly profileLongest: string;
+  readonly calendarTitle: string;
+  readonly calendarBlurb: string;
+  readonly calendarLess: string;
+  readonly calendarMore: string;
+  readonly calendarDay: (date: string, minutes: number) => string;
+  readonly calendarEmptyDay: (date: string) => string;
+  /** Monday first: `calendarDays()` returns its weeks that way round. */
+  readonly calendarWeekdays: readonly [string, string, string, string, string, string, string];
+  readonly dayTitle: (date: string) => string;
+  readonly dayNothing: string;
+  readonly dayClasses: (n: number) => string;
+  readonly dayClose: string;
+  readonly mistakeWordsTitle: string;
+  readonly mistakeCellsTitle: string;
+  readonly mistakeNone: string;
+  readonly mistakeBlurb: string;
+  readonly colNo: string;
+  readonly colYourAnswer: string;
+  readonly colTimesWrong: string;
+  readonly colDue: string;
+  /** Rung of the book of errors: 0 → day 3, 1 → day 7, 2 → day 21. */
+  readonly mistakeStage: (stage: number) => string;
+  readonly endingEnded: string;
+  readonly endingMidnight: string;
+  readonly endingDropped: string;
+
   readonly progressTitle: string;
   readonly lastRounds: string;
   readonly vocabInDrill: string;
@@ -96,6 +177,7 @@ export interface Strings {
   readonly inDays: (n: number) => string;
   readonly tablesSecure: (a: number, b: number) => string;
   readonly intervals: string;
+
   readonly themeLabel: string;
   readonly langLabel: string;
   readonly footer: string;
@@ -103,8 +185,6 @@ export interface Strings {
   readonly statStreak: string;
   readonly statMastered: string;
   readonly statAccuracy: string;
-  readonly todayPlan: string;
-  readonly jumpToStep: (label: string) => string;
 
   /* learner-added vocabulary */
   readonly addWordButton: string;
@@ -229,9 +309,7 @@ export interface Strings {
   readonly voiceModes: readonly [string, string, string, string];
   readonly voiceModeHints: readonly [string, string, string, string];
 
-  /* the tutor who reads the round out */
-  readonly tutorStart: string;
-  readonly tutorStartHint: string;
+  /* the tutor's status strip, now the classroom's */
   readonly tutorUnavailable: string;
   readonly tutorConnecting: string;
   readonly tutorAsking: string;
@@ -262,14 +340,11 @@ export interface Strings {
   readonly syllabusVideo: string;
   readonly syllabusCourse: string;
   readonly syllabusReading: string;
-  /** What the drill holds for a section: words, table sentences, review topics. */
+  /** What a section holds for the class: words, table sentences, review topics. */
   readonly syllabusDrilled: (words: number, sentences: number, topics: number) => string;
   readonly syllabusNotDrilled: string;
-  /** Words beyond today's working set, still queued. */
-  readonly wordsWaiting: (n: number) => string;
-  /** Shown after a noun the card will not ask a plural for. */
+  /** Shown after a noun the class will not ask a plural for. */
   readonly syllabusNoPlural: string;
-  readonly noPlural: string;
 
   /* videos and podcasts */
   readonly clipsTitle: string;
@@ -308,29 +383,105 @@ export interface Strings {
   readonly badEmail: string;
   readonly signInFailed: string;
   readonly syncedAs: (who: string) => string;
-  readonly localOnly: string;
-  readonly mergedNotice: string;
+}
+
+/**
+ * The 3/7/21 ladder of the book of errors, spelled out for the profile.
+ *
+ * The numbers are written out here rather than imported from `MISTAKE_INTERVALS`
+ * on purpose: i18n sits under everything — every screen and half the domain
+ * imports it — and reaching up from here into `mistakes.ts` is how an import
+ * cycle starts, at which point Vite hands one of the two modules a half-built
+ * namespace and `t()` returns undefined at boot. The cost is that changing the
+ * ladder means changing it twice; the guard is that both places say so.
+ *
+ * Anything past the last rung is answered "day 21" rather than left blank,
+ * because `markMistake` retires an entry the moment it would need a fourth.
+ */
+function ladderDay(stage: number): number {
+  if (stage <= 0) return 3;
+  if (stage === 1) return 7;
+  return 21;
 }
 
 const de: Strings = {
   tagline: "Täglich Deutsch · A1 → B2",
   greeting: (name) => (name ? `Guten Tag, ${name}.` : "Guten Tag."),
   lede:
-    "Eine Runde dauert etwa 25 Minuten. Alles, was du falsch machst, kommt morgen wieder — alles, was zweimal sitzt, verschwindet.",
-  steps: ["Vokabeln", "Tabellen", "Sätze", "Wiederholung", "Neues Thema"],
-  stepVocabDetailEmpty: "Nichts offen — gut gemacht.",
-  stepTablesDetail: "Lückensätze aus allen sechs Tabellen. Der Fall wird nie verraten.",
-  stepGridDetail: "Artikel, Pronomen, Endungen — Zelle für Zelle, bis sie sitzen.",
-  stepGridDetailEmpty: "Alle Tabellen sitzen. Nichts mehr abzufragen.",
-  stepReviewDetailEmpty: "Heute ist kein Thema fällig.",
-  gridStudyEyebrow: "Einprägen",
-  gridStudyHint: "Lies die Tabelle in Ruhe durch. Gleich wird sie Zelle für Zelle abgefragt.",
-  gridCellPrompt: (row, col) => `${row} · ${col}`,
+    "Jeden Tag eine Stunde, in der gesprochen wird. Dein Lehrer fragt, korrigiert dich sofort und schreibt jeden Fehler auf — an Tag 3, Tag 7 und Tag 21 fragt er ihn wieder.",
+
+  classStart: "Heutige Stunde beginnen",
+  classResume: "Stunde fortsetzen",
+  classStartMeta: (minutes, topic) => `ca. ${minutes} Min. · ${topic}`,
+  classResumeMeta: (minutes, topic) => `schon ${minutes} Min. · ${topic}`,
+  classUnavailable: "Die Stunde braucht ein Mikrofon und einen eingeschalteten Sprachmodus.",
+  classPlanTitle: "Was heute dran ist",
+  classPlanReviews: (n) => (n === 1 ? "1 alter Fehler" : `${n} alte Fehler`),
+  classPlanWords: (n) => (n === 1 ? "1 Wort" : `${n} Wörter`),
+  classPlanTables: (n) => (n === 1 ? "1 Tabelle" : `${n} Tabellen`),
+  classPlanSentences: (n) => (n === 1 ? "1 Satz" : `${n} Sätze`),
+  classPlanTalk: (minutes) => (minutes === 1 ? "1 Minute frei sprechen" : `${minutes} Minuten frei sprechen`),
+  classPlanTopic: (topic) => `Thema heute: ${topic}`,
+  classAutoClosed: (date) => `Deine Stunde vom ${date} lief noch. Um Mitternacht haben wir sie für dich geschlossen.`,
+  classAutoClosedNote:
+    "Gespeichert ist die Zeit, in der du wirklich im Unterricht warst — Pausen zählen nicht mit. Deine Antworten und deine Fehler sind alle da.",
+  classAutoClosedSeen: "Alles klar",
+  profileButton: "Dein Profil",
+
+  classTitle: "Deine Deutschstunde",
+  classHomeTitle: "Zur Startseite — die Stunde bleibt offen",
+  classClockLabel: "Dauer der Stunde",
+  classTranscriptLabel: "Mitschrift der Stunde",
+  classJumpToLatest: "Zum Neuesten",
+  classConnecting: "Dein Lehrer kommt gleich …",
+  classListening: "Ich höre zu — sprich einfach los",
+  classSpeaking: "Dein Lehrer spricht — du kannst ihn unterbrechen",
+  classThinking: "Einen Moment …",
+  classPaused: "Pause — die Uhr steht",
+  classEnded: "Die Stunde ist zu Ende",
+  classBreak: "Pause",
+  classResumeClass: "Weitermachen",
+  classEnd: "Stunde beenden",
+  classEndConfirm: "Die Stunde jetzt beenden? Danach siehst du die Zusammenfassung.",
+  classRetry: "Noch einmal verbinden",
+  classErrorTitle: "Die Verbindung ist weg",
+  classCorrection: "Korrektur",
+  classCorrectionSaid: "Du hast gesagt:",
+  classCorrectionShould: "Richtig heißt es:",
+  classNowTalk: "Gespräch",
+  classNowVocab: "Wortschatz",
+  classNowTable: "Tabelle",
+  classNowSentence: "Satz",
+  classNowReview: "Wiederholung",
+  classProgress: (done, total) => `Schritt ${done} von ${total}`,
+
+  classSummaryEyebrow: "Zusammenfassung",
+  classSummaryTitle: "Das war deine Stunde",
+  classSummaryClean: "Heute alles richtig",
+  classSummaryNothing: "Zu kurz zum Speichern",
+  classSummaryDuration: (text) => `Du hast ${text} gesprochen.`,
+  classSummaryDurationLabel: "gesprochen",
+  classSummaryScore: (right, total) => `${right} von ${total} richtig`,
+  classSummaryScoreLabel: "richtig",
+  classSummaryShareLabel: "Trefferquote",
+  classSummaryMidnight: "Diese Stunde hat niemand beendet — um Mitternacht haben wir sie geschlossen.",
+  classSummaryCovered: "Das war heute dran",
+  classSummaryMistakes: "Das ist heute schiefgegangen",
+  classSummaryNoMistakes: "Heute kein einziger Fehler — es kommt nichts zurück.",
+  classSummaryReturn: (n) =>
+    n === 1
+      ? "Das kommt an Tag 3, Tag 7 und Tag 21 wieder."
+      : `Diese ${n} Punkte kommen an Tag 3, Tag 7 und Tag 21 wieder.`,
+  classSummaryWords: "Wörter",
+  classSummaryTables: "Tabellen",
+  classSummaryGrammar: "Sätze",
+  classSummaryCorrections: "Korrigierte Sätze",
+  classSummarySection: (name) => `Thema: ${name}`,
+  unitMinutes: "Min.",
+  unitHours: "Std.",
+
   gridExample: "Beispiel",
   gridMalayalam: "മലയാളം",
-  gridMasteredNow: "Drei saubere Tage — diese Tabelle sitzt und fällt aus dem Drill.",
-  gridDaysToGo: (n) => `Sauber. Noch ${n} ${n === 1 ? "Tag" : "Tage"} in Folge, dann ist sie durch.`,
-  gridChainBroken: "Ein Fehler — die Serie beginnt morgen von vorn. Die falschen Zellen kommen zuerst.",
   gridSectionTitle: "Tabellen auswendig",
   gridSecure: (done, total) => `${done} von ${total} Tabellen sitzen.`,
   gridMissedTitle: "Dein persönliches Wörterbuch",
@@ -338,29 +489,16 @@ const de: Strings = {
   gridStatusMastered: "sitzt",
   gridStatusDay: (n) => `Tag ${n} von 3`,
   gridStatusNew: "neu",
-  overdueSuffix: (n) => ` — ${n} überfällig`,
+
   installButton: "App installieren",
-  installBlurb: "Auf den Startbildschirm — offline üben, ohne Browserleiste.",
+  installBlurb: "Auf den Startbildschirm — ohne Browserleiste, mit einem Tipp in die Stunde.",
   installIOSHint: "Installieren: Teilen-Symbol antippen → „Zum Home-Bildschirm“.",
-  wordsUnit: (n) => (n === 1 ? "1 Wort" : `${n} Wörter`),
-  tablesUnit: (n) => (n === 1 ? "1 Tabelle" : `${n} Tabellen`),
-  sentencesUnit: (n) => (n === 1 ? "1 Satz" : `${n} Sätze`),
-  dueUnit: (n) => (n === 1 ? "1 fällig" : `${n} fällig`),
-  nothingDue: "nichts fällig",
-  allClear: "alle sitzen",
-  inChat: "im Chat",
-  upNext: "als Nächstes",
-  start: "Drill starten",
-  viewProgress: "Fortschritt",
-  backToDrill: "Zurück zum Drill",
+
+  viewProgress: "Profil",
+  homeTitle: "Zur Startseite",
   back: "Zurück",
-  again: "Nochmal drillen",
-  check: "Prüfen",
-  next: "Weiter",
-  finish: "Auswertung",
-  enterHint: "Enter",
-  navHint: "↑ ↓ Feld wechseln · Enter weiter",
-  vocabCheck: "Vokabelkontrolle",
+  backHome: "Zur Startseite",
+
   auxiliary: "Hilfsverb",
   article: "Artikel",
   meaning: "Bedeutung (Englisch)",
@@ -368,25 +506,45 @@ const de: Strings = {
   plural: "Plural",
   verb: "Verb",
   noun: "Nomen",
-  correct: "Richtig.",
-  nearly: "Fast — achte auf Umlaute und ß.",
-  notQuite: "Nicht ganz.",
-  masteredNow: "Gemeistert — dieses Wort fällt aus dem Drill.",
-  oneMoreDay: (n) => `Richtig — noch einmal morgen, dann ist es weg. (${n}/2)`,
-  counterReset: "Zähler zurück auf 0 von 2.",
-  correctAnswer: "Richtig",
-  evaluation: "Auswertung",
-  flawless: "Fehlerfrei.",
-  solid: "Solide Runde.",
-  workToDo: "Da ist noch Arbeit.",
-  percentRight: (n) => `${n} % richtig`,
-  staysInDrill: (n) => (n === 1 ? "1 Punkt bleibt im Drill" : `${n} Punkte bleiben im Drill`),
-  nothingNew: "Nichts Neues im Fehlerheft",
+
   streakDays: (n) => (n === 1 ? "1 Tag in Folge" : `${n} Tage in Folge`),
   reviewAgain: "Noch einmal ansehen",
+
+  profileTitle: "Dein Profil",
+  profileEyebrow: "Dein Deutsch bis heute",
+  profileHours: "Stunden gelernt",
+  profileDays: "Tage gelernt",
+  profileClasses: "Einheiten",
+  profileLongest: "längste Serie",
+  calendarTitle: "Dein Jahr",
+  calendarBlurb:
+    "Ein Feld für jeden Tag. Je länger die Stunde, desto grüner — tipp auf ein Feld, und du siehst, was an dem Tag dran war.",
+  calendarLess: "weniger",
+  calendarMore: "mehr",
+  calendarDay: (date, minutes) => `${date} — ${minutes} ${minutes === 1 ? "Minute" : "Minuten"} gelernt`,
+  calendarEmptyDay: (date) => `${date} — keine Stunde`,
+  calendarWeekdays: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+  dayTitle: (date) => `Am ${date}`,
+  dayNothing: "An diesem Tag war keine Stunde.",
+  dayClasses: (n) => (n === 1 ? "1 Einheit" : `${n} Einheiten`),
+  dayClose: "Tag schließen",
+  mistakeWordsTitle: "Wörter, die du falsch hattest",
+  mistakeCellsTitle: "Tabellenzellen, die du falsch hattest",
+  mistakeNone: "Dein Fehlerheft ist leer.",
+  mistakeBlurb:
+    "Alles hier kommt in der Stunde wieder: an Tag 3, an Tag 7 und an Tag 21. Dreimal richtig, dann ist es weg.",
+  colNo: "Nr.",
+  colYourAnswer: "deine Antwort",
+  colTimesWrong: "falsch",
+  colDue: "kommt wieder",
+  mistakeStage: (stage) => `Tag ${ladderDay(stage)}`,
+  endingEnded: "beendet",
+  endingMidnight: "um Mitternacht geschlossen",
+  endingDropped: "offen liegen geblieben",
+
   progressTitle: "Wo du stehst",
-  lastRounds: "Letzte 14 Runden — Anteil richtiger Antworten.",
-  vocabInDrill: "Vokabeln im Drill",
+  lastRounds: "Letzte 14 Einheiten — Anteil richtiger Antworten.",
+  vocabInDrill: "Vokabeln in Arbeit",
   reviewPlan: "Grammatikthemen und Wiederholungsplan",
   colWord: "Wort",
   colMeaning: "Bedeutung",
@@ -396,22 +554,21 @@ const de: Strings = {
   colStage: "Stufe",
   colNextReview: "nächste Wiederholung",
   mastered: "gemeistert",
-  inDrill: "im Drill",
+  inDrill: "in Arbeit",
   finished: "fertig",
   dueToday: "heute",
   overdueBy: (n) => (n === 1 ? "1 Tag überfällig" : `${n} Tage überfällig`),
   inDays: (n) => (n === 1 ? "in 1 Tag" : `in ${n} Tagen`),
   tablesSecure: (a, b) => `Tabellensätze sicher: ${a} von ${b}.`,
   intervals: "Intervalle: 1 · 3 · 7 · 21 · 35 Tage.",
+
   themeLabel: "Farbschema wechseln",
   langLabel: "Sprache",
   footer: "Daily Deutsch",
-  noSessionsYet: "Noch keine Runde abgeschlossen.",
+  noSessionsYet: "Noch keine Stunde abgeschlossen.",
   statStreak: "Tage in Folge",
   statMastered: "gemeistert",
   statAccuracy: "Trefferquote",
-  todayPlan: "Dein Plan für heute",
-  jumpToStep: (label) => `Zu „${label}“ springen`,
 
   addWordButton: "Wort hinzufügen",
   addWordTitle: "Eigenes Wort hinzufügen",
@@ -430,15 +587,15 @@ const de: Strings = {
   addWordNeedParticiple: "Gib das Partizip II an.",
   ownWord: "eigenes Wort",
   removeWord: "Entfernen",
-  removeWordConfirm: (word) => `„${word}“ aus dem Drill entfernen?`,
+  removeWordConfirm: (word) => `„${word}“ aus deinen Wörtern entfernen?`,
 
   loading: "Einen Moment …",
   loginTitle: "Dein Deutsch. Jeden Tag.",
   loginBlurb:
-    "Ein Drill pro Tag, der sich merkt, was du falsch machst. Erstell ein Konto mit E-Mail und Passwort — dein Fortschritt folgt dir auf jedes Gerät.",
+    "Jeden Tag eine Stunde, in der gesprochen wird — und die sich merkt, was du falsch machst. Erstell ein Konto mit E-Mail und Passwort, dann folgt dir dein Fortschritt auf jedes Gerät.",
   loginPoints: [
-    "Vokabeln, Tabellen und Wiederholung in 25 Minuten",
-    "Fehler kommen morgen wieder, bis sie sitzen",
+    "Eine gesprochene Stunde am Tag, mit deinem Lehrer",
+    "Jeder Fehler kommt an Tag 3, 7 und 21 zurück",
     "Dein Niveau, deine Themen — auf jedem Gerät"
   ],
   signInWithGoogle: "Mit Google anmelden",
@@ -545,18 +702,15 @@ const de: Strings = {
     "Gemeinsam etwas planen — Prüfungssimulation"
   ],
 
-  tutorStart: "Mit Lehrer sprechen",
-  tutorStartHint:
-    "Dein Lehrer liest jede Frage vor und hört deine Antwort. Du kannst jederzeit wieder tippen.",
   tutorUnavailable: "Dafür brauchst du ein Mikrofon und einen eingeschalteten Sprachmodus.",
   tutorConnecting: "Dein Lehrer kommt an den Apparat …",
   tutorAsking: "Dein Lehrer spricht — hör zu",
   tutorListening: "Sag deine Antwort",
   tutorThinking: "Einen Moment …",
-  tutorEnded: "Der Lehrer hat aufgelegt. Tipp die Antworten weiter.",
+  tutorEnded: "Der Lehrer hat aufgelegt. Du kannst ihn zurückholen.",
   tutorOff: "Lehrer aus",
   tutorRepeat: "Frage noch einmal hören",
-  tutorStop: "Ohne Stimme weitermachen",
+  tutorStop: "Stimme beenden",
 
   syllabusButton: "Lehrplan",
   syllabusEyebrow: "Lehrplan A1 – B2",
@@ -579,11 +733,9 @@ const de: Strings = {
   syllabusCourse: "Kurs",
   syllabusReading: "Lesen",
   syllabusDrilled: (words, sentences, topics) =>
-    `im Drill: ${words} Wörter · ${sentences} Sätze · ${topics} ${topics === 1 ? "Wiederholung" : "Wiederholungen"}`,
-  syllabusNotDrilled: "noch nicht im Drill",
-  wordsWaiting: (n) => ` · +${n} warten`,
+    `im Unterricht: ${words} Wörter · ${sentences} Sätze · ${topics} ${topics === 1 ? "Wiederholung" : "Wiederholungen"}`,
+  syllabusNotDrilled: "noch nicht im Unterricht",
   syllabusNoPlural: "kein Plural",
-  noPlural: "kein Plural",
 
   clipsTitle: "Videos zum Thema",
   clipPlay: "Ausschnitt abspielen",
@@ -620,30 +772,87 @@ const de: Strings = {
   emailPlaceholder: "du@beispiel.de",
   badEmail: "Diese E-Mail-Adresse sieht nicht richtig aus.",
   signInFailed: "Das hat nicht geklappt. Versuch es bitte noch einmal.",
-  syncedAs: (who) => `angemeldet als ${who}`,
-  localOnly: "nur dieses Gerät",
-  mergedNotice: "Dein bisheriger Fortschritt wurde mit deinem Konto zusammengeführt."
+  syncedAs: (who) => `angemeldet als ${who}`
 };
 
 const en: Strings = {
   tagline: "Daily German · A1 → B2",
   greeting: (name) => (name ? `Good day, ${name}.` : "Good day."),
   lede:
-    "A round takes about 25 minutes. Anything you get wrong comes back tomorrow; anything you get right twice disappears.",
-  steps: ["Vocabulary", "Tables", "Sentences", "Review", "New topic"],
-  stepVocabDetailEmpty: "Nothing outstanding — well done.",
-  stepTablesDetail: "Gap sentences from all six tables. The case is never revealed.",
-  stepGridDetail: "Articles, pronouns, endings — one cell at a time until they stick.",
-  stepGridDetailEmpty: "Every table is secure. Nothing left to ask.",
-  stepReviewDetailEmpty: "No topic falls due today.",
-  gridStudyEyebrow: "Learn by heart",
-  gridStudyHint: "Read the table through. In a moment you'll be asked it cell by cell.",
-  gridCellPrompt: (row, col) => `${row} · ${col}`,
+    "One spoken class a day. Your teacher asks, corrects you on the spot and writes down every mistake — then puts it to you again on day 3, day 7 and day 21.",
+
+  classStart: "Start today's class",
+  classResume: "Continue your class",
+  classStartMeta: (minutes, topic) => `about ${minutes} min · ${topic}`,
+  classResumeMeta: (minutes, topic) => `${minutes} min already · ${topic}`,
+  classUnavailable: "A class needs a microphone and the voice mode switched on.",
+  classPlanTitle: "What today holds",
+  classPlanReviews: (n) => (n === 1 ? "1 thing you got wrong before" : `${n} things you got wrong before`),
+  classPlanWords: (n) => (n === 1 ? "1 word" : `${n} words`),
+  classPlanTables: (n) => (n === 1 ? "1 grammar table" : `${n} grammar tables`),
+  classPlanSentences: (n) => (n === 1 ? "1 sentence" : `${n} sentences`),
+  classPlanTalk: (minutes) => (minutes === 1 ? "1 minute of conversation" : `${minutes} minutes of conversation`),
+  classPlanTopic: (topic) => `Today's theme: ${topic}`,
+  classAutoClosed: (date) => `Your class from ${date} was still running. We closed it for you at midnight.`,
+  classAutoClosedNote:
+    "What is saved is the time you were really in the room — breaks do not count. Your answers and your mistakes are all there.",
+  classAutoClosedSeen: "Got it",
+  profileButton: "Your profile",
+
+  classTitle: "Your German class",
+  classHomeTitle: "Back to home — the class stays open",
+  classClockLabel: "Time in class",
+  classTranscriptLabel: "Transcript of the class",
+  classJumpToLatest: "Jump to the latest",
+  classConnecting: "Your teacher will be with you in a moment …",
+  classListening: "I'm listening — just talk",
+  classSpeaking: "Your teacher is speaking — you may cut in",
+  classThinking: "One moment …",
+  classPaused: "On a break — the clock has stopped",
+  classEnded: "The class is over",
+  classBreak: "Break",
+  classResumeClass: "Carry on",
+  classEnd: "End class",
+  classEndConfirm: "End the class now? You'll get the summary straight away.",
+  classRetry: "Try connecting again",
+  classErrorTitle: "The connection has dropped",
+  classCorrection: "Correction",
+  classCorrectionSaid: "You said:",
+  classCorrectionShould: "It should be:",
+  classNowTalk: "Conversation",
+  classNowVocab: "Vocabulary",
+  classNowTable: "Grammar table",
+  classNowSentence: "Sentence",
+  classNowReview: "Review",
+  classProgress: (done, total) => `Step ${done} of ${total}`,
+
+  classSummaryEyebrow: "Summary",
+  classSummaryTitle: "That's today's class",
+  classSummaryClean: "Everything right today",
+  classSummaryNothing: "Too short to keep",
+  classSummaryDuration: (text) => `You spoke for ${text}.`,
+  classSummaryDurationLabel: "spoken",
+  classSummaryScore: (right, total) => `${right} of ${total} correct`,
+  classSummaryScoreLabel: "right",
+  classSummaryShareLabel: "accuracy",
+  classSummaryMidnight: "Nobody ended this class — we closed it at midnight.",
+  classSummaryCovered: "What we covered",
+  classSummaryMistakes: "What went wrong today",
+  classSummaryNoMistakes: "Not a single mistake today — nothing comes back.",
+  classSummaryReturn: (n) =>
+    n === 1
+      ? "It comes back on day 3, day 7 and day 21."
+      : `These ${n} come back on day 3, day 7 and day 21.`,
+  classSummaryWords: "Words",
+  classSummaryTables: "Grammar tables",
+  classSummaryGrammar: "Sentences",
+  classSummaryCorrections: "Sentences put right",
+  classSummarySection: (name) => `Theme: ${name}`,
+  unitMinutes: "min",
+  unitHours: "h",
+
   gridExample: "Example",
   gridMalayalam: "മലയാളം",
-  gridMasteredNow: "Three clean days — this table is secure and leaves the drill.",
-  gridDaysToGo: (n) => `Clean. ${n} more ${n === 1 ? "day" : "days"} in a row and it's done.`,
-  gridChainBroken: "One slip — the run restarts tomorrow, and the cells you missed come first.",
   gridSectionTitle: "Tables by heart",
   gridSecure: (done, total) => `${done} of ${total} tables secure.`,
   gridMissedTitle: "Your personal dictionary",
@@ -651,29 +860,16 @@ const en: Strings = {
   gridStatusMastered: "secure",
   gridStatusDay: (n) => `day ${n} of 3`,
   gridStatusNew: "new",
-  overdueSuffix: (n) => ` — ${n} overdue`,
+
   installButton: "Install app",
-  installBlurb: "On your home screen — drill offline, with no browser bar.",
+  installBlurb: "On your home screen — no browser bar, one tap into the class.",
   installIOSHint: "To install: tap the Share icon → Add to Home Screen.",
-  wordsUnit: (n) => (n === 1 ? "1 word" : `${n} words`),
-  tablesUnit: (n) => (n === 1 ? "1 table" : `${n} tables`),
-  sentencesUnit: (n) => (n === 1 ? "1 sentence" : `${n} sentences`),
-  dueUnit: (n) => (n === 1 ? "1 due" : `${n} due`),
-  nothingDue: "nothing due",
-  allClear: "all secure",
-  inChat: "in chat",
-  upNext: "up next",
-  start: "Start the drill",
-  viewProgress: "Progress",
-  backToDrill: "Back to the drill",
+
+  viewProgress: "Profile",
+  homeTitle: "Back to the home screen",
   back: "Back",
-  again: "Drill again",
-  check: "Check",
-  next: "Next",
-  finish: "Results",
-  enterHint: "Enter",
-  navHint: "↑ ↓ change field · Enter to continue",
-  vocabCheck: "Vocabulary check",
+  backHome: "Back to home",
+
   auxiliary: "Auxiliary verb",
   article: "Article",
   meaning: "Meaning (English)",
@@ -681,25 +877,45 @@ const en: Strings = {
   plural: "Plural",
   verb: "Verb",
   noun: "Noun",
-  correct: "Correct.",
-  nearly: "Close — mind the umlauts and ß.",
-  notQuite: "Not quite.",
-  masteredNow: "Mastered — this word leaves the drill.",
-  oneMoreDay: (n) => `Correct — once more tomorrow and it's gone. (${n}/2)`,
-  counterReset: "Counter back to 0 of 2.",
-  correctAnswer: "Correct answer",
-  evaluation: "Results",
-  flawless: "Flawless.",
-  solid: "A solid round.",
-  workToDo: "There's work to do.",
-  percentRight: (n) => `${n}% correct`,
-  staysInDrill: (n) => (n === 1 ? "1 item stays in the drill" : `${n} items stay in the drill`),
-  nothingNew: "Nothing new for the mistake book",
+
   streakDays: (n) => (n === 1 ? "1 day in a row" : `${n} days in a row`),
   reviewAgain: "Worth another look",
+
+  profileTitle: "Your profile",
+  profileEyebrow: "Your German so far",
+  profileHours: "hours studied",
+  profileDays: "days studied",
+  profileClasses: "classes",
+  profileLongest: "longest run",
+  calendarTitle: "Your year",
+  calendarBlurb:
+    "One square for every day. The longer the class, the greener the square — tap one to see what that day held.",
+  calendarLess: "less",
+  calendarMore: "more",
+  calendarDay: (date, minutes) => `${date} — ${minutes} ${minutes === 1 ? "minute" : "minutes"} studied`,
+  calendarEmptyDay: (date) => `${date} — no class`,
+  calendarWeekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  dayTitle: (date) => `On ${date}`,
+  dayNothing: "There was no class that day.",
+  dayClasses: (n) => (n === 1 ? "1 class" : `${n} classes`),
+  dayClose: "Close the day",
+  mistakeWordsTitle: "Words you got wrong",
+  mistakeCellsTitle: "Table cells you got wrong",
+  mistakeNone: "Your book of errors is empty.",
+  mistakeBlurb:
+    "Everything here comes back in class: on day 3, on day 7 and on day 21. Right three times and it is gone.",
+  colNo: "No.",
+  colYourAnswer: "your answer",
+  colTimesWrong: "times wrong",
+  colDue: "comes back",
+  mistakeStage: (stage) => `day ${ladderDay(stage)}`,
+  endingEnded: "ended",
+  endingMidnight: "closed at midnight",
+  endingDropped: "left open",
+
   progressTitle: "Where you stand",
-  lastRounds: "Last 14 rounds — share of correct answers.",
-  vocabInDrill: "Vocabulary in the drill",
+  lastRounds: "Last 14 classes — share of correct answers.",
+  vocabInDrill: "Vocabulary in progress",
   reviewPlan: "Grammar topics and review schedule",
   colWord: "Word",
   colMeaning: "Meaning",
@@ -709,22 +925,21 @@ const en: Strings = {
   colStage: "Stage",
   colNextReview: "next review",
   mastered: "mastered",
-  inDrill: "in drill",
+  inDrill: "in progress",
   finished: "finished",
   dueToday: "today",
   overdueBy: (n) => (n === 1 ? "1 day overdue" : `${n} days overdue`),
   inDays: (n) => (n === 1 ? "in 1 day" : `in ${n} days`),
   tablesSecure: (a, b) => `Table sentences secure: ${a} of ${b}.`,
   intervals: "Intervals: 1 · 3 · 7 · 21 · 35 days.",
+
   themeLabel: "Switch colour scheme",
   langLabel: "Language",
   footer: "Daily Deutsch",
-  noSessionsYet: "No round completed yet.",
+  noSessionsYet: "No class completed yet.",
   statStreak: "day streak",
   statMastered: "mastered",
   statAccuracy: "accuracy",
-  todayPlan: "Your plan for today",
-  jumpToStep: (label) => `Jump to "${label}"`,
 
   addWordButton: "Add a word",
   addWordTitle: "Add your own word",
@@ -743,15 +958,15 @@ const en: Strings = {
   addWordNeedParticiple: "Give the past participle.",
   ownWord: "your word",
   removeWord: "Remove",
-  removeWordConfirm: (word) => `Remove "${word}" from the drill?`,
+  removeWordConfirm: (word) => `Remove "${word}" from your words?`,
 
   loading: "One moment …",
   loginTitle: "Your German. Every day.",
   loginBlurb:
-    "One drill a day that remembers what you get wrong. Create an account with your email and a password — your progress follows you to every device.",
+    "A class a day that you talk your way through — and that remembers what you get wrong. Create an account with your email and a password, and your progress follows you to every device.",
   loginPoints: [
-    "Vocabulary, tables and review in 25 minutes",
-    "Mistakes come back tomorrow until they stick",
+    "One spoken class a day, with your teacher",
+    "Every mistake comes back on day 3, 7 and 21",
     "Your level, your topics — on every device"
   ],
   signInWithGoogle: "Sign in with Google",
@@ -857,18 +1072,15 @@ const en: Strings = {
     "Planning something together — exam simulation"
   ],
 
-  tutorStart: "Speak with your teacher",
-  tutorStartHint:
-    "Your teacher reads every question out and listens to your answer. You can go back to typing at any point.",
   tutorUnavailable: "This needs a microphone and the voice mode switched on.",
   tutorConnecting: "Getting your teacher on the line …",
   tutorAsking: "Your teacher is speaking — listen",
   tutorListening: "Say your answer",
   tutorThinking: "One moment …",
-  tutorEnded: "Your teacher has hung up. Carry on typing.",
+  tutorEnded: "Your teacher has hung up. You can call again.",
   tutorOff: "Teacher off",
   tutorRepeat: "Hear the question again",
-  tutorStop: "Carry on without the voice",
+  tutorStop: "Stop the voice",
 
   syllabusButton: "Syllabus",
   syllabusEyebrow: "Syllabus A1 – B2",
@@ -891,11 +1103,9 @@ const en: Strings = {
   syllabusCourse: "Course",
   syllabusReading: "Read",
   syllabusDrilled: (words, sentences, topics) =>
-    `in the drill: ${words} words · ${sentences} sentences · ${topics} review ${topics === 1 ? "topic" : "topics"}`,
-  syllabusNotDrilled: "not in the drill yet",
-  wordsWaiting: (n) => ` · +${n} waiting`,
+    `in class: ${words} words · ${sentences} sentences · ${topics} review ${topics === 1 ? "topic" : "topics"}`,
+  syllabusNotDrilled: "not taught yet",
   syllabusNoPlural: "no plural",
-  noPlural: "no plural",
 
   clipsTitle: "Videos on this topic",
   clipPlay: "Play the clip",
@@ -932,9 +1142,7 @@ const en: Strings = {
   emailPlaceholder: "you@example.com",
   badEmail: "That email address doesn't look right.",
   signInFailed: "That didn't work. Please try again.",
-  syncedAs: (who) => `signed in as ${who}`,
-  localOnly: "this device only",
-  mergedNotice: "Your existing progress has been merged into your account."
+  syncedAs: (who) => `signed in as ${who}`
 };
 
 const CATALOGUE: Record<Lang, Strings> = { de, en };

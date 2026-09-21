@@ -246,6 +246,8 @@ export interface SessionRecord {
   date: string;
   right: number;
   total: number;
+  /** Seconds of class. Absent on rows written before classes were timed. */
+  seconds?: number;
 }
 
 export interface Progress {
@@ -259,6 +261,12 @@ export interface Progress {
   topics: Record<string, TopicProgress>;
   tables: Record<string, TableProgress>;
   sessions: SessionRecord[];
+  /** Wrong answers still owed a review, on the 3/7/21 ladder. */
+  mistakes: Mistake[];
+  /** Finished classes, oldest first. Capped, like `sessions`. */
+  classes: ClassRecord[];
+  /** The class still open, or null. At most one, whatever device started it. */
+  live: LiveClass | null;
 }
 
 /* ------------------------------------------------------------------- auth */
@@ -269,66 +277,292 @@ export interface Learner {
   displayName: string | null;
 }
 
-/* ----------------------------------------------------------------- session */
+/* ------------------------------------------------------------- the lesson */
 
 export type Verdict = "ok" | "near" | "no";
 
-export interface VocabTask {
-  readonly step: 0;
+/**
+ * What a spoken answer is asking for, which decides how it is read before it
+ * reaches the grader. Asked for an article a learner says "ähm, ich glaube
+ * der"; asked for a meaning they say a sentence. `speech.ts` does the reading,
+ * but the *kind* of thing being asked is a property of the question, so it
+ * lives here with the rest of the domain.
+ */
+export type Expects = "article" | "aux" | "english" | "german" | "none";
+
+/** Which box of a vocabulary card an answer belonged in. */
+export type VocabField = "key" | "meaning" | "form";
+
+/** Why an item is in today's class, so a re-ask can be introduced as one. */
+export type AskOrigin = "review" | "due" | "fresh";
+
+/** Everything a closed question needs to be asked, heard, graded and filed. */
+export interface ClassAskBase {
+  /** Unique within one class. Outcomes and the summary key off it. */
+  readonly id: string;
+  readonly origin: AskOrigin;
+  /**
+   * What the tutor is *told* to ask, in German. A stage direction, not a
+   * script: the tutor puts it in its own warm words, exactly as the spoken
+   * round's [FRAGE] turns have always worked.
+   */
+  readonly direction: string;
+  readonly expects: Expects;
+  /**
+   * Every answer the grader accepts. This never leaves the browser — telling
+   * the model the answer is telling it to the learner, eventually.
+   */
+  readonly accepted: readonly string[];
+  /** Said back after a wrong attempt. `accepted[0]` unless that reads oddly. */
+  readonly answer: string;
+  /** One sentence of why, from the bank. Both languages, or nothing. */
+  readonly why: Bilingual | null;
+  /** How the profile and the summary list it: "die Reise", "Dativ · maskulin". */
+  readonly subject: string;
+}
+
+export interface VocabAsk extends ClassAskBase {
   readonly kind: "vocab";
-  readonly item: VocabItem;
+  readonly vocabId: string;
+  readonly field: VocabField;
+  /** The English meaning, kept so a missed word can be listed with it. */
+  readonly gloss: string;
 }
 
-/** The whole grid, shown to read before it is ever asked. */
-export interface TableStudyTask {
-  readonly step: 1;
-  readonly kind: "table-study";
-  readonly table: ParadigmTable;
-}
-
-/** One cell of one table: "Dativ, feminin → ___". */
-export interface TableCellTask {
-  readonly step: 1;
-  readonly kind: "table-cell";
+export interface CellAsk extends ClassAskBase {
+  readonly kind: "cell";
   readonly tableId: string;
-  readonly tableName: Trilingual;
-  readonly row: number;
-  readonly col: number;
-  readonly rowLabel: Trilingual;
-  readonly colLabel: Trilingual;
-  readonly answers: readonly string[];
+  /** Exactly as `cellKey()` writes it: `<tableId>#<row>:<col>`. */
+  readonly cell: string;
+  /** The row's worked sentence, read out only after a wrong answer. */
   readonly example: TableExample | null;
 }
 
-export interface BlankTask {
-  readonly step: 2 | 3;
+export interface BlankAsk extends ClassAskBase {
   readonly kind: "blank";
-  readonly sourceId: string;
   readonly bank: "grammar" | "topic";
-  readonly label: Bilingual;
-  readonly question: BlankQuestion;
+  readonly sourceId: string;
+  /** Index into a topic's `questions`; always 0 for a grammar item. */
+  readonly index: number;
+  /** The sentence, with `___` where the gap is. */
+  readonly sentence: string;
 }
 
-export type Task = VocabTask | TableStudyTask | TableCellTask | BlankTask;
+/** One entry of the book of errors, come back round on the 3/7/21 ladder. */
+export interface ReviewAsk extends ClassAskBase {
+  readonly kind: "review";
+  readonly mistakeId: string;
+  /**
+   * What it was before it was a review — a word, a table cell, a sentence.
+   * Carried so that a review got wrong again is listed under the right
+   * heading in the day's summary rather than filed as "grammar" because that
+   * happens to be what a review is made of.
+   */
+  readonly of: MistakeKind;
+}
 
-export interface ResultRow {
-  prompt: string;
-  ok: boolean;
+/**
+ * A stretch of real conversation. It has no accepted answer, which is the
+ * whole point: this is the part of the class the app cannot mark and the model
+ * can. The tutor is steered here rather than graded — a theme, a grammar point
+ * to fish for, and the day's words to work in.
+ */
+export interface TalkTurn {
+  readonly kind: "talk";
+  readonly id: string;
+  readonly direction: string;
+  readonly subject: string;
+  /** Roughly how long the stretch should run, for the agenda's own estimate. */
+  readonly minutes: number;
+}
+
+/** A question the app asked, knows the answer to, and will mark itself. */
+export type ClassAsk = VocabAsk | CellAsk | BlankAsk | ReviewAsk;
+
+export type ClassItem = ClassAsk | TalkTurn;
+
+/**
+ * One item of the plan, small enough to store: an id and nothing else. The
+ * question itself is never written down, so a class resumed after a bank has
+ * been edited asks today's question rather than last week's.
+ */
+export interface ClassPlanItem {
+  readonly kind: ClassItem["kind"];
+  readonly ref: string;
+}
+
+/**
+ * Today's class, computed before the call opens.
+ *
+ * Deterministic from `Progress` and the date, for the same reason
+ * `sessionVocab` is: the home screen shows what today holds, a class resumed
+ * after a break has to be the same class, and a midnight auto-close has to be
+ * able to say what was on the plan. Nothing in here is drawn at random.
+ */
+export interface ClassAgenda {
+  readonly date: string;
+  readonly level: Level;
+  /** The syllabus section the conversation hangs on. */
+  readonly sectionId: string;
+  readonly sectionTitle: Bilingual;
+  /** The class, in the order it is taught. */
+  readonly items: readonly ClassItem[];
+  /**
+   * More of the same, drawn on only if the learner is still going. A class has
+   * no fixed length; this is what stops one that runs long from turning into
+   * the tutor improvising questions it has no answers for.
+   */
+  readonly spare: readonly ClassItem[];
+  /** The agenda's own estimate of `items`, in minutes. Shown on the start pill. */
+  readonly minutes: number;
+}
+
+/** What the learner did with one closed question. */
+export interface ClassAnswer {
+  readonly itemId: string;
+  readonly kind: ClassAsk["kind"];
+  readonly verdict: Verdict;
+  readonly prompt: string;
+  readonly given: string;
+  readonly expected: string;
+  readonly why: Bilingual | null;
+}
+
+/* ------------------------------------------------------ the book of errors */
+
+/**
+ * What kind of thing was got wrong, and therefore how it comes back.
+ *   vocab      — the meaning, article or form of one word
+ *   table      — one cell of one paradigm grid
+ *   grammar    — a gapped sentence, or a point the tutor asked about
+ *   correction — a sentence the learner said wrong and the tutor put right
+ */
+export type MistakeKind = "vocab" | "table" | "grammar" | "correction";
+
+/**
+ * One slip exactly as it happened, frozen into a day's summary.
+ *
+ * Deliberately a copy and not a reference to the live `Mistake`. A summary is
+ * a photograph of a day: once the ladder has moved that entry on — or retired
+ * it altogether — the photograph must still show what happened that morning.
+ */
+export interface MistakeNote {
+  readonly kind: MistakeKind;
+  /** What it is listed under: "die Butter", "Dativ · maskulin". */
+  readonly subject: string;
+  readonly prompt: string;
+  readonly expected: string;
+  readonly given: string;
+}
+
+/**
+ * A wrong answer the app has undertaken to ask again, on day 3, day 7 and
+ * day 21.
+ *
+ * This is not `TopicProgress`. That ladder (1/3/7/21/35, in `scheduler.ts`)
+ * paces whole syllabus topics; this one paces a single answer, and folding
+ * them together would mean one wrong article dragging an entire topic back a
+ * rung. Nor is it `TableProgress.missed`, which is the within-grid dictionary
+ * that a table's three-clean-days rule uses and that one clean sweep empties.
+ * A cell may sit in both at once, and should: the grid asks it again tomorrow,
+ * and this asks it again in three weeks, when the grid has long retired.
+ */
+export interface Mistake {
+  /** `<kind>:<ref>` — stable, so one cell is one entry and not one per slip. */
+  readonly id: string;
+  readonly kind: MistakeKind;
+  /** Word id and field, cell key, sentence reference, or a normalised phrase. */
+  readonly ref: string;
+  readonly subject: string;
+  /** English meaning for a word, the row and column for a cell, "" otherwise. */
+  readonly gloss: string;
+  readonly prompt: string;
+  readonly expected: string;
+  /** Everything the grader accepts when it comes back round. */
+  readonly accepted: readonly string[];
+  readonly expects: Expects;
+  /** The most recent wrong answer, so the review can show the contrast. */
   given: string;
-  expected: string;
-  why: Bilingual | null;
+  readonly firstMissed: string;
+  /** Last day it was put to the learner, so one day can never credit twice. */
+  lastAsked: string | null;
+  /** Rung of the 3/7/21 ladder. 0 = not yet reviewed; reaching 3 retires it. */
+  stage: number;
+  /** ISO date it comes back. */
+  due: string;
+  /** Times missed in all. From two, the first rung shortens to a single day. */
+  misses: number;
 }
 
-export interface SessionState {
-  tasks: Task[];
-  index: number;
-  /** Indices of tasks already graded, so a revisited question is never counted twice. */
-  answered: number[];
-  results: ResultRow[];
-  topicHits: Record<string, { right: number; wrong: number }>;
-  /** Right/wrong per table this round, and which cells were missed. */
-  tableHits: Record<string, { right: number; wrong: number; missed: string[] }>;
+/* ------------------------------------------------------------ the classes */
+
+/** Why a class stopped. */
+export type ClassEnding =
+  /** The learner pressed "End class". */
+  | "ended"
+  /** Midnight came and nobody had. */
+  | "midnight"
+  /** It was still open when a newer class started. */
+  | "dropped";
+
+/** A finished class: the day's summary, as it will be read a year from now. */
+export interface ClassRecord {
+  readonly id: string;
+  /** The day it belongs to, by the learner's own clock. */
+  readonly date: string;
+  readonly startedAt: string;
+  readonly endedAt: string;
+  /**
+   * Seconds actually spent in the room, breaks excluded. Deliberately not
+   * `endedAt - startedAt`, which counts the coffee and, for a class closed at
+   * midnight, the whole evening.
+   */
+  readonly seconds: number;
+  readonly level: Level;
+  /** What was covered, for the day view: section, tables, words. */
+  readonly sections: readonly string[];
+  readonly tables: readonly string[];
+  readonly words: readonly string[];
+  readonly right: number;
+  readonly wrong: number;
+  readonly mistakes: readonly MistakeNote[];
+  readonly ending: ClassEnding;
 }
 
-/** How one of the four session steps is drawn in the stepper. */
-export type StepState = "idle" | "active" | "done";
+/**
+ * The class still open. At most one per learner: a second class on the same
+ * day is a second `ClassRecord`, never a second one of these.
+ */
+export interface LiveClass {
+  readonly id: string;
+  readonly date: string;
+  readonly startedAt: string;
+  readonly level: Level;
+  readonly plan: readonly ClassPlanItem[];
+  /** How far down the plan the lesson had got. */
+  cursor: number;
+  /**
+   * Seconds banked by every stretch that has already ended. Never derived
+   * from two clocks — see `liveclass.ts`.
+   */
+  seconds: number;
+  /** When the current stretch began. Null on a break, or while backgrounded. */
+  resumedAt: string | null;
+  right: number;
+  wrong: number;
+  /**
+   * Every closed question answered so far.
+   *
+   * Kept whole rather than reduced to counters because the ladders are rolled
+   * forward once, when the class closes: a word's streak only moves when every
+   * field of its card was right, and a topic only climbs when every one of its
+   * questions was answered. Neither can be decided one answer at a time, and a
+   * class that ends at midnight with nobody watching has to be scorable from
+   * what was written down.
+   */
+  answers: ClassAnswer[];
+  mistakes: MistakeNote[];
+  sections: string[];
+  tables: string[];
+  words: string[];
+}
