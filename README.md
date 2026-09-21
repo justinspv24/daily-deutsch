@@ -39,17 +39,21 @@ the words a section lists *are* the drill's words for it — read from the same
 bank, shown with the article and plural the card will ask for. A noun with no
 plural (*die Butter*, *die Eltern*) gets a two-field card.
 
-Each section also carries **videos and podcast episodes**, and none of them
-were written from memory: a research pass searched for what learners actually
-recommend, fetched every video to read its length and chapters and every
-podcast feed to read its episodes, and a second, independent pass tried to
-refute each link, timestamp and claim. A video appears as the *portion* that
-explains the section — the embed plays between `start` and `end`, the link out
-jumps to the same second — and each item shows why it is there.
+Each section also carries **videos and podcast episodes** — 184 clips and 135
+episodes, every one of the 48 sections covered — and none of them were written
+from memory: a research pass searched for what learners actually recommend,
+fetched every video to read its length and chapters and every podcast feed to
+read its episodes, a second and independent pass tried to refute each link,
+timestamp and claim, and a third check asked YouTube and every podcast host
+again from this machine. A video appears as the *portion* that explains the
+section — the embed plays between `start` and `end`, the link out jumps to the
+same second — and each item shows why it is there and what the recommendation
+rests on. Where a section has checked clips, the old "search YouTube for this"
+links step aside.
 *Podcasts* on the home screen lists the shows for your level and, section by
-section, the episodes that fit, playable in the app; playback keeps going with
-the phone locked, with controls on the lock screen. `docs/media.md` has the
-method and how to rerun it.
+section, the episodes that fit, playable in the app; playback keeps going
+across screens and with the phone locked, with controls on the lock screen.
+`docs/media.md` has the method, the counts and how to rerun it.
 
 A voice call — *vv* or the spoken round — has **no time limit**: the session
 is resumed across Google's ten-minute connection resets, the panel shows the

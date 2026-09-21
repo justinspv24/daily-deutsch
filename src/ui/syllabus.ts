@@ -200,12 +200,16 @@ function renderSection(
     );
   }
 
-  const links = h("div", { class: "syllabus__links" });
-  for (const link of section.links) links.append(renderLink(link));
-
   // The verified clips and episodes for this section. Both come from the
   // research pass, not from memory, and each carries the reason it is here.
   const media = mediaFor(section.id);
+
+  // A section's "video" links are YouTube searches: a fallback for when
+  // nothing verified exists, not content. Once the section has checked
+  // clips the searches step aside, so only what was actually vetted shows.
+  const shown = section.links.filter((link) => !(link.kind === "video" && media.videos.length));
+  const links = h("div", { class: "syllabus__links" });
+  for (const link of shown) links.append(renderLink(link));
   const clips = h("div", { class: "clips" });
   for (const clip of media.videos) clips.append(renderClip(clip));
   if (!media.videos.length) clips.append(h("p", { class: "hint" }, s.clipsNone));
@@ -223,12 +227,10 @@ function renderSection(
   if (media.podcasts.length) {
     body.append(h("h4", { class: "sectiontitle" }, s.podcastsSection), episodeList(media.podcasts));
   }
-  body.append(
-    h("h4", { class: "sectiontitle" }, s.syllabusVocab),
-    vocab,
-    h("h4", { class: "sectiontitle" }, s.syllabusLinks),
-    links
-  );
+  body.append(h("h4", { class: "sectiontitle" }, s.syllabusVocab), vocab);
+  // With the searches gone most sections have nothing left here, and a
+  // heading over an empty space reads as something failing to load.
+  if (shown.length) body.append(h("h4", { class: "sectiontitle" }, s.syllabusLinks), links);
 
   return h("details", { class: "unit", id: section.id }, summary, body);
 }

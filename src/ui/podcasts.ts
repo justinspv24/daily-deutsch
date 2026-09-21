@@ -132,13 +132,21 @@ export function episodeList(episodes: readonly PodcastEpisode[]): HTMLElement {
       if (player.isCurrent(episode)) player.toggle();
       else player.play(episode);
     });
-    // The row shows which episode is playing; the bar at the bottom does the rest.
-    const unsubscribe = player.subscribe((state) => {
+    // The row shows which episode is playing; the bar at the bottom does the
+    // rest. subscribe() paints once straight away, before it has returned the
+    // function that cancels it — so this holds a slot the first call can see
+    // is still empty, and only drops the subscription on a later paint, once
+    // the row has been in the document and has left it again.
+    let unsubscribe: (() => void) | null = null;
+    unsubscribe = player.subscribe((state) => {
+      if (unsubscribe && !row.isConnected) {
+        unsubscribe();
+        return;
+      }
       const current = state.episode?.audioUrl === episode.audioUrl;
       row.dataset["playing"] = String(current && state.playing);
       play.textContent = current && state.playing ? "❚❚" : "▶";
       play.setAttribute("aria-label", current && state.playing ? s.podcastPause : s.podcastPlay);
-      if (!row.isConnected) unsubscribe();
     });
     list.append(row);
   }

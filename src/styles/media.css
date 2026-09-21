@@ -346,3 +346,20 @@ body.has-player .fab {
     display: none;
   }
 }
+
+/*
+ * The research text quotes sources, and a source is often a bare URL with no
+ * space in it for two hundred characters. Without this a single episode note
+ * widens its row past the phone's screen and the whole page scrolls sideways.
+ */
+.clip__label,
+.clip__meta,
+.clip__why,
+.show__name,
+.show__fit,
+.show__evidence,
+.episode__title,
+.episode__meta,
+.episode__why {
+  overflow-wrap: anywhere;
+}

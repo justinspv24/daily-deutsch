@@ -55,6 +55,16 @@ for (const media of allMedia()) {
   }
 }
 
+// Two researchers can land on the same portion of the same video under
+// different labels. A section offering the same clip twice is a slip, and the
+// learner would see it as one.
+for (const media of allMedia()) {
+  const ids = media.videos.map((v) => `${v.videoId}:${v.start}`);
+  assert.equal(new Set(ids).size, ids.length, `${media.section}: no clip appears twice`);
+  const urls = media.podcasts.map((p) => p.audioUrl);
+  assert.equal(new Set(urls).size, urls.length, `${media.section}: no episode appears twice`);
+}
+
 for (const level of ["A1", "A2", "B1", "B2"]) {
   for (const show of showsFor(level)) {
     assert.ok(/^https?:\/\//.test(show.homepage) && /^https?:\/\//.test(show.feedUrl), `${level}: ${show.name} has homepage and feed`);

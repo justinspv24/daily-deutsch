@@ -50,6 +50,43 @@ Only items that survived step 3 are in the app. The JSON keeps every reason;
 which are generated files and never edited by hand. `test/media.mjs` guards
 the data's shape on every test run.
 
+## What the pass of 21 September 2026 produced
+
+| | A1 | A2 | B1 | B2 |
+|---|---|---|---|---|
+| Podcast shows | 5 | 6 | 6 | 6 |
+| Sections with clips | 12/12 | 12/12 | 12/12 | 12/12 |
+| Clips | 45 | 47 | 46 | 46 |
+| Episodes | 30 | 33 | 36 | 36 |
+
+184 clips and 135 episodes, across all 48 sections. The skeptics threw out 16
+proposed items; the reasons are in the JSON next to the survivors.
+
+Then a third check, from this machine and trusting none of it
+(`scratchpad/checkmedia.mjs`): every video asked of YouTube's oembed record
+again (does the id resolve, is the title and channel the one recorded), every
+watch page re-read for its true length, and every episode's audio fetched the
+way the player fetches it — a ranged GET, not a HEAD, because several podcast
+hosts answer a HEAD with two bytes of text. **All 185 proposed clips and all
+135 episodes came back confirmed**: every id live, every title and channel as
+recorded, every `start`–`end` inside the video's real length, every audio URL
+answering with audio.
+
+That check is also what caught the feed URLs carrying raw umlauts in the path,
+which DW's own server answers with a 400 until they are percent-encoded; the
+generator now writes every URL through the URL parser, and the data ships the
+encoded form. Two other things it caught: a section that had been given the
+same portion of the same video twice under two labels (the generator now drops
+repeats and `test/media.mjs` fails on them), and research text quoting bare
+URLs, which widened a row past a phone's screen until the CSS was told to
+break them.
+
+Two things that check cannot settle, and does not pretend to: whether a clip's
+range is the *right* range for the topic, and whether the cited recommendation
+is real. Both of those are the verify agents' judgements, made with the page
+and the source in front of them, and both are printed in the app under each
+item so the reasoning can be read and disagreed with.
+
 ## Rerunning it
 
 Links rot: videos get taken down, feeds move. The research is meant to be
