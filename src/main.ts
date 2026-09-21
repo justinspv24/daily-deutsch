@@ -157,7 +157,8 @@ class App {
       onBreak: () => this.run?.suspend(),
       onEnd: () => this.run?.end(),
       onRetry: () => this.run?.retry(),
-      onNeedKey: () => this.openAccountPanel()
+      onNeedKey: () => this.openAccountPanel(),
+      onTyped: (answer) => this.run?.typed(answer)
     });
     this.classroom = view;
     this.run = new ClassRun(this.progress, agenda, live, view, {

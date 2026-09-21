@@ -307,6 +307,16 @@ export interface ClassAskBase {
    * round's [FRAGE] turns have always worked.
    */
   readonly direction: string;
+  /**
+   * The same question as it is written on the screen, in German.
+   *
+   * Not the same string as `direction`, and the difference is the point: the
+   * tutor is handed a stage direction and puts it in its own warm words, while
+   * the card has to show a real question the learner can read and type into.
+   * One is an instruction to a teacher, the other is what a teacher would have
+   * written on the board.
+   */
+  readonly question: string;
   readonly expects: Expects;
   /**
    * Every answer the grader accepts. This never leaves the browser — telling
@@ -346,6 +356,11 @@ export interface BlankAsk extends ClassAskBase {
   readonly index: number;
   /** The sentence, with `___` where the gap is. */
   readonly sentence: string;
+  /**
+   * Gender and gloss only, never the case — the same rule the bank is written
+   * to. Telling the learner it is a dative would be answering the question.
+   */
+  readonly hint: Bilingual;
 }
 
 /** One entry of the book of errors, come back round on the 3/7/21 ladder. */

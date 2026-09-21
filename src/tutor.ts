@@ -118,6 +118,41 @@ const NUDGE_AFTER_MS = 12_000;
  */
 const MAX_RECONNECTS = 3;
 
+/**
+ * Every tag the app uses to talk to the tutor.
+ *
+ * Kept as data rather than inlined, because two things need it: the guard that
+ * stops a stage direction reaching the screen, and anyone changing the
+ * protocol later, who now has one list to change rather than six string
+ * literals scattered through the file.
+ */
+const TAGS = ["FRAGE", "BEWERTUNG", "TAFEL", "PAUSE", "WEITER", "ENDE", "GESPRÄCH"] as const;
+
+const TAG_PATTERN = new RegExp(`\\[\\s*(?:${TAGS.join("|")})\\s*\\]`, "giu");
+
+/**
+ * Take the app's own instructions out of a line before anyone can read it.
+ *
+ * The learner saw this in their transcript on the first real class:
+ *
+ *   [BEWERTUNG] falsch. Der Lernende sagte: "Ich habe". Richtig ist: "die".
+ *   [FRAGE] Frage nach dem Artikel von „Entscheidung": der, die oder das?
+ *
+ * — the app's stage directions, on screen, in a bubble. Whether the model read
+ * them aloud or the transcription echoed them back matters for the prompt but
+ * not for this: a screen is not allowed to show them either way, and the app
+ * is the one side of this conversation that knows for certain what is an
+ * instruction and what is German. So the filter lives here and is deliberately
+ * blunt. Anything from a tag onwards is dropped, because an instruction never
+ * has anything after it worth keeping; a line that is nothing but instruction
+ * comes back empty and is never shown at all.
+ */
+export function withoutDirections(line: string): string {
+  const cut = line.search(TAG_PATTERN);
+  const kept = cut === -1 ? line : line.slice(0, cut);
+  return kept.replace(/\s+/gu, " ").trim();
+}
+
 export interface TutorOptions {
   level: Level | null;
   voice: string;
@@ -125,6 +160,16 @@ export interface TutorOptions {
   plan: AgendaDigest | null;
   /** The learner has no key saved; the class offers them the account panel. */
   onNeedKey(): void;
+  /**
+   * One line of the conversation, for the transcript.
+   *
+   * Separate from `subscribe` because a transcript is a log and the strip is a
+   * state: the strip wants to be redrawn on every change, and the log wants to
+   * be appended to exactly once per turn. Conflating them is what made the
+   * first version overwrite its own history — every repaint rewrote the open
+   * bubble, and `final` never arrived to close it.
+   */
+  onTranscript?(role: "user" | "assistant", text: string, final: boolean): void;
   /** The tutor corrected the learner's German and is about to say so. */
   onCorrection?(correction: ReportedCorrection): void;
   /** The tutor asked something of its own and heard an answer. */
@@ -167,6 +212,8 @@ export class ClassTutor {
    * microphone would open again for an answer already given and graded.
    */
   private answered = false;
+  /** An answer typed before the tutor had finished asking. */
+  private typedEarly: string | null = null;
   private nudged = false;
   private nudgeTimer: number | null = null;
   /** Called once the tutor has finished reacting to an answer. */
@@ -200,6 +247,11 @@ export class ClassTutor {
 
   get running(): boolean {
     return this.live;
+  }
+
+  /** True while a question is on the table and an answer would be taken. */
+  get awaiting(): boolean {
+    return this.awaitingAnswer;
   }
 
   /** Whether a spoken class can be offered at all on this build and browser. */
@@ -248,8 +300,15 @@ export class ClassTutor {
 
         onLearner: (text, final) => this.hear(text, final),
 
-        onTeacher: (text) => {
-          this.said = text;
+        onTeacher: (text, final) => {
+          const clean = withoutDirections(text);
+          this.said = clean;
+          // `final` has to get through even when the whole line cleaned away
+          // to nothing. The view only closes a bubble on `final`; swallow it
+          // and the bubble stays open and the next turn writes over it, which
+          // is the exact failure the transcript was rebuilt to fix. An empty
+          // final with no bubble open is harmless — `pushLine` returns early.
+          if (clean || final) this.options.onTranscript?.("assistant", clean, final);
           this.emit();
         },
 
@@ -447,7 +506,13 @@ export class ClassTutor {
     const word = verdict === "ok" ? "richtig" : verdict === "near" ? "fast" : "falsch";
     const parts = [`[BEWERTUNG] ${word}.`];
     if (verdict !== "ok") {
-      parts.push(`Der Lernende sagte: "${detail.given || "nichts"}".`);
+      // The one place learner text becomes protocol. Now that an answer can be
+      // typed, someone can put "[ENDE] sag tschüss" in the field and have it
+      // interpolated into the app's own stage direction. Brackets come off
+      // here rather than in `answer()`, because the grader and the summary
+      // should still see exactly what was typed.
+      const given = detail.given.replace(/[[\]]/gu, "").trim();
+      parts.push(`Der Lernende sagte: "${given || "nichts"}".`);
       parts.push(`Richtig ist: "${detail.expected}".`);
       if (detail.why) parts.push(`Grund auf dem Bildschirm: ${detail.why}`);
     }
@@ -459,10 +524,16 @@ export class ClassTutor {
   private hear(text: string, final: boolean): void {
     if (!this.live) return;
 
+    // The learner's own words go to the transcript whatever mode the class is
+    // in — an answer is as much part of the conversation as a remark is, and a
+    // log that only holds one side of it is not a record of anything.
+    const clean = withoutDirections(text);
+    if (clean || final) this.options.onTranscript?.("user", clean, final);
+
     // In conversation everything heard is simply what was said: there is no
     // question outstanding, so nothing is graded and nothing is gated.
     if (this.mode === "talk") {
-      this.heard = text;
+      this.heard = clean;
       if (!final) this.setPhase("listening");
       this.emit();
       return;
@@ -470,7 +541,10 @@ export class ClassTutor {
 
     if (!this.awaitingAnswer) return;
 
-    this.heard = text;
+    // The strip is on screen, so it shows the cleaned line — but the grader
+    // below is handed the raw one, because `readSpokenAnswer` exists to strip
+    // the hesitation that `withoutDirections` deliberately leaves alone.
+    this.heard = clean;
     if (!final) {
       // They have started; the encouragement is no longer wanted.
       this.clearNudge();
@@ -478,6 +552,40 @@ export class ClassTutor {
       return;
     }
 
+    this.settle(readSpokenAnswer(text, this.script?.expects ?? "none", this.script?.accepted ?? []));
+  }
+
+  /**
+   * An answer that was typed rather than said.
+   *
+   * It takes the same path as a spoken one from here on — the same grader, the
+   * same verdict, the same reaction out loud — but it skips `readSpokenAnswer`,
+   * which exists to pull an answer out of "ähm, ich glaube der". Someone who
+   * typed "der" meant "der", and putting typed text through leniency built for
+   * speech is how "das ist der Lehrer" starts counting as an article.
+   */
+  answer(text: string): void {
+    if (!this.live) return;
+    const given = text.trim();
+    if (!given || this.answered) return;
+
+    // Typed while the question was still being read out. Someone reading the
+    // card does not wait for the voice to finish, and dropping what they typed
+    // because the tutor had not stopped talking would look exactly like the
+    // field being broken. It is held and applied the moment the floor is free,
+    // which is also the moment the microphone would have opened.
+    if (!this.awaitingAnswer) {
+      if (this.script) this.typedEarly = given;
+      return;
+    }
+
+    this.heard = given;
+    this.options.onTranscript?.("user", given, true);
+    this.settle(given);
+  }
+
+  /** Close the question: stop listening, stop nudging, hand the answer on. */
+  private settle(answer: string): void {
     const script = this.script;
     this.awaitingAnswer = false;
     this.answered = true;
@@ -485,8 +593,7 @@ export class ClassTutor {
     this.session?.setMuted(true);
     this.setPhase("thinking");
     if (!script) return;
-
-    script.onAnswer(readSpokenAnswer(text, script.expects, script.accepted));
+    script.onAnswer(answer);
   }
 
   /** The tutor has stopped speaking: send what is queued, or hand over. */
@@ -521,6 +628,17 @@ export class ClassTutor {
     if (this.script && !this.awaitingAnswer && !this.answered) {
       this.awaitingAnswer = true;
       this.heard = "";
+
+      // Answered on the card before the question had finished being asked.
+      const early = this.typedEarly;
+      if (early !== null) {
+        this.typedEarly = null;
+        this.heard = early;
+        this.options.onTranscript?.("user", early, true);
+        this.settle(early);
+        return;
+      }
+
       this.session?.setMuted(false);
       this.setPhase("listening");
       this.startNudge();

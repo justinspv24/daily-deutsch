@@ -24,7 +24,7 @@ import type {
   VocabField,
   VocabItem
 } from "./types";
-import { NO_PLURAL } from "./types";
+
 
 /**
  * Today's class, written down before the call opens.
@@ -50,19 +50,14 @@ export const CLASS_MISSED_CELLS_PER_TABLE = 4;
 export const CLASS_SENTENCES = 4;
 
 /**
- * Five words, not the typed round's twelve.
+ * Five words a class, one question each.
  *
- * A card spoken is three questions — article, meaning, plural — and twelve of
- * them is fourteen minutes of vocabulary before a single grammar table, which
- * is the old drill with a voice bolted on. Five keeps vocabulary to about a
- * quarter of the class. The cost is throughput, and it is paid back by
- * `spare`: a learner still talking after the plan runs out gets the other
- * four, and the bank turns over at the old rate on the days they keep going.
- *
- * Cards are always asked whole. `scoreClass` advances a word's streak only
- * when every field was right, so asking a subset would retire words on the
- * strength of their meanings alone. Asking fewer cards is the honest way to
- * buy the time; asking fewer fields is not.
+ * It was five words of three questions when a card meant article, meaning and
+ * plural, and that was already most of the time a class had. Now that a card
+ * is the meaning alone (see `fieldsOf`) five words is five questions, which
+ * leaves room the conversation takes back. The number stays at five rather
+ * than rising to match, because the words that matter are the ones that come
+ * up in the talking, and a learner who keeps going gets `spare` anyway.
  */
 
 /** About how long one spoken question takes, end to end, including the reply. */
@@ -92,12 +87,25 @@ export function vocabSubject(item: VocabItem): string {
 
 /* ----------------------------------------------------------- vocabulary */
 
-/** The fields one card asks, in the order a teacher asks them. */
-function fieldsOf(item: VocabItem): readonly VocabField[] {
-  // A mass noun and a plural-only noun have no plural to ask for, so the card
-  // is two questions rather than three — exactly as it always was on screen.
-  if (item.kind === "noun" && item.form[0] === NO_PLURAL) return ["key", "meaning"];
-  return ["key", "meaning", "form"];
+/**
+ * What a card asks: the meaning, and nothing else.
+ *
+ * It used to ask three questions — article, meaning, plural — because that is
+ * what the vocabulary card on screen had three boxes for. Spoken, that turned
+ * out to be the wrong trade. "Wie heißt der Artikel von Entscheidung?" is a
+ * quiz question, not a thing anybody says out loud, and three of them per word
+ * meant a class spent its first ten minutes on forms rather than on German.
+ *
+ * The article has not been dropped, only stopped being *asked*. Every place a
+ * word appears it appears with it — the tutor says "die Meinung", the card
+ * shows "die Meinung", the profile lists "die Meinung" — so it is learnt the
+ * way a German speaker learnt it, attached to the word rather than as a
+ * separate fact about it. And the case forms themselves are still drilled hard
+ * by the paradigm tables, which is where they belong: der becoming dem is a
+ * rule, not a property of one noun.
+ */
+function fieldsOf(_item: VocabItem): readonly VocabField[] {
+  return ["meaning"];
 }
 
 function vocabAsk(item: VocabItem, field: VocabField, origin: ClassAsk["origin"]): VocabAsk {
@@ -118,11 +126,26 @@ function vocabAsk(item: VocabItem, field: VocabField, origin: ClassAsk["origin"]
 
   const accepted = field === "key" ? [item.key] : field === "meaning" ? item.en : item.form;
 
+  const question =
+    field === "key"
+      ? item.kind === "noun"
+        ? `${item.word} — der, die oder das?`
+        : `${item.word} im Perfekt — sein oder haben?`
+      : field === "meaning"
+        // A noun is asked with its article, a verb without its auxiliary:
+        // "die Reise" is the word, whereas "aufwachen (sein)" is the word
+        // plus a fact about it that nobody says out loud.
+        ? `Was heißt ${item.kind === "noun" ? full : bare} auf Englisch?`
+        : item.kind === "noun"
+          ? `Wie heißt der Plural von ${full}?`
+          : `Wie heißt das Partizip II von ${bare}?`;
+
   return {
     kind: "vocab",
     id: `v:${item.id}:${field}`,
     origin,
     direction,
+    question,
     expects: field === "key" ? (item.kind === "noun" ? "article" : "aux") : field === "meaning" ? "english" : "german",
     accepted,
     answer: accepted[0] ?? "",
@@ -205,6 +228,48 @@ function cellDirection(table: ParadigmTable, row: number, col: number): string {
     : `Frage nach der Form für ${q(person)} im ${head(colLabel)}.`;
 }
 
+/**
+ * The same cell as a question on the board.
+ *
+ * `cellDirection` tells the tutor what to ask; this is what the learner reads
+ * while they answer. It mirrors the three shapes exactly, minus the "Frage
+ * nach …" wrapper that only makes sense when you are talking to a teacher.
+ */
+function cellQuestion(table: ParadigmTable, row: number, col: number): string {
+  const rowLabel = table.rows[row]?.label.de ?? "";
+  const colLabel = table.columns[col]?.de ?? "";
+
+  switch (table.id) {
+    case "tbl-verben-fall":
+      return `Welchen Fall nimmt „${rowLabel}“?`;
+    case "tbl-praepositionen-fall":
+      return `Welchen Fall verlangt „${rowLabel}“?`;
+    case "tbl-fragewoerter-fall":
+      return `Zu welchem Fall gehört „${rowLabel}“?`;
+    case "tbl-possessiv-grund":
+      return `Wie heißt der Possessivartikel zu „${rowLabel}“?`;
+    default:
+      break;
+  }
+
+  if (ENDING_TABLES.has(table.id)) {
+    return `Adjektivendung: ${head(rowLabel)}, ${colLabel} — wie lautet sie?`;
+  }
+
+  if (CASE_ROW_TABLES.has(table.id)) {
+    const anchors = table.rows[0]?.cells ?? [];
+    const anchor = anchors[col]?.[0] ?? "";
+    const ambiguous = anchors.filter((cells) => cells[0] === anchor).length > 1;
+    const subject = ambiguous ? `„${anchor}“ (${colLabel})` : `„${anchor}“`;
+    return `Wie heißt ${subject} im ${head(rowLabel)}?`;
+  }
+
+  const anchor = table.rows[row]?.cells[0]?.[0] ?? "";
+  return anchor
+    ? `Wie heißt „${anchor}“ im ${head(colLabel)}?`
+    : `${head(rowLabel)} im ${head(colLabel)} — wie heißt das?`;
+}
+
 function cellSubject(table: ParadigmTable, row: number, col: number): string {
   const rowLabel = head(table.rows[row]?.label.de ?? "");
   const colLabel = head(table.columns[col]?.de ?? "");
@@ -226,6 +291,7 @@ function cellAsk(table: ParadigmTable, row: number, col: number, origin: ClassAs
     id: `c:${cellKey(table.id, row, col)}`,
     origin,
     direction: cellDirection(table, row, col),
+    question: cellQuestion(table, row, col),
     expects: "german",
     accepted,
     answer: spokenAnswer,
@@ -235,6 +301,30 @@ function cellAsk(table: ParadigmTable, row: number, col: number, origin: ClassAs
     cell: cellKey(table.id, row, col),
     example: table.rows[row]?.example ?? null
   };
+}
+
+/**
+ * A cell whose question would answer itself.
+ *
+ * The article and pronoun grids are asked by declining a word the learner
+ * already has — "wie heißt *der* im Akkusativ?" — and that word is the
+ * nominative. So the nominative cells ask what *der* is in the nominative,
+ * which is not a question. They are skipped rather than reworded: there is no
+ * other sensible way to ask for a form the learner was just handed, and a
+ * grid's three-day chain should not be winnable on cells nobody could get
+ * wrong.
+ *
+ * Computed from the answer rather than from a list of row indices, so a table
+ * whose rows are reordered, or one added later, cannot quietly reintroduce it.
+ */
+function trivialCell(table: ParadigmTable, row: number, col: number): boolean {
+  const anchor = CASE_ROW_TABLES.has(table.id)
+    ? table.rows[0]?.cells[col]?.[0]
+    : LOOKUP_DIRECTIONS[table.id] || ENDING_TABLES.has(table.id)
+      ? undefined
+      : table.rows[row]?.cells[0]?.[0];
+  if (!anchor) return false;
+  return (table.rows[row]?.cells[col] ?? []).includes(anchor);
 }
 
 /**
@@ -257,7 +347,10 @@ export function classCells(
   state: TableProgress | undefined,
   on: string
 ): readonly { row: number; col: number; missed: boolean }[] {
-  const all = cellsOf(table);
+  // Self-answering cells are dropped before anything else looks at the grid,
+  // so the window walks only over cells that are actually questions and a
+  // short table does not spend a third of its turn on them.
+  const all = cellsOf(table).filter((ref) => !trivialCell(table, ref.row, ref.col));
   const missedKeys = new Set(state?.missed ?? []);
   const missed = all
     .filter((ref) => missedKeys.has(cellKey(ref.tableId, ref.row, ref.col)))
@@ -298,6 +391,10 @@ function blankAsk(
     ]
       .filter(Boolean)
       .join(" "),
+    // On screen the sentence is the question: the gap is visible, so nothing
+    // has to be said about where it is.
+    question: question.sentence,
+    hint: question.hint,
     expects: "german",
     accepted: question.answers,
     answer: question.answers[0] ?? "",
@@ -330,6 +427,11 @@ function reviewAsk(entry: Mistake): ReviewAsk {
     id: `r:${entry.id}`,
     origin: "review",
     direction: `Das hatten wir schon einmal. ${entry.prompt}`,
+    // The prompt was written as a stage direction when the slip was filed, so
+    // it may open with "Frage nach …". Stripped here rather than at filing
+    // time: the book holds entries from several versions of this code, and a
+    // question that reads oddly is better than one that has been rewritten.
+    question: entry.prompt.replace(/^Frage,?\s*(nach\s+)?/iu, "").replace(/^\w/u, (c) => c.toUpperCase()),
     expects: entry.expects,
     accepted: entry.accepted,
     answer: entry.expected,

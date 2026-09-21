@@ -160,14 +160,20 @@ connection resets, the clock shows the class's own elapsed time, and the audio
 is routed so a locked phone treats it like a call.
 
 The banks are large — roughly a hundred words a level — so a class draws a
-working set, and it is a smaller one than the typed round drew. A card spoken
-is three questions (article, meaning, plural), and twelve cards is fourteen
-minutes of vocabulary before a single grammar table, which is the old drill
-with a voice bolted on. So a class asks **five words**, about a quarter of the
-hour, and keeps four more in reserve for a learner still talking when the plan
-runs out. Cards are always asked whole: a word's streak only moves when every
-field of it was right, so asking fewer cards is the honest way to buy the time
-and asking fewer fields is not.
+working set: **five words**, with four more in reserve for a learner still
+talking when the plan runs out.
+
+A word is one question, and it is the meaning. It used to be three — article,
+meaning, plural — which is what the vocabulary card on screen had three boxes
+for, and spoken that turned out to be the wrong trade: "wie heißt der Artikel
+von Entscheidung?" is a quiz question rather than a thing anybody says, and
+three of them a word meant a class spent its first ten minutes on forms. The
+article has not been dropped, only stopped being *asked*. Every place a word
+appears it appears with it — the tutor says *die Meinung*, the card shows *die
+Meinung*, the profile lists *die Meinung* — so it is learnt the way a German
+speaker learnt it, attached to the word rather than as a separate fact about
+it. The case forms are still drilled hard by the paradigm tables, which is
+where they belong: *der* becoming *dem* is a rule, not a property of one noun.
 
 Alongside the bundled banks, a learner can **add their own words** from the
 home screen or the profile. An added word is asked exactly like a bank word and

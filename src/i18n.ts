@@ -42,6 +42,14 @@ export interface Strings {
   readonly classTranscriptLabel: string;
   readonly classJumpToLatest: string;
   readonly classConnecting: string;
+  /**
+   * The two halves of the status strip, read out of the corner of the eye
+   * while somebody is talking. Both speak of the teacher in the third person,
+   * like the rest of the classroom — the strip is the app describing the call,
+   * not the teacher's own voice, and "Ich höre zu" one moment and "Dein Lehrer
+   * spricht" the next left the learner working out who was addressing him.
+   * The voice overlay is a different room and keeps its first person.
+   */
   readonly classListening: string;
   readonly classSpeaking: string;
   readonly classThinking: string;
@@ -62,6 +70,39 @@ export interface Strings {
   readonly classNowSentence: string;
   readonly classNowReview: string;
   readonly classProgress: (done: number, total: number) => string;
+
+  /* the card a closed question appears on, and the field under it */
+  /**
+   * Eyebrows on the card. They name the kind of question, never the question
+   * itself — that arrives written out in `ClassAskView.question`. The
+   * vocabulary one says "Bedeutung" and not "Wortschatz" on purpose: a
+   * vocabulary card is a single question now, the meaning, and this eyebrow is
+   * the one place the screen can say so before the learner starts reciting an
+   * article nobody asked for.
+   */
+  readonly classAskVocab: string;
+  readonly classAskTable: string;
+  readonly classAskSentence: string;
+  readonly classAskReview: string;
+  /** Accessible name of the answer field, which carries no visible caption. */
+  readonly classAnswerLabel: string;
+  /**
+   * Two placeholders, because the field means something different depending on
+   * whether the microphone is open. With the mic live, typing is the second
+   * way in and the placeholder offers it; while the tutor is talking it is the
+   * only way in. A single neutral placeholder would leave a learner who has
+   * just been asked something unsure whether saying it aloud counts at all.
+   */
+  readonly classAnswerPlaceholderSay: string;
+  readonly classAnswerPlaceholderType: string;
+  /**
+   * Not the generic `send`: this button sits beside a field the learner may
+   * equally well speak into, and a screen reader announcing "Senden" there
+   * says nothing about what is being sent.
+   */
+  readonly classAnswerSend: string;
+  /** One line under the card — both ways of answering land in the same place. */
+  readonly classAnswerHint: string;
 
   /* the day's summary */
   readonly classSummaryEyebrow: string;
@@ -113,7 +154,12 @@ export interface Strings {
   readonly back: string;
   readonly backHome: string;
 
-  /* the vocabulary card's field labels — shared with ui/addword.ts */
+  /*
+   * Field labels of the add-a-word form, and nothing else any more: the class
+   * asks a word for its meaning alone, so article, plural, participle and
+   * auxiliary now appear only where the learner is entering a word of their
+   * own. They are still needed there — the drill has to know what it was told.
+   */
   readonly auxiliary: string;
   readonly article: string;
   readonly meaning: string;
@@ -343,7 +389,7 @@ export interface Strings {
   /** What a section holds for the class: words, table sentences, review topics. */
   readonly syllabusDrilled: (words: number, sentences: number, topics: number) => string;
   readonly syllabusNotDrilled: string;
-  /** Shown after a noun the class will not ask a plural for. */
+  /** Shown in place of the plural of a noun that has none — "die Butter". */
   readonly syllabusNoPlural: string;
 
   /* videos and podcasts */
@@ -434,8 +480,8 @@ const de: Strings = {
   classTranscriptLabel: "Mitschrift der Stunde",
   classJumpToLatest: "Zum Neuesten",
   classConnecting: "Dein Lehrer kommt gleich …",
-  classListening: "Ich höre zu — sprich einfach los",
-  classSpeaking: "Dein Lehrer spricht — du kannst ihn unterbrechen",
+  classListening: "Dein Lehrer hört zu — sprich los",
+  classSpeaking: "Dein Lehrer spricht — unterbrich ihn ruhig",
   classThinking: "Einen Moment …",
   classPaused: "Pause — die Uhr steht",
   classEnded: "Die Stunde ist zu Ende",
@@ -454,6 +500,16 @@ const de: Strings = {
   classNowSentence: "Satz",
   classNowReview: "Wiederholung",
   classProgress: (done, total) => `Schritt ${done} von ${total}`,
+
+  classAskVocab: "Bedeutung",
+  classAskTable: "Tabelle",
+  classAskSentence: "Satz mit Lücke",
+  classAskReview: "Schon mal falsch",
+  classAnswerLabel: "Deine Antwort",
+  classAnswerPlaceholderSay: "Sag es — oder tipp es hier",
+  classAnswerPlaceholderType: "Tipp deine Antwort",
+  classAnswerSend: "Antwort senden",
+  classAnswerHint: "Sprich deine Antwort oder tipp sie — egal wie.",
 
   classSummaryEyebrow: "Zusammenfassung",
   classSummaryTitle: "Das war deine Stunde",
@@ -805,8 +861,8 @@ const en: Strings = {
   classTranscriptLabel: "Transcript of the class",
   classJumpToLatest: "Jump to the latest",
   classConnecting: "Your teacher will be with you in a moment …",
-  classListening: "I'm listening — just talk",
-  classSpeaking: "Your teacher is speaking — you may cut in",
+  classListening: "Your teacher is listening — go ahead",
+  classSpeaking: "Your teacher is speaking — cut in any time",
   classThinking: "One moment …",
   classPaused: "On a break — the clock has stopped",
   classEnded: "The class is over",
@@ -825,6 +881,16 @@ const en: Strings = {
   classNowSentence: "Sentence",
   classNowReview: "Review",
   classProgress: (done, total) => `Step ${done} of ${total}`,
+
+  classAskVocab: "Meaning",
+  classAskTable: "Grammar table",
+  classAskSentence: "Sentence with a gap",
+  classAskReview: "Wrong before",
+  classAnswerLabel: "Your answer",
+  classAnswerPlaceholderSay: "Say it — or type it here",
+  classAnswerPlaceholderType: "Type your answer",
+  classAnswerSend: "Send answer",
+  classAnswerHint: "Say your answer or type it — either way.",
 
   classSummaryEyebrow: "Summary",
   classSummaryTitle: "That's today's class",

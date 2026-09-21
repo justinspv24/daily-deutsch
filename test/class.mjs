@@ -384,6 +384,31 @@ const ask = (over) => ({
   const ids = a.items.map((i) => i.id);
   assert.equal(new Set(ids).size, ids.length, "nothing is asked twice in one class");
 
+  // A word is one question — its meaning — and never its article or plural.
+  // Spoken, "wie heißt der Artikel von X" is a quiz question rather than
+  // German, and three of them a word ate the first ten minutes of a class.
+  const vocab = a.items.filter((i) => i.kind === "vocab");
+  assert.ok(vocab.length > 0, "a class asks about words");
+  assert.ok(
+    vocab.every((i) => i.field === "meaning"),
+    "vocabulary is asked by meaning alone"
+  );
+  assert.ok(
+    vocab.every((i) => i.subject.split(" ").length > 1 || i.subject.includes("(")),
+    "and the word still carries its article or its auxiliary wherever it is shown"
+  );
+
+  // No cell may ask for the form it has just handed the learner: the article
+  // grids are asked by declining their own nominative, so nominative cells
+  // would answer themselves.
+  for (const cell of a.items.filter((i) => i.kind === "cell")) {
+    const anchor = cell.question.match(/„([^“]+)“/u)?.[1] ?? "";
+    assert.ok(
+      !anchor || !cell.accepted.includes(anchor),
+      `a cell must not ask what ${anchor} is: ${cell.question}`
+    );
+  }
+
   // Reviews first: what the learner got wrong before opens the lesson.
   const p2 = emptyProgress("A2");
   rememberMistake(

@@ -1,12 +1,12 @@
 import { digestOf, tablesOf } from "./agenda";
 import { judgeEnglish, judgeGerman } from "./grading";
-import { t } from "./i18n";
+import { pick, t } from "./i18n";
 import { bankTime, closeLive, liveSeconds, pauseLive, resumeLive, worthKeeping } from "./liveclass";
 import { noteAnswer, noteCorrection, scoreClass } from "./classscore";
 import { todayISO } from "./scheduler";
 import { ClassTutor, type ReportedAnswer, type ReportedCorrection } from "./tutor";
 import type { ClassAgenda, ClassAsk, ClassEnding, ClassItem, ClassRecord, LiveClass, Progress, Verdict } from "./types";
-import type { ClassFocus, ClassroomView } from "./ui/classroom";
+import type { ClassAskView, ClassFocus, ClassroomView } from "./ui/classroom";
 import { describeVoiceError } from "./ui/voice";
 
 /**
@@ -78,7 +78,11 @@ export class ClassRun {
       plan: digestOf(agenda),
       onNeedKey: () => hooks.onNeedKey(),
       onCorrection: (correction) => this.correction(correction),
-      onReported: (report) => this.reported(report)
+      onReported: (report) => this.reported(report),
+      // Straight through to the log. The strip is repainted on every change of
+      // state; the log is appended to once per turn and never rewritten, which
+      // is what lets the learner scroll back through the whole class.
+      onTranscript: (role, text, final) => this.view.say(role, text, final)
     });
     this.tutor.subscribe(() => this.paint());
   }
@@ -253,6 +257,7 @@ export class ClassRun {
 
     this.view.setPhase("live");
     this.view.setFocus(this.focusFor(item));
+    this.view.setAsk(item.kind === "talk" ? null : this.askView(item));
 
     if (item.kind === "talk") {
       this.tutor.talk(item.direction);
@@ -295,6 +300,43 @@ export class ClassRun {
    * the same grader the typed round used, deliberately: a spoken class must
    * not quietly become an easier class, or the ladders stop comparing.
    */
+  /**
+   * An answer typed into the card.
+   *
+   * The whole point of the field is that speaking is not always possible — a
+   * train, a shared office, a word the microphone keeps mishearing — so it is
+   * live for as long as the question is, and the tutor reacts to what was
+   * typed exactly as it reacts to what was said. The guard is in `ClassTutor`:
+   * once a question has been answered it stops taking answers, so a learner
+   * who types and then says the same thing is not marked twice.
+   */
+  typed(answer: string): void {
+    if (this.finished) return;
+    this.tutor.answer(answer);
+  }
+
+  /** The current question, as the card on the stage needs it. */
+  private askView(ask: ClassAsk): ClassAskView {
+    const total = this.items.length;
+    return {
+      kind:
+        ask.kind === "vocab"
+          ? "vocab"
+          : ask.kind === "cell"
+            ? "table"
+            : ask.kind === "review"
+              ? "review"
+              : "sentence",
+      question: ask.question,
+      subject: ask.subject,
+      // A gapped sentence carries its gloss; everything else is its own hint.
+      hint: ask.kind === "blank" ? pick(ask.hint) : null,
+      expects: ask.expects,
+      done: Math.min(this.live.cursor, total),
+      total
+    };
+  }
+
   private answered(ask: ClassAsk, given: string): void {
     const verdict: Verdict =
       ask.kind === "vocab" && ask.field === "meaning"
@@ -431,9 +473,11 @@ export class ClassRun {
         break;
     }
 
-    if (status.heard) this.view.setLive(status.heard);
-    else this.view.setLive("");
-    if (status.said) this.view.say("assistant", status.said, false);
+    // The interim line beside the orb is a hint about the microphone, not the
+    // record — the record is the log, which the transcript callback appends to
+    // once per turn. Writing to both from here is what made the first version
+    // overwrite its own history.
+    this.view.setLive(status.heard);
   }
 
   /** The clock is the class's own, not the call's: a break stops it. */

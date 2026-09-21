@@ -189,25 +189,66 @@ Two invariants hold the rest together:
   hears itself would transcribe its own question as the answer and mark it,
   silently, against the schedule.
 
-### Three questions per word
+### One question per word, and a card to type it into
 
-A word is three questions, not one — article, meaning, plural — which is how a
-teacher has always asked it: *der, die oder das?* … *und was heißt das auf
-Englisch?* … *und der Plural?* A card is always asked whole, because
-`scoreClass` only advances a word's streak when every field of it was right;
-asking a subset would retire words on the strength of their meanings alone.
+A word is asked once, for its meaning. It was three questions — article,
+meaning, plural — until the first real class, where it became obvious that
+"wie heißt der Artikel von Entscheidung?" is a quiz question rather than
+German, and that three of them a word eat the first ten minutes. The article
+rides along everywhere the word is shown or spoken instead, and the case forms
+are drilled by the paradigm tables, which is where a rule belongs.
 
-Phrasing lives in `src/agenda.ts` and is written to be *heard*: "Partizip II"
-is spelled "Partizip zwei" there, because a model reading the first version
-aloud says "Partizip zwei Strich Strich" often enough to matter. What the app
-sends is a stage direction, never a script — *"Frage nach dem Plural von „die
-Reise“."* — and the tutor puts it in its own warm words.
+Every closed question is also written on the screen, on a card with a field in
+it, because speaking is not always possible — a train, a shared office, a word
+the microphone keeps mishearing. Saying it and typing it are the same answer:
+both land in `ClassTutor.answer`/`settle`, are marked by the same grader and
+get the same spoken reaction. Typing skips `readSpokenAnswer`, which exists to
+pull an answer out of "ähm, ich glaube der" — someone who typed *der* meant
+*der*, and putting typed text through leniency built for speech is how "das ist
+der Lehrer" starts counting as an article. An answer typed before the tutor has
+finished asking is held and applied the moment the floor is free, because
+nobody reading a card waits for the voice to stop.
+
+There are therefore two strings per question. `direction` is what the tutor is
+told — a stage direction, never a script, *"Frage nach dem Plural von „die
+Reise“."* — and `question` is what the board says. Both live in
+`src/agenda.ts`, and the direction is written to be *heard*: "Partizip II" is
+spelled "Partizip zwei", because a model reading the first version aloud says
+"Partizip zwei Strich Strich" often enough to matter.
+
+A cell whose question would answer itself is never asked. The article and
+pronoun grids are asked by declining their own nominative — *wie heißt "der" im
+Akkusativ?* — so the nominative cells would be asking what *der* is in the
+nominative. They are computed out rather than listed out, from whether the
+answer is the anchor, so a reordered table cannot bring them back.
 
 The answers themselves never leave the browser. A model told what `die Reise`
 means will, somewhere across forty questions, say so before the learner does —
 not out of malice, but because confirming is what a helpful speaker does. It is
 given the day's words as *cues* so it can weave them into the conversation, and
 never their meanings, plurals or table cells.
+
+### What is on the screen, and for how long
+
+The transcript keeps the whole class and is scrollable to the top of it. It
+follows the conversation only while the learner is already at the bottom;
+scroll back to re-read something and it stops moving under you and offers a way
+back down. It is not persisted — the day's summary is the record.
+
+A correction is the opposite: it is not a log entry at all. It appears over the
+foot of the transcript, holds for as long as its own text takes to read, and
+removes itself. That is a deliberate reversal of the first version, where a
+correction sat in the log for the rest of the class and buried the conversation
+under things already understood. Nothing is lost by it vanishing — every
+correction is in the day's summary and, if it was a graded answer, in the book
+of errors on its 3/7/21 ladder.
+
+Nothing the app says to the tutor is ever shown. Stage directions are stripped
+in `ClassTutor` before a line can reach a bubble, on both sides of the
+conversation, because the app is the one participant that knows for certain
+which strings are instructions. That guard exists because the first real class
+printed `[BEWERTUNG] falsch. Der Lernende sagte: …` straight into the
+learner's transcript.
 
 ### Hearing an answer
 
